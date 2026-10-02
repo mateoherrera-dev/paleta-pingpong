@@ -1,0 +1,6 @@
+# Los datos se comparten por Drive: pesan demasiado para git
+datos/*
+!datos/.gitkeep
+
+__pycache__/
+.venv/

@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Paleta</title>
+<style>
+  :root {
+    --bg: #f4f7fa; --card: #ffffff; --fg: #121c28; --muted: #5a6778; --line: #d7dfe8;
+    --accent: #1b4f91; --ok: #1f7a4d; --bad: #c62f3a; --soft: #e5eef9;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #0c131b; --card: #141e2a; --fg: #e6edf5; --muted: #9babbd; --line: #26364a;
+            --accent: #74abef; --ok: #55c792; --bad: #ff6f76; --soft: #15283f; color-scheme: dark; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.5 system-ui, sans-serif; }
+  main { max-width: 480px; margin: 0 auto; padding: 16px; display: grid; gap: 14px; }
+  header { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  h1 { font-size: 1.3rem; margin: 0 auto 0 0; }
+  button { font: inherit; font-size: .9rem; padding: 8px 14px; border-radius: 8px; border: 1px solid var(--accent);
+           background: var(--accent); color: #fff; cursor: pointer; }
+  button.sec { background: transparent; color: var(--accent); }
+  .estado { font-size: .85rem; color: var(--muted); }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: grid; gap: 10px; }
+  .golpe { font-size: 1.5rem; font-weight: 600; }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .stat { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px; text-align: center; }
+  .stat small { display: block; color: var(--muted); font-size: .75rem; }
+  .stat b { font-size: 1.2rem; font-variant-numeric: tabular-nums; }
+  .consejo { background: var(--soft); border-radius: 8px; padding: 10px; }
+  .consejo.ok { color: var(--ok); }
+  ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; font-size: .9rem; }
+  li { display: flex; justify-content: space-between; gap: 8px; border-bottom: 1px solid var(--line); padding: 4px 0; }
+  .conteo { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; font-size: .9rem; }
+  label { font-size: .9rem; display: flex; gap: 6px; align-items: center; }
+  .vacio { color: var(--muted); }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Paleta</h1>
+    <button id="conectar">Conectar paleta</button>
+    <button id="simular" class="sec">Simulador</button>
+  </header>
+  <div class="estado" id="estado">Sin conectar.</div>
+
+  <section class="card" id="ultimo">
+    <div class="golpe" id="golpe">Esperando un golpe…</div>
+    <div class="stats">
+      <div class="stat"><small>Velocidad</small><b id="vel">–</b></div>
+      <div class="stat"><small>Ángulo</small><b id="ang">–</b></div>
+      <div class="stat"><small>Confianza</small><b id="conf">–</b></div>
+    </div>
+    <div class="consejo" id="consejo">Pegá un golpe para ver el análisis.</div>
+    <label><input type="checkbox" id="voz"> Leer los consejos en voz alta</label>
+  </section>
+
+  <section class="card">
+    <strong>Esta sesión</strong>
+    <div class="conteo" id="conteo"></div>
+  </section>
+
+  <section class="card">
+    <strong>Últimos golpes</strong>
+    <ul id="historial"><li class="vacio">Todavía no hay golpes.</li></ul>
+  </section>
+</main>
+
+<script>
+// Formato de los eventos y UUIDs: docs/CONTRATOS.md
+const SERVICIO_UART = '6e400001-b5a3-f393-e0a9-e50e24dcca9e';
+const CARACT_TX = '6e400003-b5a3-f393-e0a9-e50e24dcca9e';
+const GOLPES = { TD: 'Topspin de derecha', TR: 'Topspin de revés', ED: 'Empuje de derecha', ER: 'Empuje de revés', '??': 'Golpe no reconocido' };
+
+// Rangos de ángulo de la cara en el impacto (positivo = cerrada).
+// PROVISORIOS: hay que definirlos con el jugador de referencia.
+const CRITERIOS = {
+  TD: { angulo: [20, 40], pico: true },
+  TR: { angulo: [15, 35], pico: true },
+  ED: { angulo: [-45, -20], pico: false },
+  ER: { angulo: [-45, -20], pico: false },
+};
+const PICO_ANTES_MS = -25;  // si el pico de giro llega antes que esto, el jugador frena antes de pegar
+
+const sesion = { golpes: [], conteo: {} };
+const $ = (id) => document.getElementById(id);
+
+function numeroONulo(texto) {
+  return texto === '-' || texto === '' ? null : Number(texto);
+}
+
+function parsearEvento(linea) {
+  const p = linea.trim().split(',');
+  if (p.length !== 6 || !(p[1] in GOLPES)) return null;
+  return {
+    n: Number(p[0]), golpe: p[1], conf: numeroONulo(p[2]),
+    vel: numeroONulo(p[3]), ang: numeroONulo(p[4]), pico: numeroONulo(p[5]),
+  };
+}
+
+function consejo(e) {
+  const c = CRITERIOS[e.golpe];
+  if (!c) return { texto: 'No se reconoció el golpe.', ok: false };
+  const avisos = [];
+  if (e.ang !== null) {
+    if (e.ang < c.angulo[0]) avisos.push(e.golpe.startsWith('T') ? 'Cerrá más la paleta al pegar.' : 'Abrí menos la paleta al pegar.');
+    if (e.ang > c.angulo[1]) avisos.push(e.golpe.startsWith('T') ? 'Cerraste demasiado la paleta.' : 'Abrí más la paleta al pegar.');
+  }
+  if (c.pico && e.pico !== null && e.pico < PICO_ANTES_MS) avisos.push('Estás frenando antes de la pelota: acelerá a través del golpe.');
+  return avisos.length ? { texto: avisos.join(' '), ok: false } : { texto: 'Buen golpe.', ok: true };
+}
+
+function decir(texto) {
+  if (!$('voz').checked || !('speechSynthesis' in window)) return;
+  const frase = new SpeechSynthesisUtterance(texto);
+  frase.lang = 'es-AR';
+  speechSynthesis.cancel();
+  speechSynthesis.speak(frase);
+}
+
+function mostrar(e) {
+  sesion.golpes.unshift(e);
+  sesion.conteo[e.golpe] = (sesion.conteo[e.golpe] || 0) + 1;
+  const c = consejo(e);
+
+  $('golpe').textContent = GOLPES[e.golpe];
+  $('vel').textContent = e.vel === null ? '–' : `${e.vel} km/h`;
+  $('ang').textContent = e.ang === null ? '–' : `${e.ang}°`;
+  $('conf').textContent = e.conf === null ? '–' : `${e.conf} %`;
+  $('consejo').textContent = c.texto;
+  $('consejo').classList.toggle('ok', c.ok);
+  decir(c.texto);
+
+  $('conteo').innerHTML = Object.keys(GOLPES)
+    .filter((k) => sesion.conteo[k])
+    .map((k) => `<span>${GOLPES[k]}</span><b>${sesion.conteo[k]}</b>`).join('');
+  $('historial').innerHTML = sesion.golpes.slice(0, 15)
+    .map((g) => `<li><span>#${g.n} ${GOLPES[g.golpe]}</span><span>${g.vel ?? '–'} km/h · ${g.ang ?? '–'}°</span></li>`).join('');
+}
+
+// Bluetooth: la placa manda líneas de texto; pueden llegar cortadas en varios paquetes
+let pendiente = '';
+function recibir(evento) {
+  pendiente += new TextDecoder().decode(evento.target.value);
+  const lineas = pendiente.split('\n');
+  pendiente = lineas.pop();
+  for (const linea of lineas) {
+    const e = parsearEvento(linea);
+    if (e) mostrar(e);
+  }
+}
+
+async function conectar() {
+  if (!navigator.bluetooth) {
+    $('estado').textContent = 'Este navegador no tiene Bluetooth web. Usá Chrome en Android o en la compu (con https o localhost).';
+    return;
+  }
+  try {
+    $('estado').textContent = 'Buscando la paleta…';
+    const dispositivo = await navigator.bluetooth.requestDevice({
+      filters: [{ namePrefix: 'Paleta' }], optionalServices: [SERVICIO_UART],
+    });
+    dispositivo.addEventListener('gattserverdisconnected', () => { $('estado').textContent = 'Se desconectó la paleta.'; });
+    const servidor = await dispositivo.gatt.connect();
+    const servicio = await servidor.getPrimaryService(SERVICIO_UART);
+    const tx = await servicio.getCharacteristic(CARACT_TX);
+    tx.addEventListener('characteristicvaluechanged', recibir);
+    await tx.startNotifications();
+    $('estado').textContent = `Conectada a ${dispositivo.name}.`;
+  } catch (err) {
+    $('estado').textContent = `No se pudo conectar: ${err.message}`;
+  }
+}
+
+// Simulador: genera eventos falsos con el mismo formato que la placa
+let simulador = null, nSim = 0;
+function alternarSimulador() {
+  if (simulador) {
+    clearInterval(simulador); simulador = null;
+    $('simular').textContent = 'Simulador';
+    $('estado').textContent = 'Simulador detenido.';
+    return;
+  }
+  const codigos = ['TD', 'TR', 'ED', 'ER'];
+  const azar = (a, b) => Math.round(a + Math.random() * (b - a));
+  simulador = setInterval(() => {
+    const g = codigos[azar(0, 3)];
+    const topspin = g.startsWith('T');
+    const linea = [++nSim, g, azar(60, 99), topspin ? azar(30, 60) : azar(10, 25),
+      topspin ? azar(5, 50) : azar(-55, -10), topspin ? azar(-60, 10) : '-'].join(',');
+    recibir({ target: { value: new TextEncoder().encode(linea + '\n') } });
+  }, 2500);
+  $('simular').textContent = 'Detener simulador';
+  $('estado').textContent = 'Simulador: golpes inventados cada 2,5 s.';
+}
+
+$('conectar').addEventListener('click', conectar);
+$('simular').addEventListener('click', alternarSimulador);
+</script>
+</body>
+</html>
