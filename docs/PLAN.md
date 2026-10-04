@@ -73,6 +73,7 @@ Los formatos de datos entre módulos están fijados en [`CONTRATOS.md`](CONTRATO
 | Quién | Tarea | Listo cuando… |
 | --- | --- | --- |
 | **P1** | Configurar ESP-IDF / Arduino IDE para ESP32-S3-WROOM-1 (N16R8) y probar SPI base | La placa compila y el monitor serie corre a 921600 baudios |
+| **P1** | Importar el modelo Edge Impulse sintético (`firmware/modelo_dummy_sintetico.zip`) y correr inferencia de prueba | La placa compila el modelo y corre inferencias con array dummy |
 | **P1** | Mapear pines SPI libres (`SCK`, `MISO`, `MOSI`, `CS`) y pin `INT` para el MPU-6500 | Pines fijados en el código y libres de strapping pins |
 | **P2** | Script receptor en Python por puerto serie (lectura a 921600 baudios) y visualizador `ver.py` | Recibe paquetes simulados a 1000 Hz sin dropping de buffers |
 | **P2** | Escribir protocolo de captura (`docs/PROTOCOLO.md`): orden de tiros, estructura y metadatos de CSV | Protocolo cerrado |
