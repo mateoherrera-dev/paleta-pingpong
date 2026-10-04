@@ -61,7 +61,7 @@ Los formatos de datos entre módulos están fijados en [`CONTRATOS.md`](CONTRATO
 ### Organización (los tres, primera hora)
 
 - [ ] Confirmar roles: P1, P2 y P3.
-- [ ] **Comprar por internet** para recibir antes del 9/10: **2 módulos MPU-6500** (uno de repuesto), cables dupont hembra-hembra, cable USB-C flexible largo (2–3 m) y precintos. Alternativa de respaldo: 2 discos piezoeléctricos chicos por si el trigger por acelerómetro mete ruido.
+- [ ] **Comprar por internet** para recibir antes del 9/10: **2 módulos MPU-6500** (uno de repuesto), cables dupont hembra-hembra, cable USB-C flexible largo (2–3 m) cinta de pintor, cinta bifaz 3M VHB y cinta aisladora. Alternativa de respaldo: 2 discos piezoeléctricos chicos por si el trigger por acelerómetro mete ruido.
 - [ ] Crear el repo en GitHub, subir estructura base y dar permisos al equipo.
 - [ ] Crear la carpeta de Drive para los CSV crudos.
 - [ ] **Confirmar mesa de ping pong disponible los viernes a la tarde**, red portátil, 2 paletas y mínimo 20 pelotas para tiros en ráfaga.
