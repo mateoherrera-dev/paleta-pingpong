@@ -28,9 +28,9 @@ Los formatos de datos entre módulos están fijados en [`CONTRATOS.md`](CONTRATO
 
 | Persona | Módulos | Qué hace | Suplente |
 | --- | --- | --- | --- |
-| **P1 · Hardware** | Firmware + cápsula | Sensor MPU-6500 por SPI a 1000 Hz, detección de impactos por jerk/piezo, BLE por eventos, inferencia Edge Impulse en placa, cápsula en OpenSCAD | P2 |
-| **P2 · Datos** | Datos + modelo | Grabación por UART (cable USB a 921600 baudios), protocolo, dataset, entrenamiento en Edge Impulse, evaluación de precisión. En fase 2, YOLO-pose | P3 |
-| **P3 · Técnica** | App + métricas + criterios | App web BLE, cálculo cinemático ($v = \omega \cdot L$), ángulo de cara previa al choque (Madgwick), criterios de técnica y consejos | P1 |
+| **P1 · Hardware** | Firmware base | Sensor MPU-6500 por SPI a 1000 Hz (interrupciones/DMA), detección de impactos (trigger), emisión de struct BLE (NimBLE) | P2 |
+| **P2 · Datos** | Datos, Modelo + 3D | Grabación (UART), dataset, entrenamiento Edge Impulse, módulo wrapper C++ (`ml_inference.h`), diseño e impresión de cápsula (OpenSCAD) | P3 |
+| **P3 · Técnica** | App + UI + BLE | Contrato de payload BLE, App web (Web Bluetooth API), cálculo cinemático ($v = \omega \cdot L$), ángulos (Madgwick), criterios y consejos | P1 |
 
 ### Reglas
 
@@ -73,7 +73,8 @@ Los formatos de datos entre módulos están fijados en [`CONTRATOS.md`](CONTRATO
 | Quién | Tarea | Listo cuando… |
 | --- | --- | --- |
 | **P1** | Configurar ESP-IDF / Arduino IDE para ESP32-S3-WROOM-1 (N16R8) y probar SPI base | La placa compila y el monitor serie corre a 921600 baudios |
-| **P1** | Importar el modelo Edge Impulse sintético (`firmware/modelo_dummy_sintetico.zip`) y correr inferencia de prueba | La placa compila el modelo y corre inferencias con array dummy |
+| **P2** | Escribir módulo wrapper C++ (`ml_inference.h/cpp`) integrando el modelo Edge Impulse sintético (`firmware/modelo_dummy_sintetico.zip`) | Módulo encapsulado listo con función `predecir_golpe()` |
+| **P1** | Linkear `ml_inference.h` en el `.ino` y correr inferencia de prueba con array dummy | La placa compila el modelo y devuelve la predicción |
 | **P1** | Mapear pines SPI libres (`SCK`, `MISO`, `MOSI`, `CS`) y pin `INT` para el MPU-6500 | Pines fijados en el código y libres de strapping pins |
 | **P2** | Script receptor en Python por puerto serie (lectura a 921600 baudios) y visualizador `ver.py` | Recibe paquetes simulados a 1000 Hz sin dropping de buffers |
 | **P2** | Escribir protocolo de captura (`docs/PROTOCOLO.md`): orden de tiros, estructura y metadatos de CSV | Protocolo cerrado |
@@ -88,7 +89,7 @@ Los formatos de datos entre módulos están fijados en [`CONTRATOS.md`](CONTRATO
 
 | P1 | P2 | P3 |
 | --- | --- | --- |
-| Conectar MPU-6500 por SPI a $\ge 1\text{ MHz}$. Leer registro `WHO_AM_I` (`0x70`). Configurar muestreo a 1000 Hz por FIFO/interrupción y atar sensor a la paleta | Script de guardado masivo en CSV. Validar que la derivada de aceleración ($\Delta a / \Delta t$) aísle el impacto real de los swings al aire | Algoritmo de orientación (Madgwick/Mahony) en Python procesando las ráfagas capturadas |
+| Conectar MPU-6500 por SPI a $\ge 1\text{ MHz}$. Leer registro `WHO_AM_I` (`0x70`). Configurar muestreo a 1000 Hz por FIFO/interrupción y atar sensor a la paleta | Modelar cápsula de la placa en OpenSCAD midiendo componentes. Validar aislación del impacto real vs swings al aire | Algoritmo de orientación (Madgwick/Mahony) en Python procesando las ráfagas. Definir contrato de payload BLE (struct C) |
 
 **Tarde:** 30–40 min de capturas con cable USB largo (swings al aire vs. golpes reales contra pelota).
 **Hito:** Señal limpia a 1000 Hz en PC y trigger de impacto validado sin falsos positivos.
@@ -106,7 +107,7 @@ Los formatos de datos entre módulos están fijados en [`CONTRATOS.md`](CONTRATO
 
 | P1 | P2 | P3 |
 | --- | --- | --- |
-| Exportar modelo C++ de Edge Impulse, integrarlo en el firmware y pasar a alimentación por Powerbank (verificar que no corte por bajo consumo) | Entrenar modelo en Edge Impulse, optimizar cuantización INT8 y medir matriz de confusión | Conectar app web con el BLE real: parsear paquete de 20 bytes al recibir impacto |
+| Pasar a alimentación por Powerbank (verificar que no corte) y emitir struct de predicción por NimBLE al detectar impacto | Entrenar modelo en Edge Impulse, optimizar cuantización INT8, exportar C++ y actualizar `ml_inference.h` | Conectar app web con el BLE real: parsear struct (payload C cerrado) y actualizar UI al impacto |
 
 **Tarde:** Capturar a 3–5 compañeros de la facultad con la paleta inalámbrica para validar precisión fuera del dataset de entrenamiento.
 **Hito:** Precisión medida en hardware real.
@@ -114,7 +115,7 @@ Los formatos de datos entre módulos están fijados en [`CONTRATOS.md`](CONTRATO
 - $60\% - 80\%$: reentrenamiento con golpes ambiguos.
 - $< 60\%$: reducir alcance a 3 golpes.
 
-**Durante la semana:** Enviar cápsula a imprimir en 3D.
+**Durante la semana:** P2 envía la cápsula a imprimir en 3D.
 
 ### Clase 4 · Viernes 30/10 · Integración Total y Jugador de Referencia
 
@@ -126,7 +127,7 @@ Los formatos de datos entre módulos están fijados en [`CONTRATOS.md`](CONTRATO
 
 | P1 | P2 | P3 |
 | --- | --- | --- |
-| Montar electrónica final en la cápsula impresa y verificar alivio de tensión del cable USB al bolsillo | Calibrar pesos y reentrenar modelo agregando las muestras del jugador experto | Pulir reglas heurísticas de consejos en base al perfil del jugador de referencia |
+| Montar electrónica final en la cápsula impresa y verificar alivio de tensión del cable USB al bolsillo | Calibrar pesos mecánicos de la paleta y reentrenar modelo agregando las muestras del jugador experto | Pulir reglas heurísticas de consejos en base al perfil del jugador de referencia |
 
 **Tarde:** Pruebas de usabilidad ciega con compañeros ajenos a la carrera.
 **Congelamiento de código al finalizar la jornada.**
