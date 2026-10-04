@@ -165,36 +165,38 @@ Los formatos de datos entre módulos están fijados en [`CONTRATOS.md`](CONTRATO
 ## 7. Especificaciones Mecánicas y de Montaje (P2)
 
 ### 7.1 Qué modelar en Fusion 360
-Diseñar dos carcasas separadas con espesor de pared de 1.5 mm a 2.0 mm, para ser impresas en PETG o PLA:
+Diseñá dos piezas impresas en PETG o PLA (paredes de 1.6 mm a 2.0 mm):
 
-**Cápsula A (Sensor MPU-6500):**
-- Cajita ultracompacta (aprox. $22 \times 18 \times 8\text{ mm}$, peso $< 6\text{ g}$).
-- Alojamiento interno justo para la plaqueta del breakout MPU-6500, con soporte para dos tornillos autorroscantes M2 (o trabas por encastre snap-fit).
-- Salida lateral o inferior para el mazo de 6 cables SPI con un canal estrangulador (*strain relief*) que evite tirones directos sobre las soldaduras de la placa.
-- Cara inferior completamente plana y rugosa para facilitar la adhesión química.
+**Pieza 1 — Cápsula del Sensor (MPU-6500):**
+- Caja diminuta (aprox. $22 \times 18 \times 7\text{ mm}$, peso $< 5\text{ g}$).
+- Alojamiento interno para la plaqueta del MPU-6500, con dos trabas a presión (snap-fit) o soporte para tornillos autorroscantes M2.
+- Ranura de salida en el canto inferior para el cable SPI de 6 hilos, con traba interna de alivio de tensión (*strain relief*) para evitar que los tirones desuelden las pistas.
+- Base inferior 100% plana y ligeramente texturada para maximizar la adhesión.
 
-**Cápsula B (Procesador ESP32-S3):**
-- Caja ergonómica para alojar el módulo ESP32-S3-WROOM-1 (N16R8).
-- Abertura para el conector USB-C (alimentación hacia el powerbank en el bolsillo).
-- Salida para la bornera/conector del cable SPI que viene de la mano.
-- Base ligeramente curvada para copiar la anatomía del brazo, equipada con dos ranuras laterales pasantes de $25 \times 3\text{ mm}$ para enhebrar una correa elástica deportiva con velcro.
+**Pieza 2 — Capuchón Prolongador del Mango (ESP32-S3):**
+- Diseño tipo "vaina" o capuchón que prolonga el mango 3.5 a 4 cm hacia abajo en vertical, sin aletas laterales que sobresalgan del perfil de la mano.
+- Zona superior (encastre): Cavidad que abraza los últimos 15 mm del mango de la paleta copiando su forma elíptica/cóncava, con apriete por fricción o ranura para una vuelta de cinta exterior.
+- Zona inferior (electrónica): Aloja la placa ESP32-S3 orientada de forma vertical (en la misma dirección del eje del mango).
+- Abertura en la base inferior centrada para conectar el cable USB-C de alimentación.
+- Entrada superior para recibir los cables del bus SPI que bajan por el canto.
+- Aristas redondeadas con filetes (*fillets*) de radio amplio para que el talón de la palma descanse sin molestias.
 
 ### 7.2 Dónde ubicar cada componente
-- **MPU-6500:** En el cuello de la paleta (el triángulo de madera descubierta entre el final de la empuñadura y el borde inferior de la goma). Se monta sobre la cara de revés o en el lateral donde no apoyen las yemas ni el talón de los dedos.
-  *Por qué ahí:* Está a solo 2–3 cm del punto de impacto, capturando la onda elástica de alta frecuencia ($> 150\text{ Hz}$) sin la amortiguación viscoelástica que introduce la mano en el mango, y con mayor brazo de palanca angular que en el pomo inferior.
-- **ESP32-S3:** En el tercio medio o superior del antebrazo (lado dorsal, unos 8–12 cm por debajo del codo).
-  *Por qué ahí:* Despeja la articulación de la muñeca para movimientos explosivos de flexión y rotación (brushing), y no agrega peso a la mano.
-- **Batería (Powerbank):** En el bolsillo del pantalón, unida al antebrazo por un cable USB estándar pasado por debajo de la remera.
+- **MPU-6500:** En el cuello de la paleta (el triángulo de madera descubierta entre el mango y la goma), en la cara donde no apoye el dedo índice.
+  *Por qué ahí:* Está pegado a la zona de juego (a 2–3 cm del contacto), capturando la vibración pura del impacto ($>150\text{ Hz}$) y el ángulo exacto de la madera sin la amortiguación de los tejidos de la mano.
+- **ESP32-S3:** En el extremo inferior del mango (el pomo), alineado longitudinalmente dentro del capuchón.
+  *Por qué ahí:* Al estar ubicado en el eje de rotación de la muñeca, los 10–12 gramos extra de la placa y la carcasa tienen un momento de inercia prácticamente despreciable; la punta de la paleta se siente igual de ágil.
+- **Alimentación (Powerbank):** En el bolsillo del pantalón.
 
-### 7.3 Cómo montarlo y fijarlo (Mecánica y Cableado)
-- **Fijación del sensor a la madera (segura y desmontable):**
-  1. Limpiar la zona del cuello con alcohol isopropílico.
-  2. Pegar una primera capa de cinta de enmascarar de papel (cinta de pintor) bien tensionada sobre la madera.
-  3. Sobre esa cinta de papel, colocar cinta bifaz de espuma acrílica (3M VHB).
-  4. Presionar la base plana de la Cápsula A contra la 3M VHB durante 30 segundos. Esta combinación transmite la rigidez requerida para los 1000 Hz pero permite despegar todo tirando del papel sin astillar el enchapado de la paleta.
-- **Puente de cable SPI (Paleta $\rightarrow$ Antebrazo):**
-  - Usar cable extraflexible de silicona multifilar (AWG 28 o AWG 30) o cinta plana para los 6 hilos (VCC, GND, SCK, MOSI, MISO, CS).
-  - **Comba de seguridad obligatoria:** Dejar un lazo o bucle flojo de 4 a 6 cm de margen sobre el dorso de la muñeca.
-  - Fijar el cable con una vuelta de cinta aisladora en la base del mango y otra en la muñeca antes de subir al antebrazo. Al quebrar la muñeca 90° hacia adelante y hacia atrás, el cable nunca debe tensarse ni hacer tope mecánico.
-- **Sujeción del ESP32:**
-  - Ajustar la Cápsula B con la banda elástica de velcro en el antebrazo, asegurando que quede firme para no desplazarse con la inercia del braceo pero sin cortar la circulación.
+### 7.3 Cómo montarlo y cablearlo
+- **Fijación del sensor a la madera:**
+  1. Limpiá la zona del cuello con alcohol.
+  2. Pegá primero un trozo de cinta de enmascarar (cinta de papel de pintor) bien estirada sobre la madera.
+  3. Encima de la cinta de papel, colocá cinta bifaz de espuma acrílica (3M VHB) y presioná la Cápsula 1 firmemente. El sensor queda rígidamente acoplado para transmitir alta frecuencia y podés retirarlo después sin arrancar astillas de la paleta.
+- **Puente del bus SPI (Cápsula 1 $\rightarrow$ Cápsula 2):**
+  - El mazo de 6 hilos recorre apenas 8 a 10 cm a lo largo del canto lateral estrecho del mango.
+  - Fijalo al ras de la madera con una tira de cinta de borde de ping pong (*edge tape*) o cinta aisladora negra bien tensa.
+  - Al estar pegado a la madera, el cable queda completamente inmóvil: no sufre flexión en los tiros, no agrega ruido al bus SPI a 1000 Hz y no toca los dedos ni el cuerpo.
+- **Alimentación hacia el cuerpo:**
+  - Enchufá un cable USB-C liviano y flexible a la base del capuchón.
+  - Pasalo por dentro de la manga de la remera hacia el powerbank en el bolsillo, dejando una comba floja a la altura del codo para bracear libremente sin tirones.
