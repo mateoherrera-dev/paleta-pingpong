@@ -29,7 +29,7 @@ Los formatos de datos entre módulos están fijados en [`CONTRATOS.md`](CONTRATO
 | Persona | Módulos | Qué hace | Suplente |
 | --- | --- | --- | --- |
 | **P1 · Hardware** | Firmware base | Sensor MPU-6500 por SPI a 1000 Hz (interrupciones/DMA), detección de impactos (trigger), emisión de struct BLE (NimBLE) | P2 |
-| **P2 · Datos** | Datos, Modelo + 3D | Grabación (UART), dataset, entrenamiento Edge Impulse, módulo wrapper C++ (`ml_inference.h`), diseño e impresión de cápsula (OpenSCAD) | P3 |
+| **P2 · Datos** | Datos, Modelo + 3D | Grabación (UART), dataset, entrenamiento Edge Impulse, módulo wrapper C++ (`ml_inference.h`), diseño e impresión de cápsula (Fusion 360) | P3 |
 | **P3 · Técnica** | App + UI + BLE | Contrato de payload BLE, App web (Web Bluetooth API), cálculo cinemático ($v = \omega \cdot L$), ángulos (Madgwick), criterios y consejos | P1 |
 
 ### Reglas
@@ -89,7 +89,7 @@ Los formatos de datos entre módulos están fijados en [`CONTRATOS.md`](CONTRATO
 
 | P1 | P2 | P3 |
 | --- | --- | --- |
-| Conectar MPU-6500 por SPI a $\ge 1\text{ MHz}$. Leer registro `WHO_AM_I` (`0x70`). Configurar muestreo a 1000 Hz por FIFO/interrupción y atar sensor a la paleta | Modelar cápsula de la placa en OpenSCAD midiendo componentes. Validar aislación del impacto real vs swings al aire | Algoritmo de orientación (Madgwick/Mahony) en Python procesando las ráfagas. Definir contrato de payload BLE (struct C) |
+| Conectar MPU-6500 por SPI a $\ge 1\text{ MHz}$. Leer registro `WHO_AM_I` (`0x70`). Configurar muestreo a 1000 Hz por FIFO/interrupción y atar sensor a la paleta | Modelar cápsula de la placa en Fusion 360 midiendo componentes. Validar aislación del impacto real vs swings al aire | Algoritmo de orientación (Madgwick/Mahony) en Python procesando las ráfagas. Definir contrato de payload BLE (struct C) |
 
 **Tarde:** 30–40 min de capturas con cable USB largo (swings al aire vs. golpes reales contra pelota).
 **Hito:** Señal limpia a 1000 Hz en PC y trigger de impacto validado sin falsos positivos.
@@ -159,3 +159,42 @@ Los formatos de datos entre módulos están fijados en [`CONTRATOS.md`](CONTRATO
 | Powerbank se apaga por bajo consumo en reposo | Colocar carga resistiva en paralelo o forzar loop de cálculo continuo sin entrar en deep sleep |
 | Modelo pesado o latencia alta en ESP32-S3 | Cuantizar a `int8` en Edge Impulse o clasificar por árbol de decisión directo sobre picos de $\omega$ |
 | Falla en enlace BLE durante la demo | Conexión cableada por puerto serie mostrando los mismos datos en consola/web |
+
+---
+
+## 7. Especificaciones Mecánicas y de Montaje (P2)
+
+### 7.1 Qué modelar en Fusion 360
+Diseñar dos carcasas separadas con espesor de pared de 1.5 mm a 2.0 mm, para ser impresas en PETG o PLA:
+
+**Cápsula A (Sensor MPU-6500):**
+- Cajita ultracompacta (aprox. $22 \times 18 \times 8\text{ mm}$, peso $< 6\text{ g}$).
+- Alojamiento interno justo para la plaqueta del breakout MPU-6500, con soporte para dos tornillos autorroscantes M2 (o trabas por encastre snap-fit).
+- Salida lateral o inferior para el mazo de 6 cables SPI con un canal estrangulador (*strain relief*) que evite tirones directos sobre las soldaduras de la placa.
+- Cara inferior completamente plana y rugosa para facilitar la adhesión química.
+
+**Cápsula B (Procesador ESP32-S3):**
+- Caja ergonómica para alojar el módulo ESP32-S3-WROOM-1 (N16R8).
+- Abertura para el conector USB-C (alimentación hacia el powerbank en el bolsillo).
+- Salida para la bornera/conector del cable SPI que viene de la mano.
+- Base ligeramente curvada para copiar la anatomía del brazo, equipada con dos ranuras laterales pasantes de $25 \times 3\text{ mm}$ para enhebrar una correa elástica deportiva con velcro.
+
+### 7.2 Dónde ubicar cada componente
+- **MPU-6500:** En el cuello de la paleta (el triángulo de madera descubierta entre el final de la empuñadura y el borde inferior de la goma). Se monta sobre la cara de revés o en el lateral donde no apoyen las yemas ni el talón de los dedos.
+  *Por qué ahí:* Está a solo 2–3 cm del punto de impacto, capturando la onda elástica de alta frecuencia ($> 150\text{ Hz}$) sin la amortiguación viscoelástica que introduce la mano en el mango, y con mayor brazo de palanca angular que en el pomo inferior.
+- **ESP32-S3:** En el tercio medio o superior del antebrazo (lado dorsal, unos 8–12 cm por debajo del codo).
+  *Por qué ahí:* Despeja la articulación de la muñeca para movimientos explosivos de flexión y rotación (brushing), y no agrega peso a la mano.
+- **Batería (Powerbank):** En el bolsillo del pantalón, unida al antebrazo por un cable USB estándar pasado por debajo de la remera.
+
+### 7.3 Cómo montarlo y fijarlo (Mecánica y Cableado)
+- **Fijación del sensor a la madera (segura y desmontable):**
+  1. Limpiar la zona del cuello con alcohol isopropílico.
+  2. Pegar una primera capa de cinta de enmascarar de papel (cinta de pintor) bien tensionada sobre la madera.
+  3. Sobre esa cinta de papel, colocar cinta bifaz de espuma acrílica (3M VHB).
+  4. Presionar la base plana de la Cápsula A contra la 3M VHB durante 30 segundos. Esta combinación transmite la rigidez requerida para los 1000 Hz pero permite despegar todo tirando del papel sin astillar el enchapado de la paleta.
+- **Puente de cable SPI (Paleta $\rightarrow$ Antebrazo):**
+  - Usar cable extraflexible de silicona multifilar (AWG 28 o AWG 30) o cinta plana para los 6 hilos (VCC, GND, SCK, MOSI, MISO, CS).
+  - **Comba de seguridad obligatoria:** Dejar un lazo o bucle flojo de 4 a 6 cm de margen sobre el dorso de la muñeca.
+  - Fijar el cable con una vuelta de cinta aisladora en la base del mango y otra en la muñeca antes de subir al antebrazo. Al quebrar la muñeca 90° hacia adelante y hacia atrás, el cable nunca debe tensarse ni hacer tope mecánico.
+- **Sujeción del ESP32:**
+  - Ajustar la Cápsula B con la banda elástica de velcro en el antebrazo, asegurando que quede firme para no desplazarse con la inercia del braceo pero sin cortar la circulación.
