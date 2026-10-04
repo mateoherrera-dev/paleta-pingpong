@@ -89,7 +89,9 @@ Los formatos de datos entre módulos están fijados en [`CONTRATOS.md`](CONTRATO
 | --- | --- | --- |
 | Configurar IDE para ESP32-S3 y linkear `ml_inference.h` (prueba dummy). Mapear pines, conectar MPU-6500 por SPI $\ge 1\text{ MHz}$, y configurar muestreo a 1000 Hz por interrupción | Modelar cápsula de la placa en Fusion 360 midiendo componentes. Validar aislación del impacto real vs swings al aire | Algoritmo de orientación (Madgwick/Mahony) en Python procesando las ráfagas. Definir contrato de payload BLE (struct C) |
 
-**Tarde:** 30–40 min de capturas con cable USB largo (swings al aire vs. golpes reales contra pelota).
+**Tarde:** 
+1. **Montaje provisorio (13:30):** Pegar la plaqueta pelada del MPU-6500 a la madera usando cinta de pintor + VHB, y encintar los cables al canto (protocolo 7.3) para evitar ruido mecánico. Al terminar el día se despega todo.
+2. **Grabación:** 30-40 min de capturas con cable USB largo (swings al aire vs. golpes reales contra pelota).
 **Hito:** Señal limpia a 1000 Hz en PC y trigger de impacto validado sin falsos positivos.
 *⚠️ Salvavidas (Plan B):* Si a las 11:30 AM P1 no logra estabilizar las interrupciones de hardware, abortar y usar un bucle de *polling* bruto (`delayMicroseconds`) para garantizar la grabación de la tarde.
 
