@@ -194,9 +194,9 @@ Diseñá dos piezas impresas en PETG o PLA (paredes de 1.6 mm a 2.0 mm):
   2. Pegá primero un trozo de cinta de enmascarar (cinta de papel de pintor) bien estirada sobre la madera.
   3. Encima de la cinta de papel, colocá cinta bifaz de espuma acrílica (3M VHB) y presioná la Cápsula 1 firmemente. El sensor queda rígidamente acoplado para transmitir alta frecuencia y podés retirarlo después sin arrancar astillas de la paleta.
 - **Puente del bus SPI (Cápsula 1 $\rightarrow$ Cápsula 2):**
-  - El mazo de 6 hilos recorre apenas 8 a 10 cm a lo largo del canto lateral estrecho del mango.
-  - Fijalo al ras de la madera con una tira de cinta de borde de ping pong (*edge tape*) o cinta aisladora negra bien tensa.
-  - Al estar pegado a la madera, el cable queda completamente inmóvil: no sufre flexión en los tiros, no agrega ruido al bus SPI a 1000 Hz y no toca los dedos ni el cuerpo.
+  - **Ordenar los cables en cinta plana:** No armes una trenza ni un manojo cilíndrico grueso. Peiná los 6 hilos para que queden planos, uno al lado del otro en paralelo, formando una franja plana de menos de 1 mm de espesor.
+  - **Primera fijación (Inmovilización puntual):** Apoyá la franja de cables recorriendo el canto lateral estrecho del mango (la madera del canto entre las dos cachas donde no cierran los dedos). Pegá dos tiritas finas de cinta de papel o cinta scotch transparente bien tensadas (una cerca del cuello y otra cerca de la base) para que los cables no se muevan de su carril mientras trabajás.
+  - **Fijación mecánica definitiva y protección:** Cubrí todo el canto lateral del mango de arriba a abajo usando una vuelta de cinta de borde para paleta de ping pong (*edge tape*) o cinta aisladora de PVC de buena calidad. Aplicala estirándola con fuerza para que abrace la madera y copie el relieve. La cinta sella los cables contra el sudor de la mano, evita roces y deja el mango completamente liso al tacto.
 - **Alimentación hacia el cuerpo:**
   - Enchufá un cable USB-C liviano y flexible a la base del capuchón.
   - Pasalo por dentro de la manga de la remera hacia el powerbank en el bolsillo, dejando una comba floja a la altura del codo para bracear libremente sin tirones.
