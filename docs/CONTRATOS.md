@@ -50,25 +50,46 @@ Las líneas que empiezan con `#` son mensajes y se ignoran.
 - Golpes válidos: `topspin_derecha`, `topspin_reves`, `empuje_derecha`, `empuje_reves`, o `libre` para juego libre.
 - Se guardan en `datos/crudos/`. **No se suben a git** (pesan mucho): se comparten en la carpeta de Drive del grupo.
 
-## 4. Evento de golpe (placa → celular, por Bluetooth)
+## 4. Interfaz de Inferencia C++ (P1 ↔ P2)
 
-- Servicio: **Nordic UART** (`6e400001-b5a3-f393-e0a9-e50e24dcca9e`).
-- La placa notifica por la característica `6e400003-b5a3-f393-e0a9-e50e24dcca9e`.
-- Nombre de la placa: empieza con `Paleta` (por ejemplo `Paleta-01`).
-- Un evento por golpe, una línea de texto terminada en `\n`:
+Para aislar el código de adquisición de hardware (P1) del modelo de Machine Learning de Edge Impulse (P2), la comunicación interna del ESP32 se rige estrictamente por el wrapper `firmware/paleta/ml_inference.h`.
 
+- **Entrada (Buffer):** P1 invoca la inferencia pasando un array de **1176 floats** estáticos. Este valor está fijado por la constante `ML_BUFFER_LONGITUD_ESPERADA`, representando 196 ms de captura (196 muestras $\times$ 6 ejes IMU a 1000 Hz).
+- **Salida (Struct):** P2 procesa la señal y devuelve un `PrediccionGolpe` purgado de tipos de TensorFlow:
+  ```c
+  typedef struct {
+      const char* etiqueta;      // ej. "topspin_derecha"
+      float probabilidad;        // 0.0 a 1.0
+      float tiempo_inferencia_ms;
+  } PrediccionGolpe;
+  ```
+
+## 5. Evento de golpe BLE (P1 ↔ P3)
+
+Para evitar el bloqueo de interrupciones en el ESP32 causado por el parseo y concatenación de strings, el Bluetooth Low Energy transmite un **Struct de C empaquetado (Packed Struct)** binario. Ocupa solo 14 bytes y entra sobradamente en un paquete BLE estándar (MTU 20).
+
+- **Servicio Custom:** `6e400001-b5a3-f393-e0a9-e50e24dcca9e`.
+- **Característica de Notificación (Notify):** `6e400003-b5a3-f393-e0a9-e50e24dcca9e`.
+
+### Estructura de Datos (C++ ESP32)
+```c
+#pragma pack(push, 1)
+struct BlePayload {
+    uint32_t timestamp;     // 4 bytes: ms desde el arranque del ESP32
+    uint16_t numero_golpe;  // 2 bytes: contador de impactos en la sesión
+    uint8_t  tipo_golpe;    // 1 byte: 0=TD, 1=TR, 2=ED, 3=ER, 4=Desconocido
+    uint8_t  confianza;     // 1 byte: Probabilidad de Edge Impulse (0 a 100)
+    int16_t  vel_kmh;       // 2 bytes: Velocidad tangencial estimada
+    int16_t  ang_deg;       // 2 bytes: Ángulo de la cara (+ cerrada, - abierta)
+    int16_t  pico_ms;       // 2 bytes: Tiempo del pico giro vs impacto (- es antes)
+}; // Total: 14 bytes
+#pragma pack(pop)
 ```
-n,golpe,conf,vel_kmh,ang_deg,pico_ms
-23,TD,91,46,28,-40
+
+### Recepción (Web App P3)
+P3 se suscribe a la característica usando la **Web Bluetooth API**. Al recibir el buffer binario, lo decodifica usando un `DataView` estándar de JavaScript en formato **Little-Endian**:
+```javascript
+let timestamp = dataView.getUint32(0, true);
+let tipo_golpe = dataView.getUint8(6);
+let vel_kmh = dataView.getInt16(8, true);
 ```
-
-| Campo | Detalle |
-| --- | --- |
-| `n` | Número de golpe en la sesión |
-| `golpe` | `TD` topspin derecha · `TR` topspin revés · `ED` empuje derecha · `ER` empuje revés · `??` no reconocido |
-| `conf` | Confianza del modelo, 0 a 100 |
-| `vel_kmh` | Velocidad estimada de la paleta, km/h. `-` si todavía no se calcula |
-| `ang_deg` | Ángulo de la cara en el impacto. **Positivo = cerrada** (mirando hacia la mesa), negativo = abierta. `-` si no se calcula |
-| `pico_ms` | Momento del pico de giro respecto del impacto. **Negativo = el pico fue antes** (frenó antes de pegar). `-` si no se calcula |
-
-El formato es corto a propósito: entra en un solo paquete Bluetooth (20 bytes) aunque el celular no negocie paquetes más grandes.
