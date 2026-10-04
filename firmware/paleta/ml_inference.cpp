@@ -11,7 +11,7 @@ void ml_inicializar() {
     Serial.println("ML_INFERENCE: Módulo de inferencia inicializado.");
 }
 
-PrediccionGolpe predecir_golpe(float* buffer_imu_200ms, int longitud_buffer) {
+PrediccionGolpe predecir_golpe(float* buffer_imu_196ms, int longitud_buffer) {
     PrediccionGolpe resultado = {"Desconocido", 0.0f, 0.0f};
 
     // 1. Validar que P1 nos pasó el tamaño de buffer correcto.
@@ -24,7 +24,7 @@ PrediccionGolpe predecir_golpe(float* buffer_imu_200ms, int longitud_buffer) {
 
     // 2. Envolver el array puro de C en la estructura signal_t que usa Edge Impulse
     signal_t signal;
-    int err = numpy::signal_from_buffer(buffer_imu_200ms, EI_CLASSIFIER_DSP_INPUT_FRAME_SIZE, &signal);
+    int err = numpy::signal_from_buffer(buffer_imu_196ms, EI_CLASSIFIER_DSP_INPUT_FRAME_SIZE, &signal);
     
     if (err != 0) {
         Serial.printf("ML_ERROR: Falló signal_from_buffer (código %d)\n", err);
