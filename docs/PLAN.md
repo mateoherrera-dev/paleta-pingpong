@@ -83,6 +83,7 @@ Los formatos de datos entre módulos están fijados en [`CONTRATOS.md`](CONTRATO
 ## 4. Fase 1: MVP, viernes por viernes
 
 ### Clase 1 · Viernes 9/10 · Señal real y adquisición a 1000 Hz (Alimentación: Cable USB-C a PC)
+**?? Materiales a llevar:** Placa ESP32-S3, MPU-6500, cable USB-C largo (2-3 m), paleta, cinta de pintor, cinta bifaz 3M VHB, cinta aisladora / edge tape.
 
 | P1 | P2 | P3 |
 | --- | --- | --- |
@@ -93,6 +94,7 @@ Los formatos de datos entre módulos están fijados en [`CONTRATOS.md`](CONTRATO
 *⚠️ Salvavidas (Plan B):* Si a las 11:30 AM P1 no logra estabilizar las interrupciones de hardware, abortar y usar un bucle de *polling* bruto (`delayMicroseconds`) para garantizar la grabación de la tarde.
 
 ### Clase 2 · Viernes 16/10 · Grabación masiva del Dataset (Alimentación: Cable USB-C a PC)
+**?? Materiales a llevar:** Setup f�sico de Clase 1, m�nimo 20 pelotas de ping pong y red port�til.
 
 | P1 | P2 | P3 |
 | --- | --- | --- |
@@ -102,6 +104,7 @@ Los formatos de datos entre módulos están fijados en [`CONTRATOS.md`](CONTRATO
 **Hito:** Dataset v1 subido a Drive y segmentado para entrenamiento.
 
 ### Clase 3 · Viernes 23/10 · Despliegue TinyML y Pase a Inalámbrico (Alimentación: Powerbank en bolsillo)
+**?? Materiales a llevar:** Paleta ensamblada provisional, Powerbank de bolsillo, cable USB-C est�ndar (bolsillo a paleta), celular de prueba para P3.
 
 | P1 | P2 | P3 |
 | --- | --- | --- |
@@ -115,23 +118,31 @@ Los formatos de datos entre módulos están fijados en [`CONTRATOS.md`](CONTRATO
 
 **Durante la semana:** P2 envía la cápsula a imprimir en 3D.
 
-### Clase 4 · Viernes 30/10 · Integración Total y Jugador de Referencia
-
-**Mañana (los tres):** Sensor en paleta alimentado por powerbank → Inferencia local en ESP32-S3 → Disparo BLE de métricas ($v$, ángulo, tipo) → App celular mostrando métricas y feedback.
-**Tarde:** Sesión de pruebas y validación con el **jugador de referencia**.
-**Hito:** Golpes reales recibidos en el celular sin cables ni compu intermediaria.
-
-### Clase 5 · Viernes 6/11 · Ensamble y Ajuste Fino
+### Clase 4 · Viernes 30/10 · Integración Total y Ensamble Definitivo
+**?? Materiales a llevar:** Piezas impresas en 3D (C�psula y Capuch�n tra�das por P2), herramientas menores para ensamble final.
 
 | P1 | P2 | P3 |
 | --- | --- | --- |
-| Montar electrónica final en la cápsula impresa y verificar alivio de tensión del cable USB al bolsillo | Calibrar pesos mecánicos de la paleta y reentrenar modelo agregando las muestras del jugador experto | Pulir reglas heurísticas de consejos en base al perfil del jugador de referencia |
+| Montar electrónica en la carcasa 3D final, fijar sensor al cuello y verificar alivio de tensión USB | Cargar modelo exportado de Edge Impulse en firmware y verificar estabilidad SPI a 1000 Hz | Enlazar Web App por BLE (struct 14 bytes) y validar refresco de UI con golpes en vivo |
 
-**Tarde:** Pruebas de usabilidad ciega con compañeros ajenos a la carrera.
-**Congelamiento de código al finalizar la jornada.**
-**Hito:** Sistema cerrado y robusto mecánicamente.
+**Tarde (los tres):** Prueba de humo de punta a punta con la paleta ensamblada. 20 golpes de cada tipo entre los integrantes del grupo para chequear autonomía y robustez mecánica.  
+**Hito:** Paleta armada en su carcasa definitiva, transmitiendo métricas al celular sin cables a la PC.
+
+---
+
+### Clase 5 · Viernes 6/11 · Validación Ciega y Ajuste Heurístico
+**?? Materiales a llevar:** Hardware 100% ensamblado y funcional, red y pelotas para las pruebas ciegas.
+
+| P1 | P2 | P3 |
+| --- | --- | --- |
+| Calibrar umbrales de trigger de impacto para eliminar falsos positivos por roces | Ajustar umbral de confianza en inferencia (descartar tiros ambiguos a clase 4) | Pulir reglas heurísticas de consejos según cinemática teórica (ángulos y pico de giro) |
+
+**Tarde:** Sesión de pruebas de usabilidad y acierto ciego con 3 a 5 compañeros ajenos a la carrera para medir la generalización del modelo.  
+**Congelamiento de código al finalizar la jornada.**  
+**Hito:** Precisión $\ge 80\%$ validada en personas externas al entrenamiento y código 100% congelado.
 
 ### Clase 6 · Viernes 13/11 · MVP Terminado
+**?? Materiales a llevar:** MVP completo, Powerbank cargado al 100%, c�mara o celular extra con buen almacenamiento y tr�pode para filmar la demo.
 
 - **Mañana:** Calibraciones menores y pruebas de estrés de batería/enlace BLE.
 - **Tarde:** Medición de métricas finales (latencia, acierto, batería), ensayo general y **filmación de la demo de respaldo**.
