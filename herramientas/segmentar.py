@@ -61,13 +61,8 @@ def main():
             # Reindexar el timestamp para que arranque en 0 ms
             ventana['timestamp'] = ((ventana['t_us'] - ventana['t_us'].iloc[0]) / 1000).astype(int)
             
-            # Renombrar columnas para estandarizarlas en Edge Impulse
-            ventana = ventana.rename(columns={
-                'ax_g': 'ax', 'ay_g': 'ay', 'az_g': 'az',
-                'gx_dps': 'gx', 'gy_dps': 'gy', 'gz_dps': 'gz'
-            })
-            
-            columnas_exportar = ['timestamp', 'ax', 'ay', 'az', 'gx', 'gy', 'gz']
+            # Exportar manteniendo los nombres de columnas originales del proyecto
+            columnas_exportar = ['timestamp', 'ax_g', 'ay_g', 'az_g', 'gx_dps', 'gy_dps', 'gz_dps']
             ventana_limpia = ventana[columnas_exportar]
             
             # Formato de nombre especial para Edge Impulse: "etiqueta.identificador.csv"
