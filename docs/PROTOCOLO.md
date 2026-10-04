@@ -1,19 +1,16 @@
 # Protocolo de Captura de Datos
 
-Este documento define el estándar de recolección de datos para el entrenamiento del modelo de reconocimiento de golpes de ping pong en el proyecto de la paleta sensada.
+Este documento define el estándar de recolección de datos para el entrenamiento del modelo de reconocimiento de golpes de ping pong.
 
-## 1. Nomenclatura de Archivos
-Todos los archivos de captura crudos deben exportarse en formato CSV siguiendo estrictamente esta nomenclatura:
+## 1. Herramientas y Nomenclatura
+Las capturas deben realizarse utilizando el script `herramientas/grabar.py`, que se encarga automáticamente de recolectar los datos por el puerto serie y guardarlos.
 
-`[sujeto]_[golpe]_[sesion].csv`
+Los archivos generados se guardarán en la carpeta `datos/crudos/` siguiendo esta nomenclatura automática:
+`[YYYY-MM-DD_HHMMSS]_[jugador]_[golpe].csv`
 
-**Ejemplos:** 
-- `tomas_TD_01.csv`
-- `jugador1_TR_02.csv`
+**Ejemplo:** `2026-10-04_153000_tomas_topspin_derecha.csv`
 
-* **sujeto:** Nombre del jugador en minúsculas y sin espacios (ej. `tomas`, `p1`).
-* **golpe:** Acrónimo del tipo de golpe (ver sección 3).
-* **sesion:** Número secuencial de la ráfaga de captura a dos dígitos (ej. `01`, `02`).
+Para visualizar los datos y verificar la integridad de la señal, utilizar el script interactivo `herramientas/ver.py`.
 
 ## 2. Protocolo de Captura en Mesa
 Para garantizar que el modelo aprenda aislando el gesto técnico puro (y no ruido de la mesa o peloteos impredecibles), se deben seguir estas reglas durante la captura:
@@ -21,12 +18,12 @@ Para garantizar que el modelo aprenda aislando el gesto técnico puro (y no ruid
 - **No se realiza peloteo abierto.** Toda pelota debe venir de un lanzamiento (multiball).
 - El alimentador lanzará **series de 10 a 20 pelotas** con un ritmo y velocidad constante.
 - El jugador debe realizar el golpe y retornar brevemente a una **posición neutra** entre cada pelota.
-- Si una pelota de la ráfaga se impacta mal de forma notoria, se anota el tiempo o se descarta la ráfaga entera (o se recorta a posteriori).
+- El script `grabar.py` reportará los impactos procesados en tiempo real. 
 
 ## 3. Orden de los Golpes
-Para minimizar el tiempo perdido en la mesa por cambios de posición y estandarizar el proceso, las sesiones de captura seguirán siempre este orden exacto:
+Al utilizar `--golpe` en `grabar.py`, los nombres válidos son los que define el sistema en `senal.py`. El orden de grabación en la mesa debe ser siempre el siguiente para optimizar tiempos:
 
-1. **TD** - Topspin de derecha
-2. **ED** - Empuje / Corte de derecha
-3. **TR** - Topspin de revés
-4. **ER** - Empuje / Corte de revés
+1. `topspin_derecha`
+2. `empuje_derecha`
+3. `topspin_reves`
+4. `empuje_reves`
