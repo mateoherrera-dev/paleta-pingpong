@@ -72,10 +72,7 @@ Los formatos de datos entre módulos están fijados en [`CONTRATOS.md`](CONTRATO
 
 | Quién | Tarea | Listo cuando… |
 | --- | --- | --- |
-| **P1** | Configurar ESP-IDF / Arduino IDE para ESP32-S3-WROOM-1 (N16R8) y probar SPI base | La placa compila y el monitor serie corre a 921600 baudios |
 | **P2** | Escribir módulo wrapper C++ (`ml_inference.h/cpp`) integrando el modelo Edge Impulse sintético (`firmware/modelo_dummy_sintetico.zip`) | Módulo encapsulado listo con función `predecir_golpe()` |
-| **P1** | Linkear `ml_inference.h` en el `.ino` y correr inferencia de prueba con array dummy | La placa compila el modelo y devuelve la predicción |
-| **P1** | Mapear pines SPI libres (`SCK`, `MISO`, `MOSI`, `CS`) y pin `INT` para el MPU-6500 | Pines fijados en el código y libres de strapping pins |
 | **P2** | Script receptor en Python por puerto serie (lectura a 921600 baudios) y visualizador `ver.py` | Recibe paquetes simulados a 1000 Hz sin dropping de buffers |
 | **P2** | Escribir protocolo de captura (`docs/PROTOCOLO.md`): orden de tiros, estructura y metadatos de CSV | Protocolo cerrado |
 | **P3** | App web base (Web Bluetooth API) desplegada en GitHub Pages | Conecta y parsea el string de prueba del contrato |
@@ -89,7 +86,7 @@ Los formatos de datos entre módulos están fijados en [`CONTRATOS.md`](CONTRATO
 
 | P1 | P2 | P3 |
 | --- | --- | --- |
-| Conectar MPU-6500 por SPI a $\ge 1\text{ MHz}$. Leer registro `WHO_AM_I` (`0x70`). Configurar muestreo a 1000 Hz por FIFO/interrupción y atar sensor a la paleta | Modelar cápsula de la placa en Fusion 360 midiendo componentes. Validar aislación del impacto real vs swings al aire | Algoritmo de orientación (Madgwick/Mahony) en Python procesando las ráfagas. Definir contrato de payload BLE (struct C) |
+| Configurar IDE para ESP32-S3 y linkear `ml_inference.h` (prueba dummy). Mapear pines, conectar MPU-6500 por SPI $\ge 1\text{ MHz}$, y configurar muestreo a 1000 Hz por interrupción | Modelar cápsula de la placa en Fusion 360 midiendo componentes. Validar aislación del impacto real vs swings al aire | Algoritmo de orientación (Madgwick/Mahony) en Python procesando las ráfagas. Definir contrato de payload BLE (struct C) |
 
 **Tarde:** 30–40 min de capturas con cable USB largo (swings al aire vs. golpes reales contra pelota).
 **Hito:** Señal limpia a 1000 Hz en PC y trigger de impacto validado sin falsos positivos.
