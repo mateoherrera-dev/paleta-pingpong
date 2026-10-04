@@ -90,6 +90,7 @@ Los formatos de datos entre módulos están fijados en [`CONTRATOS.md`](CONTRATO
 
 **Tarde:** 30–40 min de capturas con cable USB largo (swings al aire vs. golpes reales contra pelota).
 **Hito:** Señal limpia a 1000 Hz en PC y trigger de impacto validado sin falsos positivos.
+*⚠️ Salvavidas (Plan B):* Si a las 11:30 AM P1 no logra estabilizar las interrupciones de hardware, abortar y usar un bucle de *polling* bruto (`delayMicroseconds`) para garantizar la grabación de la tarde.
 
 ### Clase 2 · Viernes 16/10 · Grabación masiva del Dataset (Alimentación: Cable USB-C a PC)
 
@@ -151,6 +152,7 @@ Los formatos de datos entre módulos están fijados en [`CONTRATOS.md`](CONTRATO
 
 | Riesgo | Plan B |
 | --- | --- |
+| P1 trabado con interrupciones del ESP32 a 1000 Hz | Pasar temporalmente a *polling* (`delayMicroseconds(900)`) en el `loop()` para no bloquear la grabación de P2 |
 | MPU-6500 saturado o con ruido en SPI | Bajar frecuencia SPI a 1 MHz; si el bus I2C ya viene armado en la breakout, forzar Fast Mode (400 kHz) |
 | Falsos positivos en trigger de impacto por aceleración | Soldar disco piezoeléctrico en pin ADC como comparador analógico puro de vibración |
 | Powerbank se apaga por bajo consumo en reposo | Colocar carga resistiva en paralelo o forzar loop de cálculo continuo sin entrar en deep sleep |
