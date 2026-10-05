@@ -83,7 +83,7 @@ Los formatos de datos entre módulos están fijados en [`CONTRATOS.md`](CONTRATO
 ## 4. Fase 1: MVP, viernes por viernes
 
 ### Clase 1 · Viernes 9/10 · Señal real y adquisición a 1000 Hz (Alimentación: Cable USB-C a PC)
-**?? Materiales a llevar:** Placa ESP32-S3, MPU-6500, cable USB-C largo (2-3 m), paleta, cinta de pintor, cinta bifaz 3M VHB, cinta aisladora / edge tape.
+**?? Materiales a llevar:** Placa ESP32-S3, MPU-6500, cable USB-C largo (2-3 m), paleta, cinta de pintor, cinta bifaz 3M VHB, cinta aisladora / edge tape, pelotas de ping pong.
 
 | P1 | P2 | P3 |
 | --- | --- | --- |
