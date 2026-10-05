@@ -104,6 +104,7 @@ Los formatos de datos entre módulos están fijados en [`CONTRATOS.md`](CONTRATO
 
 **Tarde: Grabación masiva.** Los tres: 50 golpes por tipo (Topspin Der/Rev, Empuje Der/Rev) $\approx$ 600 tiros.
 **Hito:** Dataset v1 subido a Drive y segmentado para entrenamiento.
+*⚠️ Criterio de Trigger (Plan B):* Evaluar si el acelerómetro detecta limpiamente el impacto sin falsos positivos. Si anda bien, se descarta el piezoeléctrico. Si mete ruido, el piezoeléctrico entra al diseño 3D y hardware de inmediato.
 
 ### Clase 3 · Viernes 23/10 · Despliegue TinyML y Pase a Inalámbrico (Alimentación: Powerbank en bolsillo)
 **?? Materiales a llevar:** Paleta ensamblada provisional, Powerbank de bolsillo, cable USB-C est�ndar (bolsillo a paleta), celular de prueba para P3.
@@ -179,10 +180,10 @@ Los formatos de datos entre módulos están fijados en [`CONTRATOS.md`](CONTRATO
 ### 7.1 Qué modelar en Fusion 360
 Diseñá dos piezas impresas en PETG o PLA (paredes de 1.6 mm a 2.0 mm):
 
-**Pieza 1 — Cápsula del Sensor (MPU-6500):**
+**Pieza 1 — Cápsula del Sensor (MPU-6500 y Piezoeléctrico):**
 - Caja diminuta (aprox. $22 \times 18 \times 7\text{ mm}$, peso $< 5\text{ g}$).
-- Alojamiento interno para la plaqueta del MPU-6500, con dos trabas a presión (snap-fit) o soporte para tornillos autorroscantes M2.
-- Ranura de salida en el canto inferior para el cable SPI de 6 hilos, con traba interna de alivio de tensión (*strain relief*) para evitar que los tirones desuelden las pistas.
+- Alojamiento interno que tape la plaqueta del MPU-6500 y deje un receptáculo contiguo para el disco piezoeléctrico (Plan B).
+- Ranura de salida en el canto inferior pasante hacia el capuchón que admita hasta **7 hilos planos** (6 SPI + 1 señal piezoeléctrica, compartiendo masa GND), con traba interna de alivio de tensión (*strain relief*).
 - Base inferior 100% plana y ligeramente texturada para maximizar la adhesión.
 
 **Pieza 2 — Capuchón Prolongador del Mango (ESP32-S3):**
@@ -203,8 +204,10 @@ Diseñá dos piezas impresas en PETG o PLA (paredes de 1.6 mm a 2.0 mm):
 ### 7.3 Cómo montarlo y cablearlo
 - **Fijación del sensor a la madera:**
   1. Limpiá la zona del cuello con alcohol.
-  2. Pegá primero un trozo de cinta de enmascarar (cinta de papel de pintor) bien estirada sobre la madera.
-  3. Encima de la cinta de papel, colocá cinta bifaz de espuma acrílica (3M VHB) y presioná la Cápsula 1 firmemente. El sensor queda rígidamente acoplado para transmitir alta frecuencia y podés retirarlo después sin arrancar astillas de la paleta.
+  2. Pegá primero un parche de cinta de enmascarar (cinta de papel de pintor) bien estirada sobre la madera (cinta de sacrificio).
+  3. Encima de la cinta de papel, colocá cinta bifaz (3M VHB).
+  4. Apoyá la cara metálica del **disco piezoeléctrico** y la base del **MPU-6500** presionando firmemente directo contra el VHB. *(El piezoeléctrico NUNCA va encastrado en las paredes de plástico porque el plástico actuaría como filtro pasabajos disipando la onda de la madera).* 
+  5. La cápsula 3D se coloca por arriba actuando simplemente como un **domo protector** que los cubre, sin apretarlos ni dejarlos sueltos.
 - **Puente del bus SPI (Cápsula 1 $\rightarrow$ Cápsula 2):**
   - **Ordenar los cables en cinta plana:** No armes una trenza ni un manojo cilíndrico grueso. Peiná los 6 hilos para que queden planos, uno al lado del otro en paralelo, formando una franja plana de menos de 1 mm de espesor.
   - **Primera fijación (Inmovilización puntual):** Apoyá la franja de cables recorriendo el canto lateral estrecho del mango (la madera del canto entre las dos cachas donde no cierran los dedos). Pegá dos tiritas finas de cinta de papel o cinta scotch transparente bien tensadas (una cerca del cuello y otra cerca de la base) para que los cables no se muevan de su carril mientras trabajás.
