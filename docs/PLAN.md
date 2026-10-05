@@ -162,6 +162,49 @@ Los formatos de datos entre módulos están fijados en [`CONTRATOS.md`](CONTRATO
 
 ---
 
+### 5.1 Modo Tutorial: Entrenador Biomecánico Interactivo (Feature Práctica)
+
+Para que el proyecto tenga rigor técnico y no hagan promesas falsas ante los profesores, hay que tener claro el alcance del sensor.
+
+#### 1. El límite físico: qué puede y qué NO puede decir la app
+**Lo que el sensor SÍ sabe (en la paleta):**
+- Ángulo de la cara en el momento exacto del impacto (`ang_deg`).
+- Velocidad tangencial estimada del golpe (`vel_kmh`).
+- Cuándo aceleró la muñeca respecto al impacto (`pico_ms`).
+- Si el movimiento fue de cepillado (*brushing*) o de empuje plano/bloqueo (según los ratios $\omega / a_z$).
+
+**Lo que el sensor NO sabe (y no deben inventar):**
+- Posición de los pies, cadera o codo (eso requeriría cámara o sensores en el cuerpo).
+
+**Regla de oro de los feedbacks:**
+- La app **nunca** debe decir: *"Abrí más el codo"* o *"Flexioná las rodillas"*.
+- La app **sí** debe decir: *"Entraste con la cara 15° demasiado abierta"* o *"Aceleraste después del impacto; el látigo de muñeca tiene que ser antes"*.
+
+#### 2. Cómo se estructura el "Modo Tutorial"
+En la web app de P3, en vez de limitarse a mostrar una tabla de métricas crudas, se armará una pestaña "Academia / Tutoriales" con objetivos por niveles.
+
+**Módulo: "Aprender Topspin de Derecha (Comba)"**
+El usuario entra a una pantalla con 3 pasos guiados:
+
+- **Paso 1: Ángulo de ataque (Cerrar la cara)**
+  - **Objetivo:** Lograr 5 golpes seguidos con la cara cerrada entre $-15^\circ$ y $-35^\circ$.
+  - **Feedback visual:** La app muestra un gráfico o indicador de aguja.
+  - **Regla:** Si `ang_deg > -5°`, disparar audio/texto: *"Paleta muy vertical. Vas a tirar la pelota afuera; cerrá la muñeca hacia la mesa"*.
+
+- **Paso 2: El 'Brushing' (Velocidad de roce vs. Choque)**
+  - **Objetivo:** Superar los $15\text{ km/h}$ o cierto umbral de aceleración angular ($\omega_y > 800^\circ/\text{s}$) asegurando que el tipo de golpe sea clasificado como Topspin por Edge Impulse.
+  - **Regla:** Si el modelo clasifica como Empuje pero el jugador intentó hacer topspin, disparar audio/texto: *"Estás empujando la pelota plana. Hacé un arco ascendente de abajo hacia arriba"*.
+
+- **Paso 3: Timing del látigo (El pico de giro)**
+  - **Objetivo:** Con la métrica `pico_ms` del struct: si el pico máximo de rotación angular ocurrió después de tocar la pelota (`pico_ms > 0`), el golpe fue trabado.
+  - **Feedback:** *"Llegaste tarde con la aceleración. El pico de velocidad tiene que alcanzarse justo antes del impacto"*.
+
+#### 3. Esfuerzo de desarrollo vs. Impacto real
+- **Complejidad de código (P3): Baja / Media.**
+  Son condicionales puros (`if`/`else`) sobre el `BlePayload` que ya reciben en la web app vía Web Bluetooth. Solo implica armar una interfaz con tarjetas de desafíos (*"Desafío: 5 topspins con cara cerrada"*), un contador de progreso y un sintetizador de voz del navegador (`window.speechSynthesis`) para que el celular hable en tiempo real mientras el jugador tiene la paleta en la mano.
+- **Impacto en la evaluación: Altísimo.**
+  Pasan de presentar *"un hardware con acelerómetro que tira numeritos en pantalla"* a presentar *"un entrenador biomecánico interactivo de tenis de mesa"*.
+
 ## 6. Matriz de Riesgos y Planes de Contingencia
 
 | Riesgo | Plan B |
