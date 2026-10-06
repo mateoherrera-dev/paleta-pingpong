@@ -154,6 +154,48 @@ Los formatos de datos entre módulos están fijados en [`CONTRATOS.md`](CONTRATO
 
 ---
 
+
+### 4.7 Cálculo de Ángulo y Filtro de Orientación (Parte del MVP)
+
+**¿Por qué está en el MVP?**
+En `CONTRATOS.md`, el struct binario de 14 bytes (`BlePayload`) que P1 le manda por Bluetooth a P3 incluye explícitamente el campo:
+```cpp
+int16_t ang_deg; // 2 bytes: Ángulo de la cara (+ cerrada, - abierta)
+```
+Si no calculan la orientación de la paleta, ese campo viaja en 0 o con basura, y la Web App de P3 no puede mostrar si el jugador impactó con la paleta abierta o cerrada.
+
+#### 1. Dónde SÍ se necesita un filtro (Cálculo del ángulo de la cara)
+Para completar el campo `ang_deg` y saber si la paleta entró abierta o cerrada, necesitás conocer la orientación espacial de la madera respecto a la gravedad:
+- **El problema físico:** En medio de un swing de tenis de mesa no podés calcular el ángulo simplemente con $\arctan(a_z / a_x)$, porque las aceleraciones centrípeta y tangencial superan por mucho a la gravedad ($1\text{ g}$) y falsean el vector vertical.
+- **La solución:** Un algoritmo de orientación espacial (*attitude estimation*) que integre el giroscopio y use el acelerómetro para corregir la deriva (*drift*) lentamente.
+
+#### 2. Cómo resolverlo sin volverse locos en el MVP
+No tienen que programar las ecuaciones de Madgwick desde cero en C++. Hay dos caminos directos:
+
+**Opción A: La vía estándar (Librería probada en Arduino/ESP-IDF)**
+Usar la librería `MadgwickAHRS` (disponible en el gestor de librerías de Arduino). Son apenas dos llamadas:
+```cpp
+Madgwick filter;
+filter.begin(100); // Se actualiza a 100 Hz, no a 1000 Hz
+
+// En el loop:
+filter.updateIMU(gx, gy, gz, ax, ay, az);
+float pitch = filter.getPitch(); // o el ángulo sobre el eje normal
+```
+
+**Opción B: El "atajo" heurístico de MVP (Filtro complementario de 3 líneas)**
+Si Madgwick les da problemas de ajuste de ganancia ($\beta$) durante la Clase 1 o 2:
+- Antes del swing (cuando la paleta está casi quieta), calculan el ángulo base con el acelerómetro: $\theta_{\text{acc}} = \arctan2(a_z, a_x) \cdot \frac{180}{\pi}$.
+- Durante los ~150 ms del golpe rápido, integran puramente el giroscopio: $\Delta\theta = \int g_y \, dt$.
+- Ángulo al impacto = $\theta_{\text{base}} + \Delta\theta$.
+
+#### 3. Implementación práctica: No calcular a 1000 Hz
+No es necesario correr el filtro Madgwick a 1000 Hz durante toda la sesión:
+- **Fase de preparación ($t < -150\text{ ms}$):** El jugador prepara el tiro. Ahí el movimiento es suave. Correr Madgwick o un filtro complementario liviano a 100 o 200 Hz mantiene orientado el cuaternión del sistema.
+- **Fase de swing rápido / impacto:** Congelás la corrección del acelerómetro (ponés $\beta = 0$ para que el choque de la pelota no incline la estimación) e integrás puramente la rotación del giroscopio durante los 50 ms previos al impacto.
+
+**Conclusión de Fase 1 (MVP actual):** Inferencia de los 4 golpes en el ESP32 + cálculo del ángulo `ang_deg` e impacto por IMU + envío por BLE al celular.
+
 ## 5. Fase 2: Video de Entrega y Tracking de Postura (Post 13/11)
 
 - **Grabación final:** Una sola toma lateral a 3 metros (altura de cadera), 60 fps, con iluminación uniforme.
@@ -206,28 +248,7 @@ El usuario entra a una pantalla con 3 pasos guiados:
   Pasan de presentar *"un hardware con acelerómetro que tira numeritos en pantalla"* a presentar *"un entrenador biomecánico interactivo de tenis de mesa"*.
 
 
-### 5.2 Implementación del Filtro de Orientación (Cálculo del ángulo)
 
-#### 2. Dónde SÍ se necesita un filtro (Cálculo del ángulo de la cara)
-Para completar el campo `ang_deg` del struct BLE (`BlePayload`) y saber si la paleta entró abierta o cerrada, necesitás conocer la orientación espacial de la madera respecto a la gravedad:
-- **El problema físico:** En medio de un swing de tenis de mesa no podés calcular el ángulo simplemente con $\arctan(a_z / a_x)$, porque las aceleraciones centrípeta y tangencial superan por mucho a la gravedad ($1\text{ g}$) y falsean el vector vertical.
-- **La solución:** Un algoritmo de orientación espacial (*attitude estimation*) que integre el giroscopio y use el acelerómetro para corregir la deriva (*drift*) lentamente.
-
-#### 3. ¿Kalman o Madgwick?
-
-| Criterio | Filtro de Kalman Extendido (EKF) | Filtro Madgwick |
-| :--- | :--- | :--- |
-| **Carga computacional** | Muy alta (inversión de matrices en punto flotante) | Muy baja (descenso de gradiente optimizado con cuaterniones) |
-| **Rendimiento a 1000 Hz** | Asfixia el core del ESP32 si corre en cada muestra | Ejecuta en microsegundos |
-| **Comportamiento en impactos** | Sensible a aceleraciones no gravitatorias prolongadas | Ajustando la ganancia $\beta$, ignora picos de choque |
-
-La elección estándar en este tipo de proyectos es **Madgwick**.
-
-#### 4. Implementación práctica: No calcular a 1000 Hz
-No es necesario correr el filtro Madgwick a 1000 Hz durante toda la sesión:
-- **Fase de preparación ($t < -150\text{ ms}$):** El jugador prepara el tiro. Ahí el movimiento es suave. Correr Madgwick o un filtro complementario liviano a 100 o 200 Hz mantiene orientado el cuaternión del sistema.
-- **Fase de swing rápido / impacto:** Congelás la corrección del acelerómetro (ponés $\beta = 0$ para que el choque de la pelota no incline la estimación) e integrás puramente la rotación del giroscopio durante los 50 ms previos al impacto.
-- **Extracción del ángulo:** Al dispararse el trigger de impacto, proyectás el eje $Z$ del cuaternión respecto a la gravedad y obtenés `ang_deg` para meterlo en el paquete BLE de 14 bytes.
 ## 6. Matriz de Riesgos y Planes de Contingencia
 
 | Riesgo | Plan B |
