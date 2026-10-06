@@ -205,6 +205,29 @@ El usuario entra a una pantalla con 3 pasos guiados:
 - **Impacto en la evaluación: Altísimo.**
   Pasan de presentar *"un hardware con acelerómetro que tira numeritos en pantalla"* a presentar *"un entrenador biomecánico interactivo de tenis de mesa"*.
 
+
+### 5.2 Implementación del Filtro de Orientación (Cálculo del ángulo)
+
+#### 2. Dónde SÍ se necesita un filtro (Cálculo del ángulo de la cara)
+Para completar el campo `ang_deg` del struct BLE (`BlePayload`) y saber si la paleta entró abierta o cerrada, necesitás conocer la orientación espacial de la madera respecto a la gravedad:
+- **El problema físico:** En medio de un swing de tenis de mesa no podés calcular el ángulo simplemente con $\arctan(a_z / a_x)$, porque las aceleraciones centrípeta y tangencial superan por mucho a la gravedad ($1\text{ g}$) y falsean el vector vertical.
+- **La solución:** Un algoritmo de orientación espacial (*attitude estimation*) que integre el giroscopio y use el acelerómetro para corregir la deriva (*drift*) lentamente.
+
+#### 3. ¿Kalman o Madgwick?
+
+| Criterio | Filtro de Kalman Extendido (EKF) | Filtro Madgwick |
+| :--- | :--- | :--- |
+| **Carga computacional** | Muy alta (inversión de matrices en punto flotante) | Muy baja (descenso de gradiente optimizado con cuaterniones) |
+| **Rendimiento a 1000 Hz** | Asfixia el core del ESP32 si corre en cada muestra | Ejecuta en microsegundos |
+| **Comportamiento en impactos** | Sensible a aceleraciones no gravitatorias prolongadas | Ajustando la ganancia $\beta$, ignora picos de choque |
+
+La elección estándar en este tipo de proyectos es **Madgwick**.
+
+#### 4. Implementación práctica: No calcular a 1000 Hz
+No es necesario correr el filtro Madgwick a 1000 Hz durante toda la sesión:
+- **Fase de preparación ($t < -150\text{ ms}$):** El jugador prepara el tiro. Ahí el movimiento es suave. Correr Madgwick o un filtro complementario liviano a 100 o 200 Hz mantiene orientado el cuaternión del sistema.
+- **Fase de swing rápido / impacto:** Congelás la corrección del acelerómetro (ponés $\beta = 0$ para que el choque de la pelota no incline la estimación) e integrás puramente la rotación del giroscopio durante los 50 ms previos al impacto.
+- **Extracción del ángulo:** Al dispararse el trigger de impacto, proyectás el eje $Z$ del cuaternión respecto a la gravedad y obtenés `ang_deg` para meterlo en el paquete BLE de 14 bytes.
 ## 6. Matriz de Riesgos y Planes de Contingencia
 
 | Riesgo | Plan B |
