@@ -96,13 +96,13 @@ Los formatos de datos entre modulos estan fijados en [`CONTRATOS.md`](CONTRATOS.
 *⚠️ Salvavidas (Plan B):* Si a las 11:30 AM P1 no logra estabilizar las interrupciones de hardware, abortar y usar un bucle de *polling* bruto (`delayMicroseconds`) para garantizar la grabacion de la tarde.
 
 ### Clase 2 · Viernes 16/10 · Grabacion masiva del Dataset (Alimentacion: Cable USB-C a PC)
-**Materiales a llevar:** Setup fisico de Clase 1, minimo 20 pelotas de ping pong y red portatil.
+**Materiales a llevar:** Setup fisico de Clase 1, MPU-6500 de repuesto, cinta plana de 7 vias, cinta Kapton, termocontraible fino, minimo 20 pelotas de ping pong y red portatil.
 
 | P1 | P2 | P3 |
 | --- | --- | --- |
 | Implementar buffer circular en ESP32-S3 (congelar ventana de 200 ms alrededor del impacto) y testear BLE en dummy | Script de segmentacion automatica de impactos y formateo directo para Edge Impulse | Pruebas de estimacion de velocidad tangencial ($v = \omega_{\text{swing}} \cdot L$) y visualizacion en tiempo real |
 
-**Tareas de Hardware e Impresion 3D (Clase 2):**
+**Montaje definitivo del sensor (Clase 2):** la capsula impresa no llega para esta clase, pero el sensor ya queda pegado en su lugar final. La capsula es solo una tapa que no toca el sensor y se agrega en la Clase 4 sin moverlo, asi que el dataset de la tarde se graba con el montaje que va a tener la paleta terminada.
 
 1. **Preparacion del sensor de repuesto (Hardware limpio)**
    - No soldar la tira de pines (headers) recta: Dejar los orificios del PCB libres de conectores macho.
@@ -112,25 +112,25 @@ Los formatos de datos entre modulos estan fijados en [`CONTRATOS.md`](CONTRATOS.
      - Soldar cada hilo directamente en los orificios de la interfaz SPI: VCC, GND, SCL/SCLK, SDA/SDI, AD0/SDO, NCS e INT.
      - Doblar los cables en un angulo plano de 90° inmediatamente al salir del estaño hacia el mango.
    - Aislacion y perfil bajo: Colocar cinta Kapton sobre las soldaduras para evitar contactos. Espesor total: < 3 mm.
+   - Recalibrar el offset del acelerometro con `herramientas/calibrar.py` (es otro modulo) y actualizar `OFFSET_A*_G` en `paleta.ino`.
 
-2. **Extrusion / Impresion 3D**
-   - Exportar el STL de la Pieza 1: Capsula con base en cuña compensada (30 mm de ancho, 20.5 mm de largo, rampa de 6 mm a 9.8 mm de alto y ranura pasacables de 12 × 2.5 mm).
-   - Laminado (Slicer):
-     - Altura de capa: 0.2 mm.
-     - Perimetros: 3 o 4 (paredes de 1.6 mm solidas).
-     - Orientacion en cama: Boca abajo (apoyada sobre el techo plano, sin soportes).
-   - Calce en seco (dry fit): Comprobar que la base inclinada apoye al 100% plana sobre el chaflan de la madera y que el cable plano pase holgado hacia el mango.
+2. **Fijacion en la madera**
+   - Marcar en el cuello el contorno de la capsula (medidas en la seccion 7.1), para que el sensor quede donde despues lo va a tapar.
+   - Pegar el MPU con cinta de pintor + VHB (seccion 7.3), rigido contra la madera y **paralelo a la cara de la paleta**, no apoyado sobre el chaflan. Si queda inclinado, los ejes dejan de coincidir con `CONTRATOS.md` y el angulo de la cara sale corrido.
+   - Llevar la cinta plana por el canto del mango y cubrirla con edge tape (seccion 7.3).
 
-3. **Fijacion en la madera**
-   - Montaje del sensor: Fijar la placa asegurando rigidez mecanica contra la madera.
-   - Montaje del domo protector: Fijar el perimetro de la capsula a la madera con adhesivo removible / masilla para sellar y proteger la electronica sin tocar los componentes.
-
-4. **Conexion hacia el mango**
-   - En el extremo del cable plano en el mango, crimpar/soldar terminales para conectar a la ESP32-S3 (respetando pines SPI ya probados: SCL→42, SDA→41, AD0→14, NCS→21, INT→1).
+3. **Conexion hacia el mango**
+   - En el extremo del cable plano en el mango, soldar terminales dupont hembra (sirven los de cables dupont cortados, con termocontraible) para conectar a la ESP32-S3, respetando los pines SPI ya probados: SCL→42, SDA→41, AD0→14, NCS→21, INT→1.
    - Comprobar continuidad con multimetro antes de encender para descartar cortos entre lineas SPI adyacentes.
 
-**Tarde: Grabacion masiva.** Los tres: 50 golpes por tipo (Topspin Der/Rev, Empuje Der/Rev) $\approx$ 600 tiros.
-**Hito:** Dataset v1 subido a Drive y segmentado para entrenamiento.
+4. **Verificar ejes y angulo (antes de grabar)**
+   - Paleta acostada con la goma roja arriba y el mango fuera del borde de la mesa (asi la cara queda horizontal): tiene que dar `az` ≈ +1 g y `ax`, `ay` ≈ 0 g.
+     - Si `az` da −1 g, el modulo quedo mirando para el lado negro: invertir los ejes en `alinearEjes()`.
+     - Si `ax` o `ay` se alejan de 0 (0.05 g ≈ 3°), el sensor quedo inclinado: volver a pegarlo derecho o corregir esa inclinacion en `alinearEjes()`.
+   - Paleta vertical con el mango abajo: tiene que dar `ax` ≈ +1 g.
+
+**Tarde: Grabacion masiva** con el sensor ya en su lugar definitivo. Los tres: 50 golpes por tipo (Topspin Der/Rev, Empuje Der/Rev) $\approx$ 600 tiros.
+**Hito:** Sensor de repuesto montado en su lugar definitivo y Dataset v1 subido a Drive y segmentado para entrenamiento.
 *⚠️ Criterio de Trigger (Plan B):* Evaluar si el acelerometro detecta limpiamente el impacto sin falsos positivos. Si anda bien, se descarta el piezoelectrico. Si mete ruido, el piezoelectrico entra al diseño 3D y hardware de inmediato.
 
 ### Clase 3 · Viernes 23/10 · Despliegue TinyML y Pase a Inalambrico (Alimentacion: Powerbank en bolsillo)
@@ -146,14 +146,14 @@ Los formatos de datos entre modulos estan fijados en [`CONTRATOS.md`](CONTRATOS.
 - $60\% - 80\%$: reentrenamiento con golpes ambiguos.
 - $< 60\%$: reducir alcance a 3 golpes.
 
-**Durante la semana:** P2 envia la capsula a imprimir en 3D.
+**Durante la semana:** P2 envia la capsula y el capuchon a imprimir en 3D (medidas y parametros de impresion en la seccion 7.1).
 
 ### Clase 4 · Viernes 30/10 · Integracion Total y Ensamble Definitivo
-**Materiales a llevar:** Piezas impresas en 3D (Capsula y Capuchon traidas por P2), herramientas menores para ensamble final.
+**Materiales a llevar:** Piezas impresas en 3D (Capsula y Capuchon traidas por P2), adhesivo removible / masilla, herramientas menores para ensamble final.
 
 | P1 | P2 | P3 |
 | --- | --- | --- |
-| Montar electronica en la carcasa 3D final, fijar sensor al cuello y verificar alivio de tension USB | Cargar modelo exportado de Edge Impulse en firmware y verificar estabilidad SPI a 1000 Hz | Enlazar Web App por BLE (struct 14 bytes) y validar refresco de UI con golpes en vivo |
+| Calce en seco de la capsula sobre el sensor ya pegado (la cuña apoya plana en el chaflan y la cinta plana pasa holgada), pegar su perimetro con adhesivo removible / masilla sin tocar el sensor, montar la ESP32-S3 en el capuchon y verificar alivio de tension USB | Cargar modelo exportado de Edge Impulse en firmware y verificar estabilidad SPI a 1000 Hz | Enlazar Web App por BLE (struct 14 bytes) y validar refresco de UI con golpes en vivo |
 
 **Tarde (los tres):** Prueba de humo de punta a punta con la paleta ensamblada. 20 golpes de cada tipo entre los integrantes del grupo para chequear autonomia y robustez mecanica.  
 **Hito:** Paleta armada en su carcasa definitiva, transmitiendo metricas al celular sin cables a la PC.
