@@ -294,11 +294,13 @@ El usuario entra a una pantalla con 3 pasos guiados:
 ### 7.1 Que modelar en Fusion 360
 Diseña dos piezas impresas en PETG o PLA (paredes de 1.6 mm a 2.0 mm):
 
-**Pieza 1 — Capsula del Sensor (MPU-6500 y Piezoelectrico):**
-- Caja diminuta (aprox. $22 \times 18 \times 7\text{ mm}$, peso $< 5\text{ g}$).
-- Alojamiento interno que tape la plaqueta del MPU-6500 y deje un receptaculo contiguo para el disco piezoelectrico (Plan B).
-- Ranura de salida en el canto inferior pasante hacia el capuchon que admita hasta **7 hilos planos** (6 SPI + 1 señal piezoelectrica, compartiendo masa GND), con traba interna de alivio de tension (*strain relief*).
-- Base inferior 100% plana y ligeramente texturada para maximizar la adhesion.
+**Pieza 1 — Capsula del Sensor (MPU-6500):**
+- Medidas tomadas sobre la paleta el 9/10: 30 mm de ancho, 20.5 mm de largo, alto en rampa de 6 a 9.8 mm, peso $< 5\text{ g}$.
+- Base en cuña compensada que apoya plana sobre el chaflan de la madera del cuello.
+- Domo que tapa la plaqueta del MPU-6500 sin tocarla (el sensor va pegado a la madera, no a la capsula).
+- Ranura pasacables de 12 × 2.5 mm en el canto inferior para la **cinta plana de 7 vias** (VCC, GND, SCL, SDA, AD0, NCS, INT), con traba interna de alivio de tension (*strain relief*).
+- Las 7 vias quedan ocupadas por el sensor: si entra el piezoelectrico (Plan B), probablemente vaya en la otra cara de la paleta, con su propio cable.
+- Impresion: capa de 0.2 mm, 3 o 4 perimetros (paredes de 1.6 mm solidas), boca abajo apoyada sobre el techo plano, sin soportes.
 
 **Pieza 2 — Capuchon Prolongador del Mango (ESP32-S3):**
 - Diseño tipo "vaina" o capuchon que prolonga el mango 3.5 a 4 cm hacia abajo en vertical, sin aletas laterales que sobresalgan del perfil de la mano.
@@ -323,7 +325,7 @@ Diseña dos piezas impresas en PETG o PLA (paredes de 1.6 mm a 2.0 mm):
   4. Apoya la cara metalica del **disco piezoelectrico** y la base del **MPU-6500** presionando firmemente directo contra el VHB. *(El piezoelectrico NUNCA va encastrado en las paredes de plastico porque el plastico actuaria como filtro pasabajos disipando la onda de la madera).* 
   5. La capsula 3D se coloca por arriba actuando simplemente como un **domo protector** que los cubre, sin apretarlos ni dejarlos sueltos.
 - **Puente del bus SPI (Capsula 1 $\rightarrow$ Capsula 2):**
-  - **Ordenar los cables en cinta plana:** No armes una trenza ni un manojo cilindrico grueso. Peina los 6 hilos para que queden planos, uno al lado del otro en paralelo, formando una franja plana de menos de 1 mm de espesor.
+  - **Ordenar los cables en cinta plana:** No armes una trenza ni un manojo cilindrico grueso. Peina los 7 hilos para que queden planos, uno al lado del otro en paralelo, formando una franja plana de menos de 1 mm de espesor.
   - **Primera fijacion (Inmovilizacion puntual):** Apoya la franja de cables recorriendo el canto lateral estrecho del mango (la madera del canto entre las dos cachas donde no cierran los dedos). Pega dos tiritas finas de cinta de papel o cinta scotch transparente bien tensadas (una cerca del cuello y otra cerca de la base) para que los cables no se muevan de su carril mientras trabajas.
   - **Fijacion mecanica definitiva y proteccion:** Cubri todo el canto lateral del mango de arriba a abajo usando una vuelta de cinta de borde para paleta de ping pong (*edge tape*) o cinta aisladora de PVC de buena calidad. Aplicala estirandola con fuerza para que abrace la madera y copie el relieve. La cinta sella los cables contra el sudor de la mano, evita roces y deja el mango completamente liso al tacto.
 - **Alimentacion hacia el cuerpo:**
