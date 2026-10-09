@@ -34,16 +34,16 @@ https://www.youtube.com/watch?v=_Bi3vOTH_do
 * Pico de velocidad angular $\omega_{\max}$ alineado con el instante del choque.
 
 #### Reglas Deterministicas de Evaluacion
-* **Rango ideal de angulo ($\theta_{\text{impacto}}$):** $[-30^\circ, -10^\circ]$
+* **Rango ideal de angulo ($\theta_{\text{impacto}}$):** $[-40^\circ, -20^\circ]$
 * **Tolerancia de timing ($\Delta t_{\text{pico}}$):** $\ge -25\text{ ms}$
 * **Aceleracion vertical minima previa:** $a_{\text{vertical}} \ge a_{\text{min\_lift}}$
 
 ```text
 SI a_vertical < a_min_lift:
     RETORNAR "Inicia el swing mas abajo (altura de rodilla) y termina sobre los ojos para levantar la bola."
-SINO SI θ_impacto > +5°:
+SINO SI θ_impacto > -5°:
     RETORNAR "Cara excesivamente abierta; cerra levemente la paleta para que no flote al fondo."
-SINO SI θ_impacto < -35°:
+SINO SI θ_impacto < -45°:
     RETORNAR "Cara muy cerrada; estas tapando la pelota y el corte rival la tirara a la red."
 SINO SI Δt_pico < -35 ms:
     RETORNAR "Estas frenando la mano antes del contacto; acelera a traves de la pelota."
