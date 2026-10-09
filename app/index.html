@@ -74,13 +74,13 @@ const SERVICIO_UART = '6e400001-b5a3-f393-e0a9-e50e24dcca9e';
 const CARACT_TX = '6e400003-b5a3-f393-e0a9-e50e24dcca9e';
 const GOLPES = { TD: 'Topspin de derecha', TR: 'Topspin de revés', ED: 'Empuje de derecha', ER: 'Empuje de revés', '??': 'Golpe no reconocido' };
 
-// Rangos de ángulo de la cara en el impacto (positivo = cerrada).
-// PROVISORIOS: hay que definirlos con el jugador de referencia.
+// Rangos de ángulo de la cara en el impacto (negativo = cerrada, positivo = abierta),
+// sacados de docs/GOLPES.md. Hay que ajustarlos con el jugador de referencia.
 const CRITERIOS = {
-  TD: { angulo: [20, 40], pico: true },
-  TR: { angulo: [15, 35], pico: true },
-  ED: { angulo: [-45, -20], pico: false },
-  ER: { angulo: [-45, -20], pico: false },
+  TD: { angulo: [-30, -10], pico: true },
+  TR: { angulo: [-35, -15], pico: true },
+  ED: { angulo: [30, 50], pico: false },
+  ER: { angulo: [25, 45], pico: false },
 };
 const PICO_ANTES_MS = -25;  // si el pico de giro llega antes que esto, el jugador frena antes de pegar
 
@@ -105,8 +105,8 @@ function consejo(e) {
   if (!c) return { texto: 'No se reconoció el golpe.', ok: false };
   const avisos = [];
   if (e.ang !== null) {
-    if (e.ang < c.angulo[0]) avisos.push(e.golpe.startsWith('T') ? 'Cerrá más la paleta al pegar.' : 'Abrí menos la paleta al pegar.');
-    if (e.ang > c.angulo[1]) avisos.push(e.golpe.startsWith('T') ? 'Cerraste demasiado la paleta.' : 'Abrí más la paleta al pegar.');
+    if (e.ang < c.angulo[0]) avisos.push('Paleta demasiado cerrada: abrila un poco al pegar.');
+    if (e.ang > c.angulo[1]) avisos.push('Paleta demasiado abierta: cerrala un poco al pegar.');
   }
   if (c.pico && e.pico !== null && e.pico < PICO_ANTES_MS) avisos.push('Estás frenando antes de la pelota: acelerá a través del golpe.');
   return avisos.length ? { texto: avisos.join(' '), ok: false } : { texto: 'Buen golpe.', ok: true };
@@ -189,7 +189,7 @@ function alternarSimulador() {
     const g = codigos[azar(0, 3)];
     const topspin = g.startsWith('T');
     const linea = [++nSim, g, azar(60, 99), topspin ? azar(30, 60) : azar(10, 25),
-      topspin ? azar(5, 50) : azar(-55, -10), topspin ? azar(-60, 10) : '-'].join(',');
+      topspin ? azar(-45, 0) : azar(15, 60), topspin ? azar(-60, 10) : '-'].join(',');
     recibir({ target: { value: new TextEncoder().encode(linea + '\n') } });
   }, 2500);
   $('simular').textContent = 'Detener simulador';

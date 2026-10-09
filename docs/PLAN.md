@@ -160,7 +160,7 @@ Los formatos de datos entre módulos están fijados en [`CONTRATOS.md`](CONTRATO
 **¿Por qué está en el MVP?**
 En `CONTRATOS.md`, el struct binario de 14 bytes (`BlePayload`) que P1 le manda por Bluetooth a P3 incluye explícitamente el campo:
 ```cpp
-int16_t ang_deg; // 2 bytes: Ángulo de la cara (+ cerrada, - abierta)
+int16_t ang_deg; // 2 bytes: Ángulo de la cara (- cerrada, + abierta)
 ```
 Si no calculan la orientación de la paleta, ese campo viaja en 0 o con basura, y la Web App de P3 no puede mostrar si el jugador impactó con la paleta abierta o cerrada.
 
