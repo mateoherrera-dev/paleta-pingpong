@@ -102,6 +102,33 @@ Los formatos de datos entre modulos estan fijados en [`CONTRATOS.md`](CONTRATOS.
 | --- | --- | --- |
 | Implementar buffer circular en ESP32-S3 (congelar ventana de 200 ms alrededor del impacto) y testear BLE en dummy | Script de segmentacion automatica de impactos y formateo directo para Edge Impulse | Pruebas de estimacion de velocidad tangencial ($v = \omega_{\text{swing}} \cdot L$) y visualizacion en tiempo real |
 
+**Tareas de Hardware e Impresion 3D (Clase 2):**
+
+1. **Preparacion del sensor de repuesto (Hardware limpio)**
+   - No soldar la tira de pines (headers) recta: Dejar los orificios del PCB libres de conectores macho.
+   - Soldar cable plano (ribbon cable) directamente a los pads:
+     - Cortar un tramo de cinta plana de 7 vias (longitud aprox. 12 a 15 cm hasta la base del mango).
+     - Pelar y estañar las puntas apenas 1 mm.
+     - Soldar cada hilo directamente en los orificios de la interfaz SPI: VCC, GND, SCL/SCLK, SDA/SDI, AD0/SDO, NCS e INT.
+     - Doblar los cables en un angulo plano de 90° inmediatamente al salir del estaño hacia el mango.
+   - Aislacion y perfil bajo: Colocar cinta Kapton sobre las soldaduras para evitar contactos. Espesor total: < 3 mm.
+
+2. **Extrusion / Impresion 3D**
+   - Exportar el STL de la Pieza 1: Capsula con base en cuña compensada (30 mm de ancho, 20.5 mm de largo, rampa de 6 mm a 9.8 mm de alto y ranura pasacables de 12 × 2.5 mm).
+   - Laminado (Slicer):
+     - Altura de capa: 0.2 mm.
+     - Perimetros: 3 o 4 (paredes de 1.6 mm solidas).
+     - Orientacion en cama: Boca abajo (apoyada sobre el techo plano, sin soportes).
+   - Calce en seco (dry fit): Comprobar que la base inclinada apoye al 100% plana sobre el chaflan de la madera y que el cable plano pase holgado hacia el mango.
+
+3. **Fijacion en la madera**
+   - Montaje del sensor: Fijar la placa asegurando rigidez mecanica contra la madera.
+   - Montaje del domo protector: Fijar el perimetro de la capsula a la madera con adhesivo removible / masilla para sellar y proteger la electronica sin tocar los componentes.
+
+4. **Conexion hacia el mango**
+   - En el extremo del cable plano en el mango, crimpar/soldar terminales para conectar a la ESP32-S3 (respetando pines SPI ya probados: SCL→42, SDA→41, AD0→14, NCS→21, INT→1).
+   - Comprobar continuidad con multimetro antes de encender para descartar cortos entre lineas SPI adyacentes.
+
 **Tarde: Grabacion masiva.** Los tres: 50 golpes por tipo (Topspin Der/Rev, Empuje Der/Rev) $\approx$ 600 tiros.
 **Hito:** Dataset v1 subido a Drive y segmentado para entrenamiento.
 *⚠️ Criterio de Trigger (Plan B):* Evaluar si el acelerometro detecta limpiamente el impacto sin falsos positivos. Si anda bien, se descarta el piezoelectrico. Si mete ruido, el piezoelectrico entra al diseño 3D y hardware de inmediato.
