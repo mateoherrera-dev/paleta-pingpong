@@ -20,7 +20,13 @@ Un sensor en el mango de la paleta reconoce cada golpe, mide el angulo de la pal
 
 ### Firmware (modulo A)
 
-Placa: **ESP32S3 Dev Module**, con la misma configuracion que en el proyecto de las gafas. La camara no se usa.
+Configuracion de la placa en el Arduino IDE (la camara no se usa):
+
+- Placa: **ESP32S3 Dev Module**
+- Flash Size: **16MB**
+- PSRAM: **OPI PSRAM**
+- Partition Scheme: **16M Flash (3MB APP/9.9MB FATFS)**
+- Si se usa el USB nativo para el monitor serie: USB CDC On Boot → **Enabled**
 
 Conexion del MPU6050 (modulo GY-521):
 

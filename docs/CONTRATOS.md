@@ -80,11 +80,21 @@ struct BlePayload {
     uint8_t  tipo_golpe;    // 1 byte: 0=TD, 1=TR, 2=ED, 3=ER, 4=Desconocido
     uint8_t  confianza;     // 1 byte: Probabilidad de Edge Impulse (0 a 100)
     int16_t  vel_kmh;       // 2 bytes: Velocidad tangencial estimada
-    int16_t  ang_deg;       // 2 bytes: Angulo de la cara (+ cerrada, - abierta)
+    int16_t  ang_deg;       // 2 bytes: Angulo de la cara (- cerrada, + abierta; ver abajo)
     int16_t  pico_ms;       // 2 bytes: Tiempo del pico giro vs impacto (- es antes)
 }; // Total: 14 bytes
 #pragma pack(pop)
 ```
+
+### Signo del angulo (`ang_deg`)
+
+Misma convencion que [`GOLPES.md`](GOLPES.md), donde estan los rangos de cada golpe:
+
+| Valor | Cara de la paleta | Golpe tipico |
+| --- | --- | --- |
+| **0°** | Vertical, perpendicular a la mesa | — |
+| **Negativo** | **Cerrada**: mira hacia la mesa | Topspin (ideal entre −35° y −10°) |
+| **Positivo** | **Abierta**: mira hacia el techo | Empuje (ideal entre +25° y +50°) |
 
 ### Recepcion (Web App P3)
 P3 se suscribe a la caracteristica usando la **Web Bluetooth API**. Al recibir el buffer binario, lo decodifica usando un `DataView` estandar de JavaScript en formato **Little-Endian**:

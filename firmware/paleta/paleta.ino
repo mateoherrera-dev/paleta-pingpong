@@ -4,7 +4,7 @@
 //   t_us,ax_g,ay_g,az_g,gx_dps,gy_dps,gz_dps,impacto
 // Formato, unidades y ejes: docs/CONTRATOS.md
 //
-// Placa: ESP32S3 Dev Module (misma configuración que en el proyecto de las gafas).
+// Placa: ESP32S3 Dev Module. Configuración completa del Arduino IDE en el README.
 // La cámara no se usa: se puede desconectar.
 
 #include <Wire.h>

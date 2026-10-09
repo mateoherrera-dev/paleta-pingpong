@@ -1,0 +1,5 @@
+# Todos los archivos de texto en UTF-8, para que los acentos se vean bien en GitHub
+root = true
+
+[*]
+charset = utf-8
