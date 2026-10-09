@@ -38,7 +38,7 @@ Los formatos de datos entre modulos estan fijados en [`CONTRATOS.md`](CONTRATOS.
 - **Los tres graban datos.** La grabacion es una actividad de grupo, no del modulo de datos solo.
 - **Integrar todos los viernes.** Cada viernes a la tarde se prueba de punta a punta lo que haya, aunque sea con datos simulados.
 - **Los contratos no se cambian solos:** se discute entre los tres y se actualiza `CONTRATOS.md`.
-- **Git:** ramas `firmware`, `datos`, `app`, merge a `main` cuando compile y ande. Commit antes de irse cada viernes.
+- **Git:** una rama corta por tarea y PR a `main` (que esta protegida), merge cuando compile y ande. Todo pusheado antes de irse cada viernes. Detalle en [`AGENTS.md`](../AGENTS.md).
 
 ---
 
