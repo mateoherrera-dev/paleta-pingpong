@@ -26,6 +26,13 @@ const uint32_t PERIODO_US = 1000;  // 1000 Hz
 const float LSB_POR_G = 2048.0f;
 const float LSB_POR_DPS = 16.4f;
 
+// Offset del acelerómetro de ESTE módulo, en g y en los ejes del módulo: se resta a cada lectura.
+// El eje Z de este chip lee ≈ +0,46 g de más (la hoja de datos admite hasta ±0,08 g).
+// Medido el 9/10 con herramientas/calibrar.py. Si se cambia el módulo, hay que volver a medirlo.
+const float OFFSET_AX_G = 0.033f;
+const float OFFSET_AY_G = -0.012f;
+const float OFFSET_AZ_G = 0.460f;
+
 // Detección de impacto: salto brusco de aceleración entre dos muestras seguidas.
 // El swing cambia la aceleración de a poco; el golpe con la pelota, de golpe.
 // Es un primer valor: ajustarlo con herramientas/ver.py sobre golpes reales.
@@ -128,7 +135,9 @@ void loop() {
   int16_t crudo[7];
   leerMPU(crudo);
 
-  float ax = crudo[0] / LSB_POR_G, ay = crudo[1] / LSB_POR_G, az = crudo[2] / LSB_POR_G;
+  float ax = crudo[0] / LSB_POR_G - OFFSET_AX_G;
+  float ay = crudo[1] / LSB_POR_G - OFFSET_AY_G;
+  float az = crudo[2] / LSB_POR_G - OFFSET_AZ_G;
   float gx = crudo[4] / LSB_POR_DPS, gy = crudo[5] / LSB_POR_DPS, gz = crudo[6] / LSB_POR_DPS;  // crudo[3] es la temperatura
   alinearEjes(ax, ay, az);
   alinearEjes(gx, gy, gz);
