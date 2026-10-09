@@ -4,3 +4,6 @@ datos/*
 
 __pycache__/
 .venv/
+
+# Libreria de Arduino generada por firmware/armar_libreria_arduino.py
+firmware/*_arduino.zip

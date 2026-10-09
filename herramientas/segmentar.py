@@ -16,9 +16,11 @@ def main():
 
     salida_dir.mkdir(parents=True, exist_ok=True)
 
-    # Parámetros de la ventana (1000 Hz): 120 ms antes, 80 ms después = 200 ms total
+    # Parámetros de la ventana (1000 Hz): 120 ms antes, 76 ms después = 196 ms total.
+    # Tiene que coincidir con lo que espera el modelo: ML_BUFFER_LONGITUD_ESPERADA / 6 ejes
+    # en firmware/paleta/ml_inference.h (y con el buffer circular del firmware).
     VENTANA_PRE = 120
-    VENTANA_POST = 80
+    VENTANA_POST = 76
 
     archivos = list(crudos_dir.glob("*.csv"))
     if not archivos:
