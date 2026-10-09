@@ -15,6 +15,12 @@ const int PIN_SCK = 42;   // SCL → reloj
 const int PIN_MOSI = 41;  // SDA → datos de la placa al sensor
 const int PIN_MISO = 14;  // AD0 → datos del sensor a la placa
 const int PIN_CS = 21;    // NCS → chip select
+const int PIN_INT = 1;    // INT → avisa que hay una muestra nueva
+
+// true: se lee cada vez que el sensor avisa por INT que tiene una muestra nueva. Va al ritmo del
+// reloj del sensor, así no se repiten ni se saltean muestras (idea tomada del PR #5 de Mateo).
+// false: plan B, se lee cada 1000 µs con micros() y el cable INT no hace falta.
+const bool USAR_INT = true;
 
 // El MPU-6500 acepta hasta 1 MHz para escribir registros y hasta 20 MHz para leer datos.
 // Con cables dupont largos conviene quedarse en 1 MHz: leer una muestra tarda ~120 µs.
@@ -40,9 +46,20 @@ const float UMBRAL_SALTO_G = 1.5f;
 const uint32_t REFRACTARIO_US = 300000;  // después de un impacto, ignorar 300 ms
 
 uint32_t proximaMuestra = 0;
+uint32_t ultimaLectura = 0;   // micros() de la última muestra leída
+uint32_t ultimoMensaje = 0;   // para no mandar avisos por serie más de una vez por segundo
 uint32_t ultimoImpacto = 0;
 float axAnterior = 0, ayAnterior = 0, azAnterior = 0;
 bool hayAnterior = false;
+
+volatile uint32_t avisos = 0;  // pulsos de INT desde que arrancó: los cuenta la interrupción
+uint32_t avisosLeidos = 0;     // hasta qué aviso ya se leyó
+uint32_t perdidas = 0;         // muestras que el sensor tuvo listas y no se llegaron a leer
+
+// La interrupción solo cuenta el aviso. El SPI se lee en loop(), nunca acá adentro.
+void IRAM_ATTR alAvisarElSensor() {
+  avisos++;
+}
 
 void escribirRegistro(uint8_t registro, uint8_t valor) {
   SPI.beginTransaction(AJUSTES_SPI);
@@ -84,6 +101,8 @@ bool iniciarMPU(uint8_t &id) {
   escribirRegistro(0x1C, 0x18);  // ACCEL_CONFIG: ±16 g
   escribirRegistro(0x1D, 0x00);  // ACCEL_CONFIG2: filtro del acelerómetro de 218 Hz (registro nuevo del 6500)
   escribirRegistro(0x6C, 0x00);  // PWR_MGMT_2: los 6 ejes encendidos
+  escribirRegistro(0x37, 0x00);  // INT_PIN_CFG: INT activo en alto, pulso de 50 µs
+  escribirRegistro(0x38, 0x01);  // INT_ENABLE: avisar por INT con cada muestra nueva
   return true;
 }
 
@@ -122,15 +141,52 @@ void setup() {
     delay(1000);
   }
   Serial.printf("# MPU-6500 encontrado (WHO_AM_I = 0x%02X)\n", id);
+  if (USAR_INT) {
+    pinMode(PIN_INT, INPUT);
+    attachInterrupt(digitalPinToInterrupt(PIN_INT), alAvisarElSensor, RISING);
+    Serial.printf("# Muestreo por INT (GPIO %d)\n", PIN_INT);
+  } else {
+    Serial.println("# Muestreo cada 1 ms con micros() (USAR_INT = false)");
+  }
   Serial.println("# Paleta lista. Columnas: t_us,ax_g,ay_g,az_g,gx_dps,gy_dps,gz_dps,impacto");
-  proximaMuestra = micros();
+  avisosLeidos = avisos;  // los avisos que llegaron mientras se imprimía no cuentan como perdidos
+  proximaMuestra = ultimaLectura = micros();
+}
+
+// Decide si toca leer una muestra: con INT, cuando el sensor avisó; en el plan B, cada 1 ms.
+bool tocaLeer() {
+  uint32_t ahora = micros();
+  if (USAR_INT) {
+    uint32_t hasta = avisos;  // copia: la interrupción lo puede cambiar en cualquier momento
+    if (hasta == avisosLeidos) {
+      // si el sensor no avisa nunca, el cable INT está suelto o en otro pin
+      if (ahora - ultimaLectura > 1000000 && ahora - ultimoMensaje > 1000000) {
+        Serial.printf("# No llega el aviso por INT (GPIO %d): revisar el cable o poner USAR_INT = false\n", PIN_INT);
+        ultimoMensaje = ahora;
+      }
+      return false;
+    }
+    perdidas += hasta - avisosLeidos - 1;  // si avisó más de una vez desde la última lectura, esas muestras se perdieron
+    avisosLeidos = hasta;
+    return true;
+  }
+  if ((int32_t)(ahora - proximaMuestra) < 0) return false;
+  proximaMuestra += PERIODO_US;
+  if ((int32_t)(ahora - proximaMuestra) > 0) proximaMuestra = ahora + PERIODO_US;  // atrasados: retomar desde ahora
+  return true;
 }
 
 void loop() {
+  if (!tocaLeer()) return;
   uint32_t ahora = micros();
-  if ((int32_t)(ahora - proximaMuestra) < 0) return;
-  proximaMuestra += PERIODO_US;
-  if ((int32_t)(ahora - proximaMuestra) > 0) proximaMuestra = ahora + PERIODO_US;  // atrasados: retomar desde ahora
+  ultimaLectura = ahora;
+
+  // Las líneas con # las muestra grabar.py pero no las guarda en el CSV
+  if (perdidas > 0 && ahora - ultimoMensaje > 1000000) {
+    Serial.printf("# Se perdieron %lu muestras\n", (unsigned long)perdidas);
+    perdidas = 0;
+    ultimoMensaje = ahora;
+  }
 
   int16_t crudo[7];
   leerMPU(crudo);
