@@ -8,6 +8,7 @@
 // La cámara no se usa: se puede desconectar.
 
 #include <SPI.h>
+#include "ml_inference.h"
 
 // Pines SPI del MPU-6500 (pin del módulo → función). Revisar en el pinout de la placa que estén libres.
 // SCL y SDA quedan en los GPIO que usaba el I2C: si hay que volver a I2C, esos dos cables no se mueven.
@@ -129,6 +130,18 @@ void alinearEjes(float &x, float &y, float &z) {
   z = mz;
 }
 
+// Corre el modelo una vez al arrancar, para ver que está cargado y cuánto tarda.
+// La ventana es la paleta quieta (az = 1 g): con el modelo dummy no importa qué etiqueta dé.
+void probarModelo() {
+  static float ventana[ML_BUFFER_LONGITUD_ESPERADA];  // static: son 4,7 kB, mejor fuera de la pila
+  for (int i = 0; i < ML_BUFFER_LONGITUD_ESPERADA; i++) ventana[i] = (i % 6 == 2) ? 1.0f : 0.0f;
+  ml_inicializar();
+  uint32_t inicio = micros();
+  PrediccionGolpe p = predecir_golpe(ventana, ML_BUFFER_LONGITUD_ESPERADA);
+  float ms = (micros() - inicio) / 1000.0f;
+  Serial.printf("# Modelo: %s con %.0f %% de certeza, en %.2f ms\n", p.etiqueta, p.probabilidad * 100, ms);
+}
+
 void setup() {
   Serial.begin(921600);
   delay(1500);  // tiempo para abrir el monitor serie
@@ -148,6 +161,7 @@ void setup() {
   } else {
     Serial.println("# Muestreo cada 1 ms con micros() (USAR_INT = false)");
   }
+  probarModelo();
   Serial.println("# Paleta lista. Columnas: t_us,ax_g,ay_g,az_g,gx_dps,gy_dps,gz_dps,impacto");
   avisosLeidos = avisos;  // los avisos que llegaron mientras se imprimía no cuentan como perdidos
   proximaMuestra = ultimaLectura = micros();
