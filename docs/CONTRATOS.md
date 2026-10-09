@@ -93,7 +93,7 @@ Misma convencion que [`GOLPES.md`](GOLPES.md), donde estan los rangos de cada go
 | Valor | Cara de la paleta | Golpe tipico |
 | --- | --- | --- |
 | **0°** | Vertical, perpendicular a la mesa | — |
-| **Negativo** | **Cerrada**: mira hacia la mesa | Topspin (ideal entre −35° y −10°) |
+| **Negativo** | **Cerrada**: mira hacia la mesa | Topspin (ideal entre −40° y −15°) |
 | **Positivo** | **Abierta**: mira hacia el techo | Empuje (ideal entre +25° y +50°) |
 
 ### Recepcion (Web App P3)
