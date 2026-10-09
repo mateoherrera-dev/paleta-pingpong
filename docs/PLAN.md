@@ -83,7 +83,7 @@ Los formatos de datos entre m贸dulos est谩n fijados en [`CONTRATOS.md`](CONTRATO
 ## 4. Fase 1: MVP, viernes por viernes
 
 ### Clase 1 路 Viernes 9/10 路 Se帽al real y adquisici贸n a 1000 Hz (Alimentaci贸n: Cable USB-C a PC)
-**?? Materiales a llevar:** Placa ESP32-S3, MPU-6500, cable USB-C largo (2-3 m), paleta, cinta de pintor, cinta bifaz 3M VHB, cinta aisladora / edge tape, pelotas de ping pong.
+**Materiales a llevar:** Placa ESP32-S3, MPU-6500, cable USB-C largo (2-3 m), paleta, cinta de pintor, cinta bifaz 3M VHB, cinta aisladora / edge tape, pelotas de ping pong.
 
 | P1 | P2 | P3 |
 | --- | --- | --- |
@@ -96,7 +96,7 @@ Los formatos de datos entre m贸dulos est谩n fijados en [`CONTRATOS.md`](CONTRATO
 *鈿狅笍 Salvavidas (Plan B):* Si a las 11:30 AM P1 no logra estabilizar las interrupciones de hardware, abortar y usar un bucle de *polling* bruto (`delayMicroseconds`) para garantizar la grabaci贸n de la tarde.
 
 ### Clase 2 路 Viernes 16/10 路 Grabaci贸n masiva del Dataset (Alimentaci贸n: Cable USB-C a PC)
-**?? Materiales a llevar:** Setup f韘ico de Clase 1, m韓imo 20 pelotas de ping pong y red port醫il.
+**Materiales a llevar:** Setup f铆sico de Clase 1, m铆nimo 20 pelotas de ping pong y red port谩til.
 
 | P1 | P2 | P3 |
 | --- | --- | --- |
@@ -107,7 +107,7 @@ Los formatos de datos entre m贸dulos est谩n fijados en [`CONTRATOS.md`](CONTRATO
 *鈿狅笍 Criterio de Trigger (Plan B):* Evaluar si el aceler贸metro detecta limpiamente el impacto sin falsos positivos. Si anda bien, se descarta el piezoel茅ctrico. Si mete ruido, el piezoel茅ctrico entra al dise帽o 3D y hardware de inmediato.
 
 ### Clase 3 路 Viernes 23/10 路 Despliegue TinyML y Pase a Inal谩mbrico (Alimentaci贸n: Powerbank en bolsillo)
-**?? Materiales a llevar:** Paleta ensamblada provisional, Powerbank de bolsillo, cable USB-C est醤dar (bolsillo a paleta), celular de prueba para P3.
+**Materiales a llevar:** Paleta ensamblada provisional, Powerbank de bolsillo, cable USB-C est谩ndar (bolsillo a paleta), celular de prueba para P3.
 
 | P1 | P2 | P3 |
 | --- | --- | --- |
@@ -122,7 +122,7 @@ Los formatos de datos entre m贸dulos est谩n fijados en [`CONTRATOS.md`](CONTRATO
 **Durante la semana:** P2 env铆a la c谩psula a imprimir en 3D.
 
 ### Clase 4 路 Viernes 30/10 路 Integraci贸n Total y Ensamble Definitivo
-**?? Materiales a llevar:** Piezas impresas en 3D (C醦sula y Capuch髇 tra韉as por P2), herramientas menores para ensamble final.
+**Materiales a llevar:** Piezas impresas en 3D (C谩psula y Capuch贸n tra铆das por P2), herramientas menores para ensamble final.
 
 | P1 | P2 | P3 |
 | --- | --- | --- |
@@ -134,7 +134,7 @@ Los formatos de datos entre m贸dulos est谩n fijados en [`CONTRATOS.md`](CONTRATO
 ---
 
 ### Clase 5 路 Viernes 6/11 路 Validaci贸n Ciega y Ajuste Heur铆stico
-**?? Materiales a llevar:** Hardware 100% ensamblado y funcional, red y pelotas para las pruebas ciegas.
+**Materiales a llevar:** Hardware 100% ensamblado y funcional, red y pelotas para las pruebas ciegas.
 
 | P1 | P2 | P3 |
 | --- | --- | --- |
@@ -145,7 +145,7 @@ Los formatos de datos entre m贸dulos est谩n fijados en [`CONTRATOS.md`](CONTRATO
 **Hito:** Precisi贸n $\ge 80\%$ validada en personas externas al entrenamiento y c贸digo 100% congelado.
 
 ### Clase 6 路 Viernes 13/11 路 MVP Terminado
-**?? Materiales a llevar:** MVP completo, Powerbank cargado al 100%, c醡ara o celular extra con buen almacenamiento y tr韕ode para filmar la demo.
+**Materiales a llevar:** MVP completo, Powerbank cargado al 100%, c谩mara o celular extra con buen almacenamiento y tr铆pode para filmar la demo.
 
 - **Ma帽ana:** Calibraciones menores y pruebas de estr茅s de bater铆a/enlace BLE.
 - **Tarde:** Medici贸n de m茅tricas finales (latencia, acierto, bater铆a), ensayo general y **filmaci贸n de la demo de respaldo**.
