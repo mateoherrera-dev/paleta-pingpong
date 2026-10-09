@@ -28,16 +28,20 @@ Configuracion de la placa en el Arduino IDE (la camara no se usa):
 - Partition Scheme: **16M Flash (3MB APP/9.9MB FATFS)**
 - Si se usa el USB nativo para el monitor serie: USB CDC On Boot → **Enabled**
 
-Conexion del MPU6050 (modulo GY-521):
+Conexion del MPU-6500 por SPI (con los nombres que trae impresos el modulo):
 
-| MPU6050 | ESP32-S3 |
-| --- | --- |
-| VCC | 3V3 |
-| GND | GND |
-| SDA | GPIO 41 |
-| SCL | GPIO 42 |
+| Modulo MPU-6500 | Funcion | ESP32-S3 |
+| --- | --- | --- |
+| VCC | Alimentacion | 3V3 |
+| GND | Masa | GND |
+| SCL | SCK (reloj) | GPIO 42 |
+| SDA | MOSI | GPIO 41 |
+| AD0 | MISO | GPIO 14 |
+| NCS | CS | GPIO 21 |
+| INT | Dato listo (interrupcion) | GPIO 1 |
+| FSYNC, EDA, ECL | - | Sin conectar |
 
-Antes de conectar, revisar en el pinout de su placa que los GPIO 41 y 42 esten libres. Si no, cambiar `PIN_SDA` y `PIN_SCL` en `paleta.ino`.
+Antes de conectar, revisar en el pinout de su placa que esos GPIO esten libres. Si no, cambiar los `PIN_...` al principio de `paleta.ino`. Al arrancar, el monitor serie tiene que mostrar `# MPU-6500 encontrado (WHO_AM_I = 0x70)`.
 
 Abrir `firmware/paleta/paleta.ino`, cargarlo y abrir el monitor serie a **921600 baudios**.
 
