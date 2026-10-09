@@ -1,9 +1,10 @@
 #include "ml_inference.h"
 #include <Arduino.h>
 
-// Cabecera principal del SDK C++ exportado por Edge Impulse
-// (asume que los directorios edge-impulse-sdk y model-parameters están en el Include Path)
-#include "edge-impulse-sdk/classifier/ei_run_classifier.h"
+// Cabecera de la librería de Arduino del modelo (incluye ei_run_classifier.h).
+// Se genera con firmware/armar_libreria_arduino.py. Si el modelo se exporta como
+// "Arduino library" desde Edge Impulse, cambiar por el <..._inferencing.h> de ese zip.
+#include <ping_pong_classifier_inferencing.h>
 
 void ml_inicializar() {
     // Edge Impulse no requiere inicialización global obligatoria,
