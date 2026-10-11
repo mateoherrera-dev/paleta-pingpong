@@ -27,3 +27,28 @@ Al utilizar `--golpe` en `grabar.py`, los nombres validos son los que define el 
 2. `empuje_derecha`
 3. `topspin_reves`
 4. `empuje_reves`
+5. `ruido`
+
+## 4. Protocolo deliberado para la clase "No golpe" (ruido / not_a_swing)
+
+Para que el modelo aprenda a rechazar perturbaciones reales sin confundirlas con tiros, se capturan deliberadamente cuatro tipos de movimientos dinamicos que no son tiros:
+
+1. **Swings al aire sin pelota (Falsos swings):**
+   - Realizar el gesto tecnico completo de drive o reves pero al aire, sin impactar la bola.
+   - *Objetivo:* Enseña a la red a no predecir un golpe si falta el transitorio de desaceleracion brusco del choque de la pelota.
+
+2. **Rebotes de control y malabares:**
+   - Hacer picar la pelota suavemente hacia arriba sobre la goma de forma continua.
+   - *Objetivo:* Enseña a la red que un impacto vertical suave sin aceleracion angular previa ($\omega \approx 0$) no es un golpe de ataque ni de empuje.
+
+3. **Manipulacion de la paleta y reacomodo de grip:**
+   - Pasarse la paleta de mano, rotarla entre los dedos, secarse el sudor en la mesa o acomodar la postura de espera activa (pequeños saltos y balanceo de muñeca).
+   - *Objetivo:* Evita disparos de inferencia mientras el punto no esta en juego.
+
+4. **Caminata y recogida de pelotas:**
+   - Caminar por la sala con la paleta en la mano y agacharse a juntar pelotas del piso.
+   - *Objetivo:* Filtra las aceleraciones corporales de baja frecuencia producidas por el paso del jugador.
+
+### Proporcion y balance en el Dataset
+- **Tamaño relativo:** La clase `ruido` debe representar entre el **20 % y 25 %** del total de muestras del dataset. Para ~200 golpes validos (50 por cada uno de los 4 tipos), se recolectan entre **50 y 60 ventanas deliberadas** de no golpes.
+- **Segmentacion identica:** Estas muestras deben recortarse usando exactamente la misma ventana temporal de 196 muestras (~196 ms, 120 antes del centro + 76 despues) que los golpes validos para que los tensores de entrada a Edge Impulse tengan dimensiones identicas (1176 floats).
