@@ -25,7 +25,7 @@ Todos los datos usan los mismos ejes, medidos sobre la paleta (no sobre el modul
 - **Z**: perpendicular a la cara, saliendo por la goma **roja**.
 - **Y**: hacia el canto, completando un sistema de mano derecha.
 
-Si el modulo no se puede montar con esos ejes, se reordenan en el firmware (`alinearEjes()` en `firmware/paleta/paleta.ino`). Las herramientas de Python y la app asumen siempre estos ejes.
+Si el modulo no se puede montar directamente con esos ejes (por ejemplo, al montarlo en la base del pomo mirando hacia abajo), se reordenan e invierten en el firmware (`alinearEjes()` en `firmware/paleta/paleta.ino`). Las herramientas de Python y la app asumen siempre estos ejes.
 
 ## 2. Muestras crudas (placa → compu, por cable USB)
 
@@ -85,6 +85,13 @@ struct BlePayload {
 }; // Total: 14 bytes
 #pragma pack(pop)
 ```
+
+### Estimacion de velocidad tangencial (`vel_kmh`)
+
+Se calcula como $v = \omega_{\text{swing}} \cdot L$:
+- $\omega_{\text{swing}}$ es la velocidad de giro en el plano del swing obtenida por el giroscopio.
+- $L$ es la distancia radial desde el plano inferior del pomo (donde apoya el sensor) hasta el centro geometrico de la cabeza de la pala (interseccion de ejes mayor y menor).
+- **Protocolo de medicion:** $L$ NO debe ser una estimacion a ojo. Se mide fisicamente en la paleta del grupo con calibre o regla y se define como constante en el codigo (ej. `#define L_PALETA_M 0.262f`).
 
 ### Signo del angulo (`ang_deg`)
 
