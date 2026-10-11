@@ -47,7 +47,7 @@ Las lineas que empiezan con `#` son mensajes y se ignoran.
 ## 3. Archivos de sesion
 
 - Nombre: `AAAA-MM-DD_HHMMSS_jugador_golpe.csv` (lo arma `herramientas/grabar.py`).
-- Golpes validos: `topspin_derecha`, `topspin_reves`, `empuje_derecha`, `empuje_reves`, o `libre` para juego libre.
+- Golpes validos: `topspin_derecha`, `topspin_reves`, `empuje_derecha`, `empuje_reves`, `ruido` (movimientos de descarte / not a swing: acomodar paleta, caminar, festejo), o `libre` para juego libre.
 - Se guardan en `datos/crudos/`. **No se suben a git** (pesan mucho): se comparten en la carpeta de Drive del grupo.
 
 ## 4. Interfaz de Inferencia C++ (P1 ↔ P2)
@@ -77,7 +77,7 @@ Para evitar el bloqueo de interrupciones en el ESP32 causado por el parseo y con
 struct BlePayload {
     uint32_t timestamp;     // 4 bytes: ms desde el arranque del ESP32
     uint16_t numero_golpe;  // 2 bytes: contador de impactos en la sesion
-    uint8_t  tipo_golpe;    // 1 byte: 0=TD, 1=TR, 2=ED, 3=ER, 4=Desconocido
+    uint8_t  tipo_golpe;    // 1 byte: 0=TD, 1=TR, 2=ED, 3=ER, 4=Desconocido o Ruido
     uint8_t  confianza;     // 1 byte: Probabilidad de Edge Impulse (0 a 100)
     int16_t  vel_kmh;       // 2 bytes: Velocidad tangencial estimada
     int16_t  ang_deg;       // 2 bytes: Angulo de la cara (- cerrada, + abierta; ver abajo)

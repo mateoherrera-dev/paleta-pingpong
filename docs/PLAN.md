@@ -136,8 +136,8 @@ Los formatos de datos entre modulos estan fijados en [`CONTRATOS.md`](CONTRATOS.
    - El choque con la pelota dura 1-2 ms, mientras que un frenazo muscular de muñeca toma 30-100 ms.
    - Disparo por derivada discreta a 1000 Hz: $Jerk[k] = (|a[k]| - |a[k-1]|) \cdot 1000$. Condicion de trigger: `if (delta_a > UMBRAL_JERK)` sobre la norma o el eje perpendicular al impacto, eliminando falsos positivos por swing libre.
 
-**Tarde: Grabacion masiva** con el sensor ya en su lugar definitivo en el pomo. Los tres: 50 golpes por tipo (Topspin Der/Rev, Empuje Der/Rev) $\approx$ 600 tiros.
-**Hito:** Sensor montado en el pomo y Dataset v1 grabado con la configuracion mecanica final.
+**Tarde: Grabacion masiva** con el sensor ya en su lugar definitivo en el pomo. Los tres: 50 golpes por tipo (Topspin Der/Rev, Empuje Der/Rev) $\approx$ 600 tiros utiles, mas **una tanda obligatoria de 50 muestras de descarte (`ruido` / `not_a_swing`)**: acomodarse el grip, caminar, picar la pelota, gestos de festejo y swings al aire sin bola. Esta clase de ruido en Edge Impulse evita que la red fuerce una clasificacion espuria con softmax alto ante movimientos casuales que pasen el trigger.
+**Hito:** Sensor montado en el pomo y Dataset v1 grabado con las 4 clases de golpe + clase de ruido.
 *⚠️ Criterio de Trigger (Plan B):* Evaluar si el acelerometro detecta limpiamente el impacto sin falsos positivos. Si anda bien, se descarta el piezoelectrico. Si mete ruido, el piezoelectrico entra al diseño 3D y hardware de inmediato.
 
 ### Clase 3 · Viernes 23/10 · Despliegue TinyML y Pase a Inalambrico (Alimentacion: Powerbank en bolsillo)
@@ -160,7 +160,7 @@ Los formatos de datos entre modulos estan fijados en [`CONTRATOS.md`](CONTRATOS.
 
 | P1 | P2 | P3 |
 | --- | --- | --- |
-| Calce en seco de la capsula sobre el sensor ya pegado (la cuña apoya plana en el chaflan y la cinta plana pasa holgada), pegar su perimetro con adhesivo removible / masilla sin tocar el sensor, montar la ESP32-S3 en el capuchon y verificar alivio de tension USB | Cargar modelo exportado de Edge Impulse en firmware y verificar estabilidad SPI a 1000 Hz | Enlazar Web App por BLE (struct 14 bytes) y validar refresco de UI con golpes en vivo |
+| Calce en seco de la Pieza A (Portasensor) abrazando el pomo de madera, verificar paso holgado de chicotes internos hacia la Pieza B (Vaina ESP32), encastrar Pieza B sobre Pieza A y verificar alivio y acceso USB-C | Cargar modelo exportado de Edge Impulse en firmware y verificar estabilidad SPI a 1000 Hz | Enlazar Web App por BLE (struct 14 bytes) y validar refresco de UI con golpes en vivo |
 
 **Tarde (los tres):** Prueba de humo de punta a punta con la paleta ensamblada. 20 golpes de cada tipo entre los integrantes del grupo para chequear autonomia y robustez mecanica.  
 **Hito:** Paleta armada en su carcasa definitiva, transmitiendo metricas al celular sin cables a la PC.
