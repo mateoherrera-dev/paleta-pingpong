@@ -4,9 +4,9 @@
 
 **Calendario:** hoy (viernes 2/10) es la clase 0. El MVP tiene que estar terminado el **viernes 13/11**. Despues viene la fase 2, hasta la entrega final.
 
-| Clase | 1 | 2 | 3 | 4 | 5 | 6 |
-| --- | --- | --- | --- | --- | --- | --- |
-| Viernes | 9/10 | 16/10 | 23/10 | 30/10 | 6/11 | **13/11 · MVP** |
+| Clase | 1 | 1.5 (extra) | 2 | 3 | 4 | 5 | 6 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Fecha | 9/10 | Miercoles 14/10 | 16/10 | 23/10 | 30/10 | 6/11 | **13/11 · MVP** |
 
 No hay un viernes de colchon al final. El margen sale de dos lados: el horario de 16 a 18 de cada viernes, y el 13/11, que esta pensado para cerrar y arreglar, no para agregar cosas.
 
@@ -95,50 +95,60 @@ Los formatos de datos entre modulos estan fijados en [`CONTRATOS.md`](CONTRATOS.
 **Hito:** Señal limpia a 1000 Hz en PC y trigger de impacto validado sin falsos positivos.
 *⚠️ Salvavidas (Plan B):* Si a las 11:30 AM P1 no logra estabilizar las interrupciones de hardware, abortar y usar un bucle de *polling* bruto (`delayMicroseconds`) para garantizar la grabacion de la tarde.
 
+### Clase 1.5 · Miercoles 14/10 · Sesion extraordinaria de destrabe (3 horas)
+**Contexto y objetivo:** Sesion intermedia para absorber el atraso de la Clase 1 y reestructurar el montaje hacia el pomo. Con 3 horas de trabajo en paralelo, el objetivo es **eliminar todos los cuellos de botella de hardware y software** para que el viernes 16/10 el equipo llegue directo a pelotear en la mesa y grabar el dataset masivo.
+
+**Materiales a llevar:** Paleta, MPU-6500 de repuesto, ESP32-S3, alicate, soldador/estaño, cables flexibles para chicotes (3-4 cm), cinta Kapton, cinta de pintor, cinta bifaz 3M VHB, regla metalica o calibre, cable USB-C a PC y pelotas de ping pong.
+
+#### Bloque 1: Hardware y Montaje Fisico (45 min)
+*Objetivo: Dejar la paleta con la electronica lista, montada y protegida.*
+1. **Soldadura de chicotes cortos (P1/P2):** Cortar los pines macho del MPU dejando solo 1 mm de muñon. Soldar los 7 cables flexibles cortos (3 a 4 cm) para las lineas SPI (VCC, GND, SCL, SDA, AD0, NCS, INT). Aislar la cara posterior con cinta Kapton.
+2. **Montaje provisorio en el pomo (P2):** Limpiar la base de madera con alcohol. Aplicar cinta de pintor estirada (sacrificio) y encima 3M VHB. Pegar la PCB del MPU plana, rigida y centrada contra la base. Sujetar el ESP32-S3 en linea por debajo con cinta, dejando el conector USB-C accesible.
+3. **Medicion geometrica rigurosa de $L$ (P3):** Medir con regla o calibre la distancia exacta desde el plano del sensor hasta el centro geometrico del sweet spot (interseccion de ejes mayor y menor). Fijar la constante en codigo (ej. `#define L_PALETA_M 0.262f`).
+
+#### Bloque 2: Validacion de Señal y Convencion de Ejes (45 min)
+*Objetivo: Comprobar lectura limpia a 1000 Hz sin inversion de signos.*
+1. **Conexion SPI a 1000 Hz:** Levantar lectura por SPI en el ESP32-S3 y verificar ausencia de lecturas congeladas o desbordes.
+2. **Prueba de signos en `alinearEjes()`:**
+   - Paleta horizontal con goma roja hacia arriba: verificar $a_z \approx +1\text{ g}$. Si da negativo, corregir signo en firmware.
+   - Paleta vertical con mango en mesa y punta al techo: verificar $a_x \approx +1\text{ g}$ hacia la punta.
+3. **Calibracion de offsets:** Correr `calibrar.py` con la paleta apoyada inmovil en la mesa y cargar los valores resultantes de `OFFSET_A*_G` en `paleta.ino`.
+
+#### Bloque 3: Trigger por Jerk y Script de Adquisicion (60 min)
+*Objetivo: Separar golpes reales de movimientos bruscos sin tocar la pelota.*
+1. **Prueba del trigger por derivada temporal ($\Delta a / \Delta t$):**
+   - P1 implementa $Jerk[k] = (|a[k]| - |a[k-1]|) \cdot 1000$ en loop/ISR.
+   - 10 swings rapidos al aire: **no debe disparar**.
+   - Golpes reales contra pelota o toques secos con dedos: **debe disparar al instante**.
+   - Ajustar `UMBRAL_JERK` hasta lograr separacion limpia.
+2. **Pipeline de Python (`ver.py` / recepcion serial):**
+   - P2 conecta el script receptor a 921600 baudios.
+   - Verificar que al disparar el trigger se guarden los 196 ms (buffer circular de 120 antes + 76 despues) sin perdida de paquetes.
+
+#### Bloque 4: Prueba de Humo de 5 Golpes y Cierre (30 min)
+*Objetivo: Validar el flujo completo de punta a punta.*
+1. Pegar 5 tiros reales de prueba en mesa.
+2. Comprobar que se generen los 5 CSVs correctamente formateados y etiquetados en la compu.
+3. Guardar la paleta ya cableada en su funda (sin despegar nada) para llevarla intacta el viernes.
+
+**Definicion de exito del miercoles:** Paleta armada con sensor fijo en el pomo, firmware SPI a 1000 Hz con ejes corregidos, trigger por Jerk validado (sin falsos positivos por swing libre) y script receptor listo.
+
 ### Clase 2 · Viernes 16/10 · Grabacion masiva del Dataset (Alimentacion: Cable USB-C a PC)
-**Materiales a llevar:** Setup fisico de Clase 1, MPU-6500 de repuesto, cinta Kapton, cables flexibles para chicotes (o cables dupont cortados), regla metalica o calibre para medir L, cinta bifaz 3M VHB, cinta de pintor, minimo 20 pelotas de ping pong y red portatil.
+**Materiales a llevar:** Paleta ya ensamblada en Clase 1.5 (en su funda intacta), cable USB-C a PC, pelotas de ping pong (minimo 20), red portatil y cinta de repuesto por contingencia.
 *Nota de compras:* Ya NO hace falta comprar cinta plana de 7 vias, tramos largos de termocontraible ni edge tape para tapar cables en el mango. El mango queda 100 % libre.
 
 | P1 | P2 | P3 |
 | --- | --- | --- |
-| Implementar buffer circular en ESP32-S3 y recalibrar trigger de impacto por derivada temporal (Jerk / $\Delta a / \Delta t$) para filtrar movimientos de muñeca | Script de segmentacion automatica de impactos y formateo directo para Edge Impulse | Protocolo de medicion exacta de $L$ (pomo a centro geometrico), pruebas de estimacion de velocidad tangencial ($v = \omega \cdot L$) y visualizacion |
+| Chequeo de señal (15 min) y supervision del buffer circular durante las capturas | Coordinacion de grabacion masiva por puerto serie y segmentacion automatica para Edge Impulse | Alimentacion constante de multiball, control de calidad visual en `ver.py` y verificacion de velocidad tangencial |
 
-**Montaje definitivo del sensor (Clase 2):** la capsula impresa no llega para esta clase, pero el sensor ya queda pegado en su lugar final en el **pomo de la paleta** (base del mango). La capsula modular se agrega en la Clase 4 sin mover el sensor, asi que el dataset de la tarde se graba con el montaje que va a tener la paleta terminada.
+**Plan de la jornada (Viernes 16/10):** Al haber cerrado el hardware y la calibracion el miercoles, se arranca directamente en la mesa:
+1. **Check rapido (9:00 - 9:30):** Conexion de la paleta a la compu, validacion de telemetria limpia en `ver.py`.
+2. **Grabacion masiva del Dataset v1 (resto de la jornada):**
+   - Los 4 golpes tecnicos: 50 golpes por tipo (Topspin Der/Rev, Empuje Der/Rev) $\approx$ 600 tiros utiles con alimentacion constante (multiball).
+   - Tanda obligatoria de 50 a 60 muestras de descarte (`ruido` / `not_a_swing`) siguiendo [`PROTOCOLO.md`](PROTOCOLO.md#4-protocolo-deliberado-para-la-clase-no-golpe-ruido--not_a_swing) (falsos swings al aire, malabares, acomodar grip, caminata/recogida).
+3. **Segmentacion y subida:** Procesar con `segmentar.py` y dejar el Dataset v1 estructurado y subido al Drive del grupo.
 
-1. **Preparacion del sensor de repuesto (Hardware limpio y pines al ras)**
-   - No desoldar los pines macho de la placa para no levantar pistas ni sobrecalentar el PCB.
-   - Cortar los pines macho al ras con alicate dejando un muñon de apenas 1 mm.
-   - Soldar chicotes de cables flexibles cortos (3 a 4 cm) directamente sobre los muñones o en la cara posterior del PCB para las lineas SPI: VCC, GND, SCL, SDA, AD0, NCS e INT.
-   - Proteger las soldaduras con cinta Kapton para evitar cualquier corto. Espesor total: < 3 mm.
-   - Recalibrar el offset del acelerometro con `herramientas/calibrar.py` y actualizar `OFFSET_A*_G` en `paleta.ino`.
-
-2. **Protocolo de medicion rigurosa de $L$ (P3)**
-   - No usar un valor aproximado: medir fisicamente en la paleta del grupo con regla metalica o calibre.
-   - Punto de referencia inferior: el plano inferior de la madera del pomo (donde apoya el sensor).
-   - Punto de referencia superior: la interseccion de los ejes mayor y menor de la cabeza de la pala (centro geometrico del sweet spot).
-   - Registrar la constante en metros (ej. `#define L_PALETA_M 0.262f`). Una variacion de $\pm 5\text{ mm}$ en $260\text{ mm}$ introduce solo $\approx 1.9\%$ de error, perfectamente tolerable para el MVP.
-
-3. **Fijacion en la madera del pomo**
-   - Limpiar la base de madera del pomo con alcohol.
-   - Pegar primero cinta de pintor (sacrificio) y encima cinta bifaz 3M VHB.
-   - Pegar la plaqueta del MPU-6500 plana y **rigida contra la base del pomo**, sin juego mecanico.
-   - Alineacion: eje largo del sensor paralelo al plano de la pala (34 mm) y eje corto perpendicular (22 mm).
-   - El ESP32-S3 se fija provisoriamente en linea por debajo con cinta, dejando el conector USB-C accesible para el cable a la PC.
-   - Chau cinta plana: los chicotes cortos (2-3 cm) van directo entre MPU y ESP32, sin nada recorriendo el mango.
-
-4. **Verificar ejes y trampa del signo en `alinearEjes()` (P1)**
-   - Al apoyar en la base del pomo mirando hacia abajo, la orientacion de los ejes se invierte respecto al montaje en el cuello.
-   - Paleta horizontal con la goma roja arriba: tiene que dar `az` ≈ +1 g y `ax`, `ay` ≈ 0 g. Si da −1 g, invertir signo en `alinearEjes()`.
-   - Paleta vertical con el mango apoyado en la mesa y la punta al techo: verificar que `ax` responda a la convencion de `CONTRATOS.md` (+1 g hacia la punta de la paleta).
-
-5. **Trigger de impacto por Jerk (P1)**
-   - En la base del pomo, la onda elastica viaja por la madera en $< 0.05\text{ ms}$, pero llega amortiguada en amplitud respecto al cuello.
-   - El choque con la pelota dura 1-2 ms, mientras que un frenazo muscular de muñeca toma 30-100 ms.
-   - Disparo por derivada discreta a 1000 Hz: $Jerk[k] = (|a[k]| - |a[k-1]|) \cdot 1000$. Condicion de trigger: `if (delta_a > UMBRAL_JERK)` sobre la norma o el eje perpendicular al impacto, eliminando falsos positivos por swing libre.
-
-**Tarde: Grabacion masiva** con el sensor ya en su lugar definitivo en el pomo. Los tres: 50 golpes por tipo (Topspin Der/Rev, Empuje Der/Rev) $\approx$ 600 tiros utiles, mas **una tanda obligatoria de 50 a 60 muestras de descarte (`ruido` / `not_a_swing`)** siguiendo el protocolo deliberado de cuatro movimientos (falsos swings, rebotes de control, manipulacion de grip, caminata y recogida) detallado en [`PROTOCOLO.md`](PROTOCOLO.md#4-protocolo-deliberado-para-la-clase-no-golpe-ruido--not_a_swing). Esto balancea el dataset (20-25 % de ruido) y evita que Edge Impulse fuerce una clasificacion espuria con softmax alto ante movimientos que pasen el trigger.
-**Hito:** Sensor montado en el pomo y Dataset v1 grabado con las 4 clases de golpe + clase de ruido balanceada.
-*⚠️ Criterio de Trigger (Plan B):* Evaluar si el acelerometro detecta limpiamente el impacto sin falsos positivos. Si anda bien, se descarta el piezoelectrico. Si mete ruido, el piezoelectrico entra al diseño 3D y hardware de inmediato.
+*⚠️ Criterio de Trigger (Plan B):* Si durante las grabaciones el trigger por Jerk muestra falsos positivos aislados, ajustar UMBRAL_JERK o elevar el refractario temporal antes de considerar sensores adicionales.
 
 ### Clase 3 · Viernes 23/10 · Despliegue TinyML y Pase a Inalambrico (Alimentacion: Powerbank en bolsillo)
 **Materiales a llevar:** Paleta ensamblada provisional, Powerbank de bolsillo, cable USB-C estandar (bolsillo a paleta), celular de prueba para P3.
