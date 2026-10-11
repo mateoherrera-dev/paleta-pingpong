@@ -61,14 +61,16 @@ https://www.youtube.com/watch?v=LmQNDC-1Ew0
 *Condicion de captura:* Ejecucion sobre bola viva neutra mediante autopique (self-feed con la mano libre).
 
 #### Tecnica segun PingSkills
-* **Posicion inicial:** Inicio frente al estomago a la altura de la mesa con la cara cerrada mirando hacia la mesa.
-* **Extension y aceleracion:** Raspado fino ascendente y hacia adelante. El brazo y la muñeca se extienden superando la linea del codo (*swing past your elbow*).
-* **Errores frecuentes:** Entrar con cara abierta provocando que la bola salga despedida fuera de la mesa, o desacelerar antes del impacto por falta de confianza.
+* **El codo como bisagra (pivote adelantado):** El codo se coloca adelantado respecto al torso, flexionado a unos 90° y apuntando hacia la red. Actua como un punto de pivote fijo y estable: el antebrazo y la muñeca se pliegan hacia el estomago y luego se extienden y rotan hacia arriba y adelante alrededor de ese eje en un movimiento de latigo.
+* **Extension y terminacion:** Raspado fino ascendente y hacia adelante. El antebrazo se proyecta hacia la red superando la linea del codo (*swing past your elbow*).
+* **Errores frecuentes:**
+  - *Codo abierto al costado:* Si el codo se va hacia el lateral del cuerpo, se bloquea la articulacion, se pierde el recorrido del antebrazo y se fuerza un empuje rigido con todo el hombro ("movimiento tipo puerta"), desplomando la velocidad angular.
+  - *Cara abierta:* Entrar con $\theta > -15^\circ$ hace que la bola neutra vuele larga fuera de la mesa.
 
 #### Signatura Inercial (IMU)
+* **Latigo vs. puerta:** Si el codo actua como pivote, el sensor en el pomo registra un pico pronunciado y concentrado de velocidad angular ($\omega_{\max}$) gracias al radio de giro del antebrazo. Si se empuja con el hombro rigido, $\omega$ queda bajo y disperso en el tiempo.
 * Inversion de polaridad en el giroscopio respecto al topspin de derecha (movimiento de supinacion y extension de reves).
-* Elevacion marcada del vector de aceleracion lineal previo al choque.
-* Curva de velocidad angular pronunciada con pico sostenido durante el *follow-through*.
+* Curva de aceleracion angular pronunciada con pico sostenido durante el *follow-through*.
 
 #### Reglas Deterministicas de Evaluacion
 * **Rango ideal de angulo ($\theta_{\text{impacto}}$):** $[-45^\circ, -25^\circ]$
@@ -78,12 +80,14 @@ https://www.youtube.com/watch?v=LmQNDC-1Ew0
 ```text
 SI θ_impacto > -15°:
     RETORNAR "Cara demasiado abierta; cerra la paleta hacia la mesa para que el topspin baje a tiempo."
-SINO SI Δt_pico < -35 ms O ω_max < ω_min_tr:
+SINO SI ω_max < ω_min_tr:
+    RETORNAR "Usa el codo adelantado como bisagra y acelera el antebrazo; no empujes rigido con el hombro."
+SINO SI Δt_pico < -35 ms:
     RETORNAR "No cortes el golpe; deja que la paleta pase la linea del codo con aceleracion continua."
 SINO SI θ_impacto < -55°:
     RETORNAR "Angulo excesivamente cerrado; abri ligeramente la cara para superar la red."
 SINO:
-    RETORNAR "Topspin de reves consistente: buena extension y raspado."
+    RETORNAR "Topspin de reves consistente: buen pivote de codo y raspado fluido."
 ```
 
 ---
