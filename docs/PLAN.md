@@ -96,41 +96,48 @@ Los formatos de datos entre modulos estan fijados en [`CONTRATOS.md`](CONTRATOS.
 *⚠️ Salvavidas (Plan B):* Si a las 11:30 AM P1 no logra estabilizar las interrupciones de hardware, abortar y usar un bucle de *polling* bruto (`delayMicroseconds`) para garantizar la grabacion de la tarde.
 
 ### Clase 2 · Viernes 16/10 · Grabacion masiva del Dataset (Alimentacion: Cable USB-C a PC)
-**Materiales a llevar:** Setup fisico de Clase 1, MPU-6500 de repuesto, cinta plana de 7 vias, cinta Kapton, termocontraible fino, minimo 20 pelotas de ping pong y red portatil.
+**Materiales a llevar:** Setup fisico de Clase 1, MPU-6500 de repuesto, cinta Kapton, cables flexibles para chicotes (o cables dupont cortados), regla metalica o calibre para medir L, cinta bifaz 3M VHB, cinta de pintor, minimo 20 pelotas de ping pong y red portatil.
+*Nota de compras:* Ya NO hace falta comprar cinta plana de 7 vias, tramos largos de termocontraible ni edge tape para tapar cables en el mango. El mango queda 100 % libre.
 
 | P1 | P2 | P3 |
 | --- | --- | --- |
-| Implementar buffer circular en ESP32-S3 (congelar ventana de 200 ms alrededor del impacto) y testear BLE en dummy | Script de segmentacion automatica de impactos y formateo directo para Edge Impulse | Pruebas de estimacion de velocidad tangencial ($v = \omega_{\text{swing}} \cdot L$) y visualizacion en tiempo real |
+| Implementar buffer circular en ESP32-S3 y recalibrar trigger de impacto por derivada temporal (Jerk / $\Delta a / \Delta t$) para filtrar movimientos de muñeca | Script de segmentacion automatica de impactos y formateo directo para Edge Impulse | Protocolo de medicion exacta de $L$ (pomo a centro geometrico), pruebas de estimacion de velocidad tangencial ($v = \omega \cdot L$) y visualizacion |
 
-**Montaje definitivo del sensor (Clase 2):** la capsula impresa no llega para esta clase, pero el sensor ya queda pegado en su lugar final. La capsula es solo una tapa que no toca el sensor y se agrega en la Clase 4 sin moverlo, asi que el dataset de la tarde se graba con el montaje que va a tener la paleta terminada.
+**Montaje definitivo del sensor (Clase 2):** la capsula impresa no llega para esta clase, pero el sensor ya queda pegado en su lugar final en el **pomo de la paleta** (base del mango). La capsula modular se agrega en la Clase 4 sin mover el sensor, asi que el dataset de la tarde se graba con el montaje que va a tener la paleta terminada.
 
-1. **Preparacion del sensor de repuesto (Hardware limpio)**
-   - No soldar la tira de pines (headers) recta: Dejar los orificios del PCB libres de conectores macho.
-   - Soldar cable plano (ribbon cable) directamente a los pads:
-     - Cortar un tramo de cinta plana de 7 vias (longitud aprox. 12 a 15 cm hasta la base del mango).
-     - Pelar y estañar las puntas apenas 1 mm.
-     - Soldar cada hilo directamente en los orificios de la interfaz SPI: VCC, GND, SCL/SCLK, SDA/SDI, AD0/SDO, NCS e INT.
-     - Doblar los cables en un angulo plano de 90° inmediatamente al salir del estaño hacia el mango.
-   - Aislacion y perfil bajo: Colocar cinta Kapton sobre las soldaduras para evitar contactos. Espesor total: < 3 mm.
-   - Recalibrar el offset del acelerometro con `herramientas/calibrar.py` (es otro modulo) y actualizar `OFFSET_A*_G` en `paleta.ino`.
+1. **Preparacion del sensor de repuesto (Hardware limpio y pines al ras)**
+   - No desoldar los pines macho de la placa para no levantar pistas ni sobrecalentar el PCB.
+   - Cortar los pines macho al ras con alicate dejando un muñon de apenas 1 mm.
+   - Soldar chicotes de cables flexibles cortos (3 a 4 cm) directamente sobre los muñones o en la cara posterior del PCB para las lineas SPI: VCC, GND, SCL, SDA, AD0, NCS e INT.
+   - Proteger las soldaduras con cinta Kapton para evitar cualquier corto. Espesor total: < 3 mm.
+   - Recalibrar el offset del acelerometro con `herramientas/calibrar.py` y actualizar `OFFSET_A*_G` en `paleta.ino`.
 
-2. **Fijacion en la madera**
-   - Marcar en el cuello el contorno de la capsula (medidas en la seccion 7.1), para que el sensor quede donde despues lo va a tapar.
-   - Pegar el MPU con cinta de pintor + VHB (seccion 7.3), rigido contra la madera y **paralelo a la cara de la paleta**, no apoyado sobre el chaflan. Si queda inclinado, los ejes dejan de coincidir con `CONTRATOS.md` y el angulo de la cara sale corrido.
-   - Llevar la cinta plana por el canto del mango y cubrirla con edge tape (seccion 7.3).
+2. **Protocolo de medicion rigurosa de $L$ (P3)**
+   - No usar un valor aproximado: medir fisicamente en la paleta del grupo con regla metalica o calibre.
+   - Punto de referencia inferior: el plano inferior de la madera del pomo (donde apoya el sensor).
+   - Punto de referencia superior: la interseccion de los ejes mayor y menor de la cabeza de la pala (centro geometrico del sweet spot).
+   - Registrar la constante en metros (ej. `#define L_PALETA_M 0.262f`). Una variacion de $\pm 5\text{ mm}$ en $260\text{ mm}$ introduce solo $\approx 1.9\%$ de error, perfectamente tolerable para el MVP.
 
-3. **Conexion hacia el mango**
-   - En el extremo del cable plano en el mango, soldar terminales dupont hembra (sirven los de cables dupont cortados, con termocontraible) para conectar a la ESP32-S3, respetando los pines SPI ya probados: SCL→42, SDA→41, AD0→14, NCS→21, INT→1.
-   - Comprobar continuidad con multimetro antes de encender para descartar cortos entre lineas SPI adyacentes.
+3. **Fijacion en la madera del pomo**
+   - Limpiar la base de madera del pomo con alcohol.
+   - Pegar primero cinta de pintor (sacrificio) y encima cinta bifaz 3M VHB.
+   - Pegar la plaqueta del MPU-6500 plana y **rigida contra la base del pomo**, sin juego mecanico.
+   - Alineacion: eje largo del sensor paralelo al plano de la pala (34 mm) y eje corto perpendicular (22 mm).
+   - El ESP32-S3 se fija provisoriamente en linea por debajo con cinta, dejando el conector USB-C accesible para el cable a la PC.
+   - Chau cinta plana: los chicotes cortos (2-3 cm) van directo entre MPU y ESP32, sin nada recorriendo el mango.
 
-4. **Verificar ejes y angulo (antes de grabar)**
-   - Paleta acostada con la goma roja arriba y el mango fuera del borde de la mesa (asi la cara queda horizontal): tiene que dar `az` ≈ +1 g y `ax`, `ay` ≈ 0 g.
-     - Si `az` da −1 g, el modulo quedo mirando para el lado negro: invertir los ejes en `alinearEjes()`.
-     - Si `ax` o `ay` se alejan de 0 (0.05 g ≈ 3°), el sensor quedo inclinado: volver a pegarlo derecho o corregir esa inclinacion en `alinearEjes()`.
-   - Paleta vertical con el mango abajo: tiene que dar `ax` ≈ +1 g.
+4. **Verificar ejes y trampa del signo en `alinearEjes()` (P1)**
+   - Al apoyar en la base del pomo mirando hacia abajo, la orientacion de los ejes se invierte respecto al montaje en el cuello.
+   - Paleta horizontal con la goma roja arriba: tiene que dar `az` ≈ +1 g y `ax`, `ay` ≈ 0 g. Si da −1 g, invertir signo en `alinearEjes()`.
+   - Paleta vertical con el mango apoyado en la mesa y la punta al techo: verificar que `ax` responda a la convencion de `CONTRATOS.md` (+1 g hacia la punta de la paleta).
 
-**Tarde: Grabacion masiva** con el sensor ya en su lugar definitivo. Los tres: 50 golpes por tipo (Topspin Der/Rev, Empuje Der/Rev) $\approx$ 600 tiros.
-**Hito:** Sensor de repuesto montado en su lugar definitivo y Dataset v1 subido a Drive y segmentado para entrenamiento.
+5. **Trigger de impacto por Jerk (P1)**
+   - En la base del pomo, la onda elastica viaja por la madera en $< 0.05\text{ ms}$, pero llega amortiguada en amplitud respecto al cuello.
+   - El choque con la pelota dura 1-2 ms, mientras que un frenazo muscular de muñeca toma 30-100 ms.
+   - Disparo por derivada discreta a 1000 Hz: $Jerk[k] = (|a[k]| - |a[k-1]|) \cdot 1000$. Condicion de trigger: `if (delta_a > UMBRAL_JERK)` sobre la norma o el eje perpendicular al impacto, eliminando falsos positivos por swing libre.
+
+**Tarde: Grabacion masiva** con el sensor ya en su lugar definitivo en el pomo. Los tres: 50 golpes por tipo (Topspin Der/Rev, Empuje Der/Rev) $\approx$ 600 tiros.
+**Hito:** Sensor montado en el pomo y Dataset v1 grabado con la configuracion mecanica final.
 *⚠️ Criterio de Trigger (Plan B):* Evaluar si el acelerometro detecta limpiamente el impacto sin falsos positivos. Si anda bien, se descarta el piezoelectrico. Si mete ruido, el piezoelectrico entra al diseño 3D y hardware de inmediato.
 
 ### Clase 3 · Viernes 23/10 · Despliegue TinyML y Pase a Inalambrico (Alimentacion: Powerbank en bolsillo)
@@ -292,42 +299,40 @@ El usuario entra a una pantalla con 3 pasos guiados:
 ## 7. Especificaciones Mecanicas y de Montaje (P2)
 
 ### 7.1 Que modelar en Fusion 360
-Diseña dos piezas impresas en PETG o PLA (paredes de 1.6 mm a 2.0 mm):
+Diseña un **sistema modular de dos piezas acopladas directamente en el pomo** impresas en PETG o PLA (paredes de 1.6 mm a 2.0 mm):
 
-**Pieza 1 — Capsula del Sensor (MPU-6500):**
-- Medidas tomadas sobre la paleta el 9/10: 30 mm de ancho, 20.5 mm de largo, alto en rampa de 6 a 9.8 mm, peso $< 5\text{ g}$.
-- Base en cuña compensada que apoya plana sobre el chaflan de la madera del cuello.
-- Domo que tapa la plaqueta del MPU-6500 sin tocarla (el sensor va pegado a la madera, no a la capsula).
-- Ranura pasacables de 12 × 2.5 mm en el canto inferior para la **cinta plana de 7 vias** (VCC, GND, SCL, SDA, AD0, NCS, INT), con traba interna de alivio de tension (*strain relief*).
-- Las 7 vias quedan ocupadas por el sensor: si entra el piezoelectrico (Plan B), probablemente vaya en la otra cara de la paleta, con su propio cable.
-- Impresion: capa de 0.2 mm, 3 o 4 perimetros (paredes de 1.6 mm solidas), boca abajo apoyada sobre el techo plano, sin soportes.
+**Pieza A — Portasensor / Base fija (MPU-6500):**
+- Medidas de encastre: cavidad que abraza los ultimos 5 a 8 mm del pomo de madera de la paleta (seccion aprox. 34 × 22 mm).
+- Aloja la plaqueta del MPU-6500 plana y **rigida contra la madera** (pegada con VHB directo a la base de la madera para transmitir el pulso de choque sin amortiguacion plastica).
+- Ventana pasacables interna hacia abajo con traba y alivio mecanico para chicotes cortos.
+- Labio perimetral de encastre o guia de fijacion para acoplar la Pieza B.
+- Impresion: paredes solidas de 1.6 a 2.0 mm, orientada para maxima rigidez estructural.
 
-**Pieza 2 — Capuchon Prolongador del Mango (ESP32-S3):**
-- Diseño tipo "vaina" o capuchon que prolonga el mango 3.5 a 4 cm hacia abajo en vertical, sin aletas laterales que sobresalgan del perfil de la mano.
-- Zona superior (encastre): Cavidad que abraza los ultimos 15 mm del mango de la paleta copiando su forma eliptica/concava, con apriete por friccion o ranura para una vuelta de cinta exterior.
-- Zona inferior (electronica): Aloja la placa ESP32-S3 orientada de forma vertical (en la misma direccion del eje del mango).
+**Pieza B — Vaina / Capuchon del ESP32-S3:**
+- Diseño tipo vaina que encastra o atornilla firmemente sobre la Pieza A, prolongando el mango hacia abajo en vertical sin aletas laterales.
+- Aloja la placa ESP32-S3 orientada de forma vertical (en la misma direccion del eje del mango).
 - Abertura en la base inferior centrada para conectar el cable USB-C de alimentacion.
-- Entrada superior para recibir los cables del bus SPI que bajan por el canto.
 - Aristas redondeadas con filetes (*fillets*) de radio amplio para que el talon de la palma descanse sin molestias.
+- **Chau cinta plana exterior:** la longitud de cables SPI pasa de 15 cm exteriores a chicotes internos de 2 a 3 cm, 100 % blindados y protegidos dentro de las piezas plasticas.
 
 ### 7.2 Donde ubicar cada componente
-- **MPU-6500:** En el cuello de la paleta (el triangulo de madera descubierta entre el mango y la goma), en la cara donde no apoye el dedo indice.
-  *Por que ahi:* Esta pegado a la zona de juego (a 2–3 cm del contacto), capturando la vibracion pura del impacto ($>150\text{ Hz}$) y el angulo exacto de la madera sin la amortiguacion de los tejidos de la mano.
-- **ESP32-S3:** En el extremo inferior del mango (el pomo), alineado longitudinalmente dentro del capuchon.
-  *Por que ahi:* Al estar ubicado en el eje de rotacion de la muñeca, los 10–12 gramos extra de la placa y la carcasa tienen un momento de inercia practicamente despreciable; la punta de la paleta se siente igual de agil.
+- **MPU-6500 y ESP32-S3:** Ambos unificados en el **pomo inferior** (base del mango).
+  *Por que ahi:*
+  1. **Ergonomia del agarre:** El agarre real *shakehand* del jugador invade por completo la zona de transicion del cuello (apoyo continuo de la eminencia tenar y el pulgar). Un resalto de hasta 10 mm en el cuello arruina la propiocepcion y cambia la biomecanica del golpe.
+  2. **Integridad electrica y mecanica:** Elimina la necesidad de pasar un bus digital SPI de 7 vias por el canto del mango expuesto a la friccion de los dedos, torsion y sudor salino.
+  3. **Inercia minima ($I = m \cdot r^2$):** Ambos componentes quedan concentrados en el eje de rotacion de la muñeca ($r \approx 0$), por lo que el peso extra tiene un momento de inercia despreciable y la paleta no cabecea.
+  4. **Deteccion por Jerk:** Aunque la amplitud bruta es menor que en el cuello, la onda de choque viaja por la madera dura en $< 0.05\text{ ms}$; el trigger por derivada temporal ($\Delta a / \Delta t$) separa limpiamente el choque de la pelota (1-2 ms) de cualquier movimiento muscular humano (30-100 ms).
 - **Alimentacion (Powerbank):** En el bolsillo del pantalon.
 
 ### 7.3 Como montarlo y cablearlo
-- **Fijacion del sensor a la madera:**
-  1. Limpia la zona del cuello con alcohol.
-  2. Pega primero un parche de cinta de enmascarar (cinta de papel de pintor) bien estirada sobre la madera (cinta de sacrificio).
-  3. Encima de la cinta de papel, coloca cinta bifaz (3M VHB).
-  4. Apoya la cara metalica del **disco piezoelectrico** y la base del **MPU-6500** presionando firmemente directo contra el VHB. *(El piezoelectrico NUNCA va encastrado en las paredes de plastico porque el plastico actuaria como filtro pasabajos disipando la onda de la madera).* 
-  5. La capsula 3D se coloca por arriba actuando simplemente como un **domo protector** que los cubre, sin apretarlos ni dejarlos sueltos.
-- **Puente del bus SPI (Capsula 1 $\rightarrow$ Capsula 2):**
-  - **Ordenar los cables en cinta plana:** No armes una trenza ni un manojo cilindrico grueso. Peina los 7 hilos para que queden planos, uno al lado del otro en paralelo, formando una franja plana de menos de 1 mm de espesor.
-  - **Primera fijacion (Inmovilizacion puntual):** Apoya la franja de cables recorriendo el canto lateral estrecho del mango (la madera del canto entre las dos cachas donde no cierran los dedos). Pega dos tiritas finas de cinta de papel o cinta scotch transparente bien tensadas (una cerca del cuello y otra cerca de la base) para que los cables no se muevan de su carril mientras trabajas.
-  - **Fijacion mecanica definitiva y proteccion:** Cubri todo el canto lateral del mango de arriba a abajo usando una vuelta de cinta de borde para paleta de ping pong (*edge tape*) o cinta aisladora de PVC de buena calidad. Aplicala estirandola con fuerza para que abrace la madera y copie el relieve. La cinta sella los cables contra el sudor de la mano, evita roces y deja el mango completamente liso al tacto.
+- **Fijacion del sensor a la madera del pomo:**
+  1. Limpiar la base plana del pomo con alcohol.
+  2. Pegar un parche de cinta de pintor estirada (sacrificio) y encima cinta bifaz 3M VHB.
+  3. Pegar el MPU-6500 presionando con fuerza directo contra el VHB. El acople debe ser rigido contra la madera para que la onda de choque no se filtre.
+- **Interconexion directa (Pieza A $\rightarrow$ Pieza B):**
+  - Soldar chicotes de cables flexibles cortos (2 a 3 cm) directo a los muñones de pines cortados al ras del MPU.
+  - Pasar los chicotes por la ventana pasacables interna de la Pieza A y conectar al ESP32-S3 dentro de la Pieza B.
+  - Encastrar la Pieza B sobre la Pieza A. El mango de la paleta queda 100 % limpio y libre de cables o cintas.
 - **Alimentacion hacia el cuerpo:**
-  - Enchufa un cable USB-C liviano y flexible a la base del capuchon.
-  - Pasalo por dentro de la manga de la remera hacia el powerbank en el bolsillo, dejando una comba floja a la altura del codo para bracear libremente sin tirones.
+  - Enchufar un cable USB-C liviano y flexible a la base inferior del capuchon.
+  - Pasarlo por dentro de la manga de la remera hacia el powerbank en el bolsillo, con comba floja en el codo para mover el brazo libremente.
