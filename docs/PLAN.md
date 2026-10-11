@@ -143,7 +143,7 @@ Los formatos de datos entre modulos estan fijados en [`CONTRATOS.md`](CONTRATOS.
 
 | P1 | P2 | P3 |
 | --- | --- | --- |
-| **Mañana:** Implementar y calibrar trigger por Jerk. **Tarde:** Monitoreo de buffer circular | **Mañana:** Validacion de recepcion de eventos. **Tarde:** Grabacion masiva y segmentacion | **Mañana:** Pruebas de estimacion $v = \omega \cdot L$. **Tarde:** Multiball y control de calidad |
+| **Mañana:** Implementar y calibrar trigger por Jerk. **Tarde:** Monitoreo de buffer circular | **Mañana:** Validacion de recepcion de eventos. **Tarde:** Grabacion masiva y segmentacion | **Mañana:** Pruebas de estimacion $v = \omega \cdot L$. **Tarde:** Control de calidad y protocolo autopique |
 
 **Plan de la jornada (Viernes 16/10):**
 1. **Mañana (9:00 - 12:30) · Calibracion del Trigger por Jerk e Impacto:**
@@ -151,7 +151,7 @@ Los formatos de datos entre modulos estan fijados en [`CONTRATOS.md`](CONTRATOS.
    - Ajuste de umbral: tirar 10 swings rapidos al aire (**no debe disparar**) vs. toques secos con pelota o dedos (**debe disparar al instante**).
    - Validar congelamiento de la ventana de 196 ms alrededor del impacto en el buffer circular.
 2. **Tarde (13:30 - 16:00) · Grabacion Masiva del Dataset v1:**
-   - Los 4 golpes tecnicos: 50 golpes por tipo (Topspin Der/Rev, Empuje Der/Rev) $\approx$ 600 tiros utiles con alimentacion constante (multiball).
+   - Los 4 golpes tecnicos: 50 golpes por tipo (Topspin Der/Rev, Empuje Der/Rev) $\approx$ 600 tiros utiles con autopique constante (self-feed con mano libre segun protocolo).
    - Tanda obligatoria de 50 a 60 muestras de descarte (`ruido` / `not_a_swing`) siguiendo [`PROTOCOLO.md`](PROTOCOLO.md#4-protocolo-deliberado-para-la-clase-no-golpe-ruido--not_a_swing) (falsos swings al aire, malabares, acomodar grip, caminata/recogida).
    - Segmentar con `segmentar.py` y subir el Dataset v1 a Drive.
 

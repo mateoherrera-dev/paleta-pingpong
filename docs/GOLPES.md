@@ -20,46 +20,50 @@ El sistema opera mediante una separacion estricta entre la **clasificacion de in
 
 ## 2. Analisis por Golpe
 
-### A. Topspin de Derecha contra Corte (Forehand Topspin Against Backspin — TD)
+### A. Topspin de Derecha (Forehand Topspin — TD)
 https://www.youtube.com/watch?v=_Bi3vOTH_do
 
+*Condicion de captura:* Ejecucion sobre bola viva neutra mediante autopique (self-feed con la mano libre). Foco en arco ascendente y aceleracion fluida.
+
 #### Tecnica segun PingSkills
-* **Posicion inicial y trayectoria:** La paleta arranca baja, a la altura de la rodilla (*knee high*), con la cara levemente abierta para poder entrar bajo el efecto cortado rival.
-* **Contacto y terminacion:** El contacto exige un raspado ascendente (*brushing action*). La trayectoria debe ser marcadamente vertical, finalizando por encima del nivel de los ojos (*above eye level*) con una flexion angular aproximada de 90° en el codo.
-* **Errores frecuentes:** Iniciar el swing a la altura de la mesa (demasiado alto), avanzar con trayectoria puramente horizontal o entrar con la cara excesivamente cerrada, lo que impide contrarrestar el backspin entrante y envia la bola a la red.
+* **Posicion inicial y trayectoria:** Al picar la bola uno mismo sobre la mesa, no existe backspin rival entrante. La paleta arranca a la altura de la cadera o mesa (no hace falta bajar hasta la rodilla), con la cara cerrada hacia la mesa para imprimir topspin y no tirar la bola larga fuera de la mesa.
+* **Contacto y terminacion:** El contacto exige un raspado ascendente hacia adelante (*brushing action*). La trayectoria sube y avanza, terminando a la altura de la frente o los ojos con flexion de codo.
+* **Errores frecuentes:** Entrar con la cara demasiado vertical o abierta ($\theta > -20^\circ$), lo que hace que la bola neutra vuele larga fuera de la mesa; o tapar excesivamente la pelota ($\theta < -60^\circ$) enviandola directo a la red.
 
 #### Signatura Inercial (IMU)
-* Vector de aceleracion vertical marcadamente positivo en la ventana previa al impacto (transicion desde altura de rodilla hacia arriba).
+* Vector de aceleracion vertical positivo en la ventana previa al impacto.
 * Rotacion horaria de antebrazo/muñeca en el eje longitudinal/transversal.
 * Pico de velocidad angular $\omega_{\max}$ alineado con el instante del choque.
 
 #### Reglas Deterministicas de Evaluacion
-* **Rango ideal de angulo ($\theta_{\text{impacto}}$):** $[-40^\circ, -20^\circ]$
+* **Rango ideal de angulo ($\theta_{\text{impacto}}$):** $[-50^\circ, -30^\circ]$
 * **Tolerancia de timing ($\Delta t_{\text{pico}}$):** $\ge -25\text{ ms}$
 * **Aceleracion vertical minima previa:** $a_{\text{vertical}} \ge a_{\text{min\_lift}}$
 
 ```text
 SI a_vertical < a_min_lift:
-    RETORNAR "Inicia el swing mas abajo (altura de rodilla) y termina sobre los ojos para levantar la bola."
-SINO SI θ_impacto > -5°:
-    RETORNAR "Cara excesivamente abierta; cerra levemente la paleta para que no flote al fondo."
-SINO SI θ_impacto < -45°:
-    RETORNAR "Cara muy cerrada; estas tapando la pelota y el corte rival la tirara a la red."
+    RETORNAR "Acompaña la trayectoria de abajo hacia arriba para imprimir efecto topspin."
+SINO SI θ_impacto > -20°:
+    RETORNAR "Cara excesivamente abierta para bola neutra; cerra la paleta hacia la mesa para no tirarla larga."
+SINO SI θ_impacto < -60°:
+    RETORNAR "Cara excesivamente cerrada; estas tapando la pelota y chocara contra la red."
 SINO SI Δt_pico < -35 ms:
     RETORNAR "Estas frenando la mano antes del contacto; acelera a traves de la pelota."
 SINO:
-    RETORNAR "Topspin de derecha optimo: trayectoria ascendente y aceleracion fluida."
+    RETORNAR "Topspin de derecha optimo: arco ascendente fluido y buen raspado."
 ```
 
 ---
 
-### B. Topspin de Reves contra Corte (Backhand Topspin — TR)
+### B. Topspin de Reves (Backhand Topspin — TR)
 https://www.youtube.com/watch?v=LmQNDC-1Ew0
 
+*Condicion de captura:* Ejecucion sobre bola viva neutra mediante autopique (self-feed con la mano libre).
+
 #### Tecnica segun PingSkills
-* **Posicion inicial:** La paleta debe descender al menos hasta la altura de las rodillas para situarse por debajo de la trayectoria de la bola y permitir una trayectoria de elevacion neta.
-* **Extension y aceleracion:** El contacto exige un raspado fino. El swing no debe interrumpirse al momento del choque: el brazo y la muñeca deben proyectarse hacia arriba hasta superar la altura de la cabeza, permitiendo que la paleta sobrepase la linea del codo (*swing past your elbow*).
-* **Errores frecuentes:** Desacelerar la mano por miedo a fallar, o no descender lo suficiente en la preparacion, provocando que la rotacion contraria de la pelota entrante (backspin) la arrastre directo a la red.
+* **Posicion inicial:** Inicio frente al estomago a la altura de la mesa con la cara cerrada mirando hacia la mesa.
+* **Extension y aceleracion:** Raspado fino ascendente y hacia adelante. El brazo y la muñeca se extienden superando la linea del codo (*swing past your elbow*).
+* **Errores frecuentes:** Entrar con cara abierta provocando que la bola salga despedida fuera de la mesa, o desacelerar antes del impacto por falta de confianza.
 
 #### Signatura Inercial (IMU)
 * Inversion de polaridad en el giroscopio respecto al topspin de derecha (movimiento de supinacion y extension de reves).
@@ -67,19 +71,19 @@ https://www.youtube.com/watch?v=LmQNDC-1Ew0
 * Curva de velocidad angular pronunciada con pico sostenido durante el *follow-through*.
 
 #### Reglas Deterministicas de Evaluacion
-* **Rango ideal de angulo ($\theta_{\text{impacto}}$):** $[-35^\circ, -15^\circ]$
+* **Rango ideal de angulo ($\theta_{\text{impacto}}$):** $[-45^\circ, -25^\circ]$
 * **Tolerancia de timing ($\Delta t_{\text{pico}}$):** $\ge -25\text{ ms}$
 * **Intensidad angular ($\omega_{\max}$):** Debe superar el umbral minimo de aceleracion del swing ($\omega_{\text{min\_tr}}$).
 
-```{text}
-SI θ_impacto > 0°:
-RETORNAR "Entraste con la cara abierta; inclina la paleta hacia la mesa para superar la red."
+```text
+SI θ_impacto > -15°:
+    RETORNAR "Cara demasiado abierta; cerra la paleta hacia la mesa para que el topspin baje a tiempo."
 SINO SI Δt_pico < -35 ms O ω_max < ω_min_tr:
-RETORNAR "No cortes el golpe; deja que la paleta pase la linea del codo con aceleracion continua."
-SINO SI θ_impacto < -45°:
-RETORNAR "Angulo excesivamente cerrado; abri ligeramente la cara para dar altura al tiro."
+    RETORNAR "No cortes el golpe; deja que la paleta pase la linea del codo con aceleracion continua."
+SINO SI θ_impacto < -55°:
+    RETORNAR "Angulo excesivamente cerrado; abri ligeramente la cara para superar la red."
 SINO:
-RETORNAR "Topspin de reves consistente: buena extension y raspado."
+    RETORNAR "Topspin de reves consistente: buena extension y raspado."
 ```
 
 ---
@@ -147,7 +151,7 @@ RETORNAR "Empuje de reves solido: buena contencion y angulo adecuado."
 
 | Golpe | Codigo ML | Angulo Optimo ($\theta$) | Condicion Critica de Falla | Consejo Prioritario |
 | :--- | :---: | :---: | :--- | :--- |
-| **Topspin Derecha** | `TD` | $-40^\circ \text{ a } -20^\circ$ | $\theta > -10^\circ$ (Impacto plano) | *"Cerra la cara de la paleta; el golpe fue muy plano."* |
-| **Topspin Reves** | `TR` | $-35^\circ \text{ a } -15^\circ$ | $\Delta t_{\text{pico}} < -35\text{ ms}$ (Freno previo) | *"No cortes el movimiento; pasa la linea del codo."* |
+| **Topspin Derecha** | `TD` | $-50^\circ \text{ a } -30^\circ$ | $\theta > -20^\circ$ (Cara muy abierta) | *"Cerra la cara de la paleta; el golpe fue muy plano/abierto."* |
+| **Topspin Reves** | `TR` | $-45^\circ \text{ a } -25^\circ$ | $\theta > -15^\circ$ (Cara muy abierta) | *"Cerra la paleta hacia la mesa para que el topspin baje."* |
 | **Empuje Derecha** | `ED` | $+30^\circ \text{ a } +50^\circ$ | $\theta < +20^\circ$ o desvio lateral | *"Abri la cara y empuja recto hacia la red."* |
 | **Empuje Reves** | `ER` | $+25^\circ \text{ a } +45^\circ$ | $\theta < +15^\circ$ (Entrada recta) | *"Inclina la paleta hacia atras para raspar por abajo."* |
