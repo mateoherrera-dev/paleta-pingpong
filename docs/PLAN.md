@@ -105,6 +105,7 @@ Aprovechando la habilitacion del trabajo remoto en computadora entre semana, se 
 
 * **P1 (Firmware):** Dejar preparado el proyecto base en el IDE para el ESP32-S3 con el bus SPI a 1000 Hz y la logica del calculo de Jerk (`|a[k]| - |a[k-1]|`).
 * **P2 (Datos & 3D):** Validar en su PC que `ver.py` y `segmentar.py` funcionen sin errores usando datos simulados; avanzar el modelado de la Pieza A y Pieza B en Fusion 360 con las medidas del pomo.
+  - *Dato critico para Pieza B:* La placa ESP32-S3 conserva sus dos tiras de pines macho de fabrica (desoldarlas con soldador comun arriesga levantar pistas). Por ende, el espesor de la placa pasa de 2 mm planos a **8–10 mm de grosor total**. La cavidad de la vaina debe contemplar esa profundidad para cerrar con holgura.
 * **P3 (App & Cinematica):** Probar el algoritmo de orientacion (Madgwick o filtro complementario) con series temporales sinteticas y dejar lista la UI de captura en la Web App. Preparar asistencia tecnica para la mañana de montaje con P1.
 
 ---
@@ -137,7 +138,10 @@ Aprovechando la habilitacion del trabajo remoto en computadora entre semana, se 
     4. **Alivio mecanico indispensable:** Aplicar una gotita de silicona caliente o una vuelta firme de cinta apretando los 7 chicotes contra el cuerpo de la plaqueta para que la rigidez del cable DuPont no haga palanca ni arranque las pistas de cobre al doblarse.
     5. **Paso por pasacables:** Si la Pieza A (Portasensor) esta disponible, pasar los extremos libres de los 7 cables a traves de los orificios de la capsula hacia afuera antes de cualquier otra union.
     6. **Contacto rigido contra la madera (clave para el Jerk):** Pegar el MPU-6500 con cinta bifaz 3M VHB directo y firme contra la base de madera (previa cinta de sacrificio), nunca flotando suelto ni sobre plastico flexible que amortigue la onda de choque. Calzar la capsula Pieza A encima.
-    7. **Conexion final a ESP32:** Recien con la capsula colocada y los cables pasados, soldar o conectar los chicotes a los pines correspondientes del ESP32-S3. (Si se suelda el ESP32 antes de pasar los cables, no se podra cerrar la capsula).
+    7. **Conexion al ESP32 (los pines macho quedan puestos):** No intentar desoldar las tiras de pines del ESP32 (se arriesga levantar pistas de cobre o dañar componentes por calor). Se eligen dos alternativas segun preferencia en el banco:
+       - *Opcion A (rapida para este viernes): Fichas hembra DuPont encintadas en bloque.* Se conservan las fichas hembra en el extremo del ESP32 y se enchufan a los pines macho. Paso critico: envolver todo el conjunto de conectores y la placa con varias vueltas firmes de cinta aisladora apretada, formando un bloque solido para que la vibracion del impacto no afloje ningun pin.
+       - *Opcion B (la mas robusta mecanicamente): Soldar a la patita del pin.* Pelar el cable y soldarlo directo con una gotita de estaño a la base metalica del pin macho del ESP32. Es una union rigida inmune a falsos contactos.
+       *(Recordar: realizar la conexion recien cuando los cables hayan atravesado los pasacables de la Pieza A).*
   - **Verificacion de agarre (Shakehand):** Empuñar la paleta en posicion real de juego antes del pegado definitivo para asegurar que la palma, la eminencia tenar y el pulgar no choquen contra los bordes de la pieza.
   - **Plan B si la impresion 3D se demora:** La prioridad absoluta es no frenar el banco de pruebas. Si la Pieza A esta a las 09:00 se monta con capsula; si no llega a tiempo, se monta el sensor de forma provisoria (cinta de pintor + 3M VHB directo en el pomo encintado) para calibrar SPI a las 11:30 y asegurar si o si la grabacion de la tarde.
   - P3 asiste mecanicamente y mide la longitud geometrica $L$ (base del pomo a centro geometrico del sweet spot) para fijar `#define L_PALETA_M` en el firmware.
@@ -376,6 +380,7 @@ Diseña un **sistema modular de dos piezas acopladas directamente en el pomo** i
 **Pieza B — Vaina / Capuchon del ESP32-S3:**
 - Diseño tipo vaina que encastra o atornilla firmemente sobre la Pieza A, prolongando el mango hacia abajo en vertical sin aletas laterales.
 - Aloja la placa ESP32-S3 orientada de forma vertical (en la misma direccion del eje del mango).
+- **Cavidad adaptada a pines macho:** Profundidad util interna de 10 a 12 mm para alojar el grosor total de la placa con sus dos tiras de pines soldadas (8 a 10 mm) sin interferencias mecanicas.
 - Abertura en la base inferior centrada para conectar el cable USB-C de alimentacion.
 - Aristas redondeadas con filetes (*fillets*) de radio amplio para que el talon de la palma descanse sin molestias.
 - **Chau cinta plana exterior:** la longitud de cables SPI pasa de 15 cm exteriores a chicotes internos de 2 a 3 cm, 100 % blindados y protegidos dentro de las piezas plasticas.
