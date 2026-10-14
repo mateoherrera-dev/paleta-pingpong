@@ -115,8 +115,8 @@ Aprovechando la habilitacion del trabajo remoto en computadora entre semana, se 
 - Placa ESP32-S3 y modulo MPU-6500 (mas repuesto).
 - Paleta de ping pong.
 - Cables Dupont hembra-hembra para cortar y estañar como chicotes de 3 a 4 cm (*aclaracion:* no se dispone de cables flexibles dedicados, se cortan Duponts).
-- Soldador, estaño, alicate de corte al ras.
-- Cinta Kapton, cinta de pintor estirada (sacrificio) y cinta bifaz 3M VHB.
+- Soldador, estaño, alicate de corte al ras, pistola de silicona caliente (o cinta firme de sujecion).
+- Cinta aislante o cinta de pintor (papel) para aislacion electrica (reemplazo de Kapton) y cinta bifaz 3M VHB para fijacion mecanica.
 - Regla metalica o calibre para medir la constante geometrica $L$.
 - Cable USB-C largo (2–3 m) a PC.
 - Minimo 20 pelotas de ping pong y red portatil.
@@ -131,7 +131,8 @@ Aprovechando la habilitacion del trabajo remoto en computadora entre semana, se 
   - Cortar pines macho del MPU-6500 al ras dejando solo 1 mm de muñon (no desoldar).
   - Cortar 7 cables Dupont al ras de sus fichas para obtener chicotes de 3 a 4 cm; pelar y estañar puntas.
   - Soldar los 7 chicotes a las pistas SPI del MPU-6500 (`VCC`, `GND`, `SCL`, `SDA`, `AD0`, `NCS`, `INT`).
-  - Proteger la cara posterior de las soldaduras con cinta Kapton para evitar cortocircuitos.
+  - Proteger la cara posterior de las soldaduras con cinta aislante o de papel para evitar cortocircuitos (reemplazo de Kapton).
+  - **Alivio mecanico indispensable para chicotes Dupont:** El cable Dupont es mas rigido que el siliconado y al doblarse dentro del pomo puede hacer palanca y arrancar las pistas de cobre o quebrar los muñones soldados. Aplicar una gotita de silicona caliente (o una vuelta firme de cinta apretando los cables contra el cuerpo de la plaqueta) para que la traccion mecanica no tire directamente de la soldadura.
   - Limpiar la base del pomo con alcohol, colocar cinta de pintor de sacrificio y fijar el sensor con cinta bifaz 3M VHB directo contra la madera.
   - Fijar el ESP32-S3 en linea asegurando que el conector USB-C no reciba esfuerzo mecanico.
   - P3 asiste mecanicamente y mide la longitud geometrica $L$ (base del pomo a centro geometrico del sweet spot) para fijar `#define L_PALETA_M` en el firmware.
@@ -391,6 +392,8 @@ Diseña un **sistema modular de dos piezas acopladas directamente en el pomo** i
 - **Interconexion directa (Pieza A $\rightarrow$ Pieza B):**
   - Cortar 7 cables Dupont hembra-hembra a 3-4 cm, pelar y estañar las puntas para armar los chicotes (no se dispone de cables flexibles dedicados).
   - Soldar los chicotes directo a los muñones de pines cortados al ras del MPU.
+  - Aislar la cara posterior con cinta aislante o de papel (en reemplazo de Kapton).
+  - Aplicar alivio mecanico (gotita de silicona caliente o cinta firme contra la plaqueta) para impedir que la rigidez del cable Dupont arranque pistas o suelte los muñones al doblar.
   - Pasar los chicotes por la ventana pasacables interna de la Pieza A y conectar al ESP32-S3 dentro de la Pieza B.
   - Encastrar la Pieza B sobre la Pieza A. El mango de la paleta queda 100 % limpio y libre de cables o cintas.
 - **Alimentacion hacia el cuerpo:**
