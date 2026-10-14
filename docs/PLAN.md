@@ -114,9 +114,10 @@ Aprovechando la habilitacion del trabajo remoto en computadora entre semana, se 
 **Materiales a llevar:**
 - Placa ESP32-S3 y modulo MPU-6500 (mas repuesto).
 - Paleta de ping pong.
-- Cables Dupont hembra-hembra para cortar y estañar como chicotes de 3 a 4 cm (*aclaracion:* no se dispone de cables flexibles dedicados, se cortan Duponts).
+- Primera pieza impresa en 3D: Pieza A (Portasensor), traida por P2 si llega a tiempo.
+- Cables Dupont hembra-hembra para cortar y estañar como chicotes de 4 a 5 cm (*aclaracion:* no se dispone de cables flexibles dedicados, se cortan Duponts).
 - Soldador, estaño, alicate de corte al ras, pistola de silicona caliente (o cinta firme de sujecion).
-- Cinta aislante o cinta de pintor (papel) para aislacion electrica (reemplazo de Kapton) y cinta bifaz 3M VHB para fijacion mecanica.
+- Cinta aislante o cinta de pintor (papel) para aislacion electrica (reemplazo de Kapton) y cinta bifaz 3M VHB para fijacion mecanica rigida.
 - Regla metalica o calibre para medir la constante geometrica $L$.
 - Cable USB-C largo (2–3 m) a PC.
 - Minimo 20 pelotas de ping pong y red portatil.
@@ -127,14 +128,18 @@ Aprovechando la habilitacion del trabajo remoto en computadora entre semana, se 
 
 #### Cronograma detallado de la jornada:
 
-* **09:00 – 11:30 (P1 + P3) · Soldadura y montaje del nuevo sensor en pomo:**
-  - Cortar pines macho del MPU-6500 al ras dejando solo 1 mm de muñon (no desoldar).
-  - Cortar 7 cables Dupont al ras de sus fichas para obtener chicotes de 3 a 4 cm; pelar y estañar puntas.
-  - Soldar los 7 chicotes a las pistas SPI del MPU-6500 (`VCC`, `GND`, `SCL`, `SDA`, `AD0`, `NCS`, `INT`).
-  - Proteger la cara posterior de las soldaduras con cinta aislante o de papel para evitar cortocircuitos (reemplazo de Kapton).
-  - **Alivio mecanico indispensable para chicotes Dupont:** El cable Dupont es mas rigido que el siliconado y al doblarse dentro del pomo puede hacer palanca y arrancar las pistas de cobre o quebrar los muñones soldados. Aplicar una gotita de silicona caliente (o una vuelta firme de cinta apretando los cables contra el cuerpo de la plaqueta) para que la traccion mecanica no tire directamente de la soldadura.
-  - Limpiar la base del pomo con alcohol, colocar cinta de pintor de sacrificio y fijar el sensor con cinta bifaz 3M VHB directo contra la madera.
-  - Fijar el ESP32-S3 en linea asegurando que el conector USB-C no reciba esfuerzo mecanico.
+* **09:00 – 11:30 (P1 + P3) · Soldadura y montaje del nuevo sensor en pomo (con o sin Pieza A):**
+  - **Longitud de chicotes (4 a 5 cm):** Como la capsula del ESP32 (Pieza B) todavia no estara y la placa ira sujeta provisoriamente con cinta, no cortar cables cortos al ras de 2 cm. Dejar chicotes de 4 a 5 cm para manipular con comodidad y evitar cables tirantes.
+  - **Secuencia estricta de ensamble:**
+    1. Cortar pines macho del nuevo MPU-6500 al ras dejando 1 mm de muñon.
+    2. Soldar los 7 chicotes de 4 a 5 cm a las pistas SPI (`VCC`, `GND`, `SCL`, `SDA`, `AD0`, `NCS`, `INT`).
+    3. Aislar la cara posterior con cinta aislante o de papel (reemplazo de Kapton).
+    4. **Alivio mecanico indispensable:** Aplicar una gotita de silicona caliente o una vuelta firme de cinta apretando los 7 chicotes contra el cuerpo de la plaqueta para que la rigidez del cable DuPont no haga palanca ni arranque las pistas de cobre al doblarse.
+    5. **Paso por pasacables:** Si la Pieza A (Portasensor) esta disponible, pasar los extremos libres de los 7 cables a traves de los orificios de la capsula hacia afuera antes de cualquier otra union.
+    6. **Contacto rigido contra la madera (clave para el Jerk):** Pegar el MPU-6500 con cinta bifaz 3M VHB directo y firme contra la base de madera (previa cinta de sacrificio), nunca flotando suelto ni sobre plastico flexible que amortigue la onda de choque. Calzar la capsula Pieza A encima.
+    7. **Conexion final a ESP32:** Recien con la capsula colocada y los cables pasados, soldar o conectar los chicotes a los pines correspondientes del ESP32-S3. (Si se suelda el ESP32 antes de pasar los cables, no se podra cerrar la capsula).
+  - **Verificacion de agarre (Shakehand):** Empuñar la paleta en posicion real de juego antes del pegado definitivo para asegurar que la palma, la eminencia tenar y el pulgar no choquen contra los bordes de la pieza.
+  - **Plan B si la impresion 3D se demora:** La prioridad absoluta es no frenar el banco de pruebas. Si la Pieza A esta a las 09:00 se monta con capsula; si no llega a tiempo, se monta el sensor de forma provisoria (cinta de pintor + 3M VHB directo en el pomo encintado) para calibrar SPI a las 11:30 y asegurar si o si la grabacion de la tarde.
   - P3 asiste mecanicamente y mide la longitud geometrica $L$ (base del pomo a centro geometrico del sweet spot) para fijar `#define L_PALETA_M` en el firmware.
 
 * **11:30 – 13:00 (P1 + P3) · Validacion SPI a 1000 Hz, ejes y Jerk preliminar:**
@@ -390,7 +395,7 @@ Diseña un **sistema modular de dos piezas acopladas directamente en el pomo** i
   2. Pegar un parche de cinta de pintor estirada (sacrificio) y encima cinta bifaz 3M VHB.
   3. Pegar el MPU-6500 presionando con fuerza directo contra el VHB. El acople debe ser rigido contra la madera para que la onda de choque no se filtre.
 - **Interconexion directa (Pieza A $\rightarrow$ Pieza B):**
-  - Cortar 7 cables Dupont hembra-hembra a 3-4 cm, pelar y estañar las puntas para armar los chicotes (no se dispone de cables flexibles dedicados).
+  - Cortar 7 cables Dupont hembra-hembra a 4-5 cm (para dar margen de conexion con el ESP32 exterior), pelar y estañar las puntas para armar los chicotes.
   - Soldar los chicotes directo a los muñones de pines cortados al ras del MPU.
   - Aislar la cara posterior con cinta aislante o de papel (en reemplazo de Kapton).
   - Aplicar alivio mecanico (gotita de silicona caliente o cinta firme contra la plaqueta) para impedir que la rigidez del cable Dupont arranque pistas o suelte los muñones al doblar.
