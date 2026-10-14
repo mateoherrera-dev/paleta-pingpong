@@ -121,7 +121,7 @@ Aprovechando la habilitacion del trabajo remoto en computadora entre semana, se 
 - Cinta aislante o cinta de pintor (papel) para aislacion electrica (reemplazo de Kapton) y cinta bifaz 3M VHB para fijacion mecanica rigida.
 - Regla metalica o calibre para medir la constante geometrica $L$.
 - Cable USB-C largo (2–3 m) a PC.
-- Minimo 20 pelotas de ping pong y red portatil.
+- Canasto o caja con 36 pelotas de ping pong y red portatil.
 
 | P1 | P2 (desde 14:00) | P3 |
 | --- | --- | --- |
@@ -161,7 +161,8 @@ Aprovechando la habilitacion del trabajo remoto en computadora entre semana, se 
   - Correr prueba de 5 minutos con `ver.py` para asegurar recepcion fluida a 1000 Hz sin desborde de bufer (*buffer overflow*).
 
 * **14:30 – 17:00 (P1 + P2 + P3) · Grabacion masiva del Dataset v1 en mesa:**
-  - Los 3 integrantes rotan continuamente en 3 roles: lanzador con autopique (mano libre segun protocolo), jugador y operador de consola de grabacion.
+  - Los 3 integrantes rotan continuamente en 3 roles: jugador con autopique, operador de consola de grabacion y recolector/asistente de pelotas.
+  - **Tandas continuas de 36 pelotas:** Se tira el canasto entero de corrido a ritmo constante (1 tiro cada 1.5 a 2 s, < 90 s por tanda) sin frenar la PC entre tiros, siguiendo las 3 reglas de oro de [`PROTOCOLO.md`](PROTOCOLO.md) (pausa neutra entre tiros, no cortar por pifias aisladas y evitar golpes espurios).
   - Capturar los 4 golpes tecnicos: 50 golpes por tipo (Topspin Derecha, Topspin Reves, Empuje Derecha, Empuje Reves).
   - Tanda obligatoria de descarte y ruido (`ruido` / `not_a_swing`) segun [`PROTOCOLO.md`](PROTOCOLO.md#4-protocolo-deliberado-para-la-clase-no-golpe-ruido--not_a_swing) (swings al aire, malabares, acomodar grip, caminata/recogida).
   - Meta: ~600 muestras etiquetadas y balanceadas.

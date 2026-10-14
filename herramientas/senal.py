@@ -5,7 +5,7 @@ Formato de los archivos y ejes: docs/CONTRATOS.md
 import numpy as np
 
 COLUMNAS = ["t_us", "ax_g", "ay_g", "az_g", "gx_dps", "gy_dps", "gz_dps", "impacto"]
-GOLPES = ["topspin_derecha", "topspin_reves", "empuje_derecha", "empuje_reves"]
+GOLPES = ["topspin_derecha", "topspin_reves", "empuje_derecha", "empuje_reves", "ruido"]
 FS = 1000  # muestras por segundo
 
 

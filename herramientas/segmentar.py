@@ -45,7 +45,7 @@ def main():
         # Inferir la etiqueta a partir del nombre original
         # GOLPES permitidos según senal.py
         etiqueta = "desconocido"
-        for golpe in ["topspin_derecha", "topspin_reves", "empuje_derecha", "empuje_reves"]:
+        for golpe in ["topspin_derecha", "topspin_reves", "empuje_derecha", "empuje_reves", "ruido"]:
             if golpe in ruta_csv.name:
                 etiqueta = golpe
                 break
