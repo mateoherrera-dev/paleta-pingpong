@@ -139,8 +139,8 @@ Aprovechando la habilitacion del trabajo remoto en computadora entre semana, se 
 * **11:30 – 13:00 (P1 + P3) · Validacion SPI a 1000 Hz, ejes y Jerk preliminar:**
   - Levantar firmware base y verificar que no haya lecturas nulas ni cuelgues del bus SPI.
   - Comprobar convencion de `alinearEjes()`:
-    - Paleta plana con goma roja hacia arriba: $a_z pprox +1	ext{ g}$.
-    - Paleta vertical con el pomo en la mesa y punta al techo: $a_x pprox +1	ext{ g}$.
+    - Paleta plana con goma roja hacia arriba: $a_z \approx +1\text{ g}$.
+    - Paleta vertical con el pomo en la mesa y punta al techo: $a_x \approx +1\text{ g}$.
   - Calibrar umbral preliminar de Jerk: verificar disparo inmediato ante toques secos de pelota o dedos y rechazo absoluto en swings rapidos al aire.
 
 * **13:00 – 14:00 (Todos) · Almuerzo y reunion de estado:**
