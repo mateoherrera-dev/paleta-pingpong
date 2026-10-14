@@ -1,14 +1,14 @@
 # Plan de trabajo
 
-**Condiciones:** somos 3 y trabajamos solo los viernes, de 9 a 16 (a veces hasta las 18). Entre semana no hay trabajo de proyecto, salvo tramites cortos: compras e impresion 3D.
+**Condiciones:** somos 3. Se trabaja de forma presencial los viernes de 9 a 18 y de forma asincronica durante la semana (desarrollo de software, modelado 3D, analisis de datos y simulaciones). P2 tiene disponibilidad presencial los viernes exclusivamente en el bloque de la tarde (14:00 a 18:00), por lo que la mañana tecnica (9:00 a 13:00) queda a cargo de P1 + P3 (con P3 como suplente y apoyo de hardware).
 
-**Calendario:** hoy (viernes 2/10) es la clase 0. El MVP tiene que estar terminado el **viernes 13/11**. Despues viene la fase 2, hasta la entrega final.
+**Calendario:** el MVP tiene que estar terminado el **viernes 13/11**. Despues viene la fase 2, hasta la entrega final.
 
-| Clase | 1 | 1.5 (extra) | 2 | 3 | 4 | 5 | 6 |
+| Clase | 1 | 1.5 (suspendida) | 2 | 3 | 4 | 5 | 6 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Fecha | 9/10 | Miercoles 14/10 | 16/10 | 23/10 | 30/10 | 6/11 | **13/11 · MVP** |
+| Fecha | 9/10 | 14/10 (absorbida) | 16/10 | 23/10 | 30/10 | 6/11 | **13/11 · MVP** |
 
-No hay un viernes de colchon al final. El margen sale de dos lados: el horario de 16 a 18 de cada viernes, y el 13/11, que esta pensado para cerrar y arreglar, no para agregar cosas.
+No hay un viernes de colchon al final. El margen sale de dos lados: el bloque de cierre de 16:30 a 18:00 de cada viernes, y el 13/11, que esta pensado para cerrar y arreglar, no para agregar cosas.
 
 **Objetivo del MVP:** alguien pega un golpe y el celular muestra **que golpe fue, con que angulo pego la paleta y la velocidad de swing estimada ($v = \omega \cdot r$)**, junto con un consejo tecnico.
 
@@ -22,6 +22,14 @@ YOLO-pose y el analisis de postura van en la **fase 2**, despues del 13/11.
 
 ---
 
+### Diagnostico: Cuellos de botella y adaptacion
+
+1. **El cuello de botella de la Clase 2:** El plan original del 16/10 asumia llegar con la paleta ya armada, soldada y testeada en la clase 1.5. Al suspenderse esa sesion intermedia el 14/10, si el viernes no se reorganiza la mañana tecnica, el equipo gastaria la tarde soldando y perderia la mesa de ping pong, postergando la captura del Dataset v1 y retrasando el entrenamiento en Edge Impulse.
+2. **La ausencia matutina de P2:** Toda actividad presencial de P2 se concentra obligatoriamente en la franja de 14:00 a 18:00. P3 acompaña activamente a P1 en el banco de hardware durante la mañana (09:00 a 13:00) para garantizar que la paleta este operativa antes del almuerzo.
+3. **Aprovechamiento del trabajo asincronico:** Habilitar el trabajo remoto en computadora entre semana permite desacoplar desarrollo de software, modelado 3D y analisis de datos de las horas de laboratorio fisico.
+
+---
+
 ## 1. Equipo y modulos
 
 Los formatos de datos entre modulos estan fijados en [`CONTRATOS.md`](CONTRATOS.md).
@@ -29,12 +37,12 @@ Los formatos de datos entre modulos estan fijados en [`CONTRATOS.md`](CONTRATOS.
 | Persona | Modulos | Que hace | Suplente |
 | --- | --- | --- | --- |
 | **P1 · Hardware** | Firmware base | Sensor MPU-6500 por SPI a 1000 Hz (interrupciones/DMA), deteccion de impactos (trigger), emision de struct BLE (NimBLE) | P2 |
-| **P2 · Datos** | Datos, Modelo + 3D | Grabacion (UART), dataset, entrenamiento Edge Impulse, modulo wrapper C++ (`ml_inference.h`), diseño e impresion de capsula (Fusion 360) | P3 |
-| **P3 · Tecnica** | App + UI + BLE | Contrato de payload BLE, App web (Web Bluetooth API), calculo cinematico ($v = \omega \cdot L$), angulos (Madgwick), criterios y consejos | P1 |
+| **P2 · Datos** | Datos, Modelo + 3D | Grabacion (UART), dataset, entrenamiento Edge Impulse, modulo wrapper C++ (`ml_inference.h`), diseño e impresion de capsula (Fusion 360). Presencial 14:00 a 18:00 | P3 |
+| **P3 · Tecnica** | App + UI + BLE | Contrato de payload BLE, App web (Web Bluetooth API), calculo cinematico ($v = \omega \cdot L$), angulos (Madgwick), criterios y consejos. Asistencia y suplente de hardware en mañanas | P1 |
 
 ### Reglas
 
-- **El suplente sabe como funciona el modulo** que cubre, por si el dueño falta un viernes.
+- **El suplente sabe como funciona el modulo** que cubre, por si el dueño falta un viernes. P3 asiste activamente en hardware los viernes por la mañana.
 - **Los tres graban datos.** La grabacion es una actividad de grupo, no del modulo de datos solo.
 - **Integrar todos los viernes.** Cada viernes a la tarde se prueba de punta a punta lo que haya, aunque sea con datos simulados.
 - **Los contratos no se cambian solos:** se discute entre los tres y se actualiza `CONTRATOS.md`.
@@ -42,17 +50,16 @@ Los formatos de datos entre modulos estan fijados en [`CONTRATOS.md`](CONTRATOS.
 
 ---
 
-## 2. Como es un viernes
+## 2. Nuevo esquema operativo de los viernes
 
-| Horario | Que se hace |
-| --- | --- |
-| 9:00 – 9:20 | Arranque: que quedo del viernes pasado, que hito tenemos que mostrar hoy |
-| 9:20 – 12:30 | **Trabajo por modulos**, cada uno en lo suyo |
-| 12:30 – 13:30 | Almuerzo |
-| 13:30 – 15:00 | **Bloque de grupo:** grabacion, pruebas con gente o integracion |
-| 15:00 – 15:45 | Prueba de punta a punta y control del hito del dia |
-| 15:45 – 16:00 | Cierre: commit, tablero, compras y tareas del proximo viernes |
-| 16:00 – 18:00 | **Colchon:** solo para lo atrasado, no para cosas nuevas |
+Con el nuevo horario de almuerzo (13:00 a 14:00) y la disponibilidad de P2 exclusivamente por la tarde, la jornada de cada viernes se divide en dos bloques funcionales bien delimitados:
+
+| Horario | Bloque | Integrantes | Foco principal |
+| --- | --- | --- | --- |
+| **09:00 – 13:00** | Mañana tecnica | **P1 + P3** | Montaje de hardware, firmware en placa, banco de pruebas y enlace BLE base. |
+| **13:00 – 14:00** | Almuerzo | **Todos** | Pausa y puesta en comun del estado de la mañana. P2 se incorpora al grupo. |
+| **14:00 – 16:30** | Tarde de mesa | **P1 + P2 + P3** | Ensayos en mesa de ping pong, captura masiva de datos y pruebas con paleta. |
+| **16:30 – 18:00** | Integracion y cierre | **P1 + P2 + P3** | Pruebas de punta a punta, segmentacion/subida de datos y acuerdos asincronicos. |
 
 ---
 
@@ -87,7 +94,7 @@ Los formatos de datos entre modulos estan fijados en [`CONTRATOS.md`](CONTRATOS.
 
 | P1 | P2 | P3 |
 | --- | --- | --- |
-| Configurar IDE para ESP32-S3 y linkear `ml_inference.h` (prueba dummy). Mapear pines, conectar MPU-6500 por SPI $\ge 1\text{ MHz}$, y configurar muestreo a 1000 Hz por interrupcion | Modelar capsula de la placa en Fusion 360 midiendo componentes. Validar aislacion del impacto real vs swings al aire | Algoritmo de orientacion (Madgwick/Mahony) en Python procesando las rafagas. Definir contrato de payload BLE (struct C) |
+| Configurar IDE para ESP32-S3 y linkear `ml_inference.h` (prueba dummy). Mapear pines, conectar MPU-6500 por SPI $\ge 1	ext{ MHz}$, y configurar muestreo a 1000 Hz por interrupcion | Modelar capsula de la placa en Fusion 360 midiendo componentes. Validar aislacion del impacto real vs swings al aire | Algoritmo de orientacion (Madgwick/Mahony) en Python procesando las rafagas. Definir contrato de payload BLE (struct C) |
 
 **Tarde:** 
 1. **Montaje provisorio (13:30):** Pegar la plaqueta pelada del MPU-6500 a la madera usando cinta de pintor + VHB, y encintar los cables al canto (protocolo 7.3) para evitar ruido mecanico. Al terminar el dia se despega todo.
@@ -95,117 +102,160 @@ Los formatos de datos entre modulos estan fijados en [`CONTRATOS.md`](CONTRATOS.
 **Hito:** Señal limpia a 1000 Hz en PC y trigger de impacto validado sin falsos positivos.
 *⚠️ Salvavidas (Plan B):* Si a las 11:30 AM P1 no logra estabilizar las interrupciones de hardware, abortar y usar un bucle de *polling* bruto (`delayMicroseconds`) para garantizar la grabacion de la tarde.
 
-### Clase 1.5 · Miercoles 14/10 · Sesion extraordinaria: Banco de pruebas e infraestructura (3 horas)
-**Contexto y objetivo:** Sesion intermedia para absorber el atraso de la Clase 1 y reestructurar el montaje hacia el pomo. El unico objetivo real es que **el hardware quede fisicamente armado y escupiendo datos limpios por puerto serie a 1000 Hz**. Nada mas. El trigger fino y la grabacion con pelota se reservan para el viernes.
+---
 
-**Materiales a llevar:** Paleta, MPU-6500 de repuesto, ESP32-S3, alicate, soldador/estaño, cables flexibles para chicotes (3-4 cm), cinta Kapton, cinta de pintor, cinta bifaz 3M VHB, regla metalica o calibre, y cable USB-C a PC.
+### Clase 1.5 · Miercoles 14/10 · Sesion suspendida (Reorganizada como asincronica + rescate)
 
-```
-[0:00 - 1:15] Taller de Soldadura y Montaje (P1 + P2)
-              └── Chicotes soldados + Montaje pomo + Cable USB asegurado + Medicion L
+La sesion extraordinaria presencial del Miercoles 14/10 fue **suspendida**. Para no comprometer la captura del Dataset v1 ni el hito del MVP, su alcance se redistribuyo en dos partes:
+1. **Trabajo asincronico en casa (Miercoles 14 y Jueves 15):** Preparacion de codigo, simulaciones y modelado 3D previo.
+2. **Rescate de Hardware en Clase 2 (Viernes 16/10, 09:00 - 13:00):** Montaje fisico, soldadura de chicotes y enlace SPI a cargo de P1 + P3 antes del almuerzo.
 
-[1:15 - 2:15] Validacion de Enlace SPI y Signos (P1)
-              └── 1000 Hz estables + Signos ax/az verificados en mesa + Offsets
+#### A. Trabajo asincronico en casa (Miercoles 14 y Jueves 15)
 
-[2:15 - 3:00] Buffer y Telemetria en Python (P2 + P3)
-              └── ver.py recibiendo paquetes sin dropear + Paleta a la funda
-```
-
-#### 1. Hardware y Montaje (P1 + P2) — 75 min
-* Cortar los pines macho del MPU-6500 al ras dejando solo 1 mm de muñon (no desoldar).
-* Soldar los 7 cables flexibles cortos (3 a 4 cm) para las lineas SPI (`VCC`, `GND`, `SCL`, `SDA`, `AD0`, `NCS`, `INT`).
-* Proteger la cara posterior de las soldaduras con cinta Kapton.
-* Montar en el pomo: limpiar con alcohol, cinta de pintor estirada (sacrificio) y cinta 3M VHB directa contra la plaqueta del sensor.
-* Fijar el ESP32-S3 abajo en linea con cinta, asegurando que el conector USB-C no reciba esfuerzo mecanico.
-* P3 mide la constante geometrica $L$ (base del pomo a centro geometrico del sweet spot) y deja escrito el `#define L_PALETA_M` en el codigo.
-
-#### 2. Validacion de Enlace SPI y Signos (P1) — 60 min
-* Levantar el firmware base leyendo el MPU-6500 por SPI a 1000 Hz.
-* Verificar con la paleta apoyada en la mesa que no haya cuelgues de bus ni lecturas en cero continuo.
-* Comprobar la convencion de `alinearEjes()`:
-  - Paleta plana con goma roja hacia arriba: $a_z \approx +1\text{ g}$.
-  - Paleta vertical con el pomo en la mesa y punta al techo: $a_x \approx +1\text{ g}$.
-* Correr `calibrar.py` para fijar los offsets en reposo y cargarlos en `OFFSET_A*_G` de `paleta.ino`.
-
-#### 3. Enlace con Python y Guardado (P2 + P3) — 45 min
-* Conectar la paleta a la PC a 921600 baudios y abrir `ver.py`.
-* Mover la paleta en la mano y verificar que las curvas grafiquen fluido y sin *buffer overflow*.
-* Confirmar que la estructura del buffer circular retenga los paquetes temporales previstos.
-* Guardar la paleta armada en su funda protectora, lista e intacta para el viernes.
-
-**Criterio de corte del Miercoles:** Se van a sus casas cuando vean en la pantalla de la compu las 6 curvas (3 aceleraciones, 3 giroscopios) moviendose en tiempo real a 1000 Hz con el sensor firme en el pomo.
+* **P1 (Firmware):** Dejar preparado el proyecto base en el IDE para el ESP32-S3 con el bus SPI a 1000 Hz y la logica del calculo de Jerk (`|a[k]| - |a[k-1]|`).
+* **P2 (Datos & 3D):** Validar en su PC que `ver.py` y `segmentar.py` funcionen sin errores usando datos simulados; avanzar el modelado de la Pieza A y Pieza B en Fusion 360 con las medidas del pomo.
+* **P3 (App & Cinematica):** Probar el algoritmo de orientacion (Madgwick o filtro complementario) con series temporales sinteticas y dejar lista la UI de captura en la Web App.
 
 ---
 
-### Clase 2 · Viernes 16/10 · Calibracion de Trigger y Grabacion Masiva (Alimentacion: Cable USB-C a PC)
-**Materiales a llevar:** Paleta ya ensamblada en Clase 1.5 (en su funda intacta), cable USB-C a PC, pelotas de ping pong (minimo 20), red portatil y cinta de repuesto por contingencia.
-*Nota de compras:* Ya NO hace falta comprar cinta plana de 7 vias, tramos largos de termocontraible ni edge tape para tapar cables en el mango. El mango queda 100 % libre.
+### Clase 2 · Viernes 16/10 · Rescate de Hardware y Grabacion Masiva (Alimentacion: Cable USB-C a PC)
 
-| P1 | P2 | P3 |
+**Materiales a llevar:**
+- Placa ESP32-S3 y modulo MPU-6500 (mas repuesto).
+- Paleta de ping pong.
+- Cables Dupont hembra-hembra para cortar y estañar como chicotes de 3 a 4 cm (*aclaracion:* no se dispone de cables flexibles dedicados, se cortan Duponts).
+- Soldador, estaño, alicate de corte al ras.
+- Cinta Kapton, cinta de pintor estirada (sacrificio) y cinta bifaz 3M VHB.
+- Regla metalica o calibre para medir la constante geometrica $L$.
+- Cable USB-C largo (2–3 m) a PC.
+- Minimo 20 pelotas de ping pong y red portatil.
+
+| P1 | P2 (desde 14:00) | P3 |
 | --- | --- | --- |
-| **Mañana:** Implementar y calibrar trigger por Jerk. **Tarde:** Monitoreo de buffer circular | **Mañana:** Validacion de recepcion de eventos. **Tarde:** Grabacion masiva y segmentacion | **Mañana:** Pruebas de estimacion $v = \omega \cdot L$. **Tarde:** Control de calidad y protocolo autopique |
+| **Mañana:** Soldadura de chicotes, montaje en pomo, enlace SPI 1000 Hz y calibracion de Jerk. **Tarde:** Monitoreo y rotacion en mesa | **Tarde:** Validacion de paquetes en `ver.py`, grabacion masiva y segmentacion | **Mañana:** Asistencia mecanica/hardware a P1, medicion de L. **Tarde:** Rotacion en mesa y control de calidad |
 
-**Plan de la jornada (Viernes 16/10):**
-1. **Mañana (9:00 - 12:30) · Calibracion del Trigger por Jerk e Impacto:**
-   - Implementar $Jerk[k] = (|a[k]| - |a[k-1]|) \cdot 1000$ en firmware.
-   - Ajuste de umbral: tirar 10 swings rapidos al aire (**no debe disparar**) vs. toques secos con pelota o dedos (**debe disparar al instante**).
-   - Validar congelamiento de la ventana de 196 ms alrededor del impacto en el buffer circular.
-2. **Tarde (13:30 - 16:00) · Grabacion Masiva del Dataset v1:**
-   - Los 4 golpes tecnicos: 50 golpes por tipo (Topspin Der/Rev, Empuje Der/Rev) $\approx$ 600 tiros utiles con autopique constante (self-feed con mano libre segun protocolo).
-   - Tanda obligatoria de 50 a 60 muestras de descarte (`ruido` / `not_a_swing`) siguiendo [`PROTOCOLO.md`](PROTOCOLO.md#4-protocolo-deliberado-para-la-clase-no-golpe-ruido--not_a_swing) (falsos swings al aire, malabares, acomodar grip, caminata/recogida).
-   - Segmentar con `segmentar.py` y subir el Dataset v1 a Drive.
+#### Cronograma detallado de la jornada:
 
-**Hito:** Dataset v1 completo (4 golpes + clase de ruido balanceada) listo para entrenar el modelo en la Clase 3.
+* **09:00 – 11:30 (P1 + P3) · Rescate de soldadura y montaje en pomo:**
+  - Cortar pines macho del MPU-6500 al ras dejando solo 1 mm de muñon (no desoldar).
+  - Cortar 7 cables Dupont al ras de sus fichas para obtener chicotes de 3 a 4 cm; pelar y estañar puntas.
+  - Soldar los 7 chicotes a las pistas SPI del MPU-6500 (`VCC`, `GND`, `SCL`, `SDA`, `AD0`, `NCS`, `INT`).
+  - Proteger la cara posterior de las soldaduras con cinta Kapton para evitar cortocircuitos.
+  - Limpiar la base del pomo con alcohol, colocar cinta de pintor de sacrificio y fijar el sensor con cinta bifaz 3M VHB directo contra la madera.
+  - Fijar el ESP32-S3 en linea asegurando que el conector USB-C no reciba esfuerzo mecanico.
+  - P3 asiste mecanicamente y mide la longitud geometrica $L$ (base del pomo a centro geometrico del sweet spot) para fijar `#define L_PALETA_M` en el firmware.
+
+* **11:30 – 13:00 (P1 + P3) · Validacion SPI a 1000 Hz, ejes y Jerk preliminar:**
+  - Levantar firmware base y verificar que no haya lecturas nulas ni cuelgues del bus SPI.
+  - Comprobar convencion de `alinearEjes()`:
+    - Paleta plana con goma roja hacia arriba: $a_z pprox +1	ext{ g}$.
+    - Paleta vertical con el pomo en la mesa y punta al techo: $a_x pprox +1	ext{ g}$.
+  - Calibrar umbral preliminar de Jerk: verificar disparo inmediato ante toques secos de pelota o dedos y rechazo absoluto en swings rapidos al aire.
+
+* **13:00 – 14:00 (Todos) · Almuerzo y reunion de estado:**
+  - Pausa para almuerzo. P2 se incorpora presencialmente al grupo y se realiza la puesta en comun del estado del hardware.
+
+* **14:00 – 14:30 (P1 + P2 + P3) · Enlace de telemetria serial:**
+  - Conectar la paleta armada a la PC de P2 a 921600 baudios.
+  - Correr prueba de 5 minutos con `ver.py` para asegurar recepcion fluida a 1000 Hz sin desborde de bufer (*buffer overflow*).
+
+* **14:30 – 17:00 (P1 + P2 + P3) · Grabacion masiva del Dataset v1 en mesa:**
+  - Los 3 integrantes rotan continuamente en 3 roles: lanzador con autopique (mano libre segun protocolo), jugador y operador de consola de grabacion.
+  - Capturar los 4 golpes tecnicos: 50 golpes por tipo (Topspin Derecha, Topspin Reves, Empuje Derecha, Empuje Reves).
+  - Tanda obligatoria de descarte y ruido (`ruido` / `not_a_swing`) segun [`PROTOCOLO.md`](PROTOCOLO.md#4-protocolo-deliberado-para-la-clase-no-golpe-ruido--not_a_swing) (swings al aire, malabares, acomodar grip, caminata/recogida).
+  - Meta: ~600 muestras etiquetadas y balanceadas.
+
+* **17:00 – 18:00 (P1 + P2 + P3) · Segmentacion, integridad y subida:**
+  - Segmentar archivos con `segmentar.py`.
+  - Chequeo de integridad de CSVs y subida a la carpeta compartida de Google Drive.
+
+**Hito de Clase 2:** Dataset v1 completo grabado con la paleta real en mesa, segmentado y disponible en Drive para iniciar entrenamiento en Edge Impulse.
 *⚠️ Criterio de Trigger (Plan B):* Si durante las grabaciones el trigger por Jerk muestra falsos positivos aislados, ajustar UMBRAL_JERK o elevar el refractario temporal antes de considerar sensores adicionales.
+
+---
+
+### Cronograma reestructurado hacia el MVP (Clases 3 a 6)
+
+Aprovechando que entre semana se trabaja en desarrollo en computadora, el ciclo se apoya en tres tiempos:
+
+```
+[Semana: Asincronico]      --> Codigo, entrenamiento ML, modelado 3D, Web App
+[Viernes Mañana (P1+P3)]   --> Banco de hardware, electronica, BLE
+[Viernes Tarde (P1+P2+P3)] --> Ensayos en mesa, captura con usuarios, integracion
+```
 
 ### Clase 3 · Viernes 23/10 · Despliegue TinyML y Pase a Inalambrico (Alimentacion: Powerbank en bolsillo)
 **Materiales a llevar:** Paleta ensamblada provisional, Powerbank de bolsillo, cable USB-C estandar (bolsillo a paleta), celular de prueba para P3.
 
-| P1 | P2 | P3 |
-| --- | --- | --- |
-| Pasar a alimentacion por Powerbank (verificar que no corte) y emitir struct de prediccion por NimBLE al detectar impacto | Entrenar modelo en Edge Impulse, optimizar cuantizacion INT8, exportar C++ y actualizar `ml_inference.h` | Conectar app web con el BLE real: parsear struct (payload C cerrado) y actualizar UI al impacto |
+* **Semana previa (Asincronica):**
+  - **P2:** Entrena modelo en Edge Impulse con Dataset v1, optimiza cuantizacion a `int8`, exporta libreria C++ y genera `ml_inference.h/cpp`.
+  - **P2:** Finaliza modelado 3D en Fusion 360 y envia a imprimir piezas (Pieza A y Pieza B).
+  - **P3:** Implementa parser del struct BLE de 14 bytes (`BlePayload`) y la interfaz visual en la Web App.
 
-**Tarde:** Capturar a 3–5 compañeros de la facultad con la paleta inalambrica para validar precision fuera del dataset de entrenamiento.
-**Hito:** Precision medida en hardware real.
-- $\ge 80\%$: se avanza a integracion final.
-- $60\% - 80\%$: reentrenamiento con golpes ambiguos.
-- $< 60\%$: reducir alcance a 3 golpes.
+* **Viernes 23/10 · Mañana (09:00 – 13:00 · P1 + P3):**
+  - Pasar alimentacion a Powerbank via cable USB-C (verificar que no corte por bajo consumo).
+  - Levantar stack NimBLE en ESP32-S3 y emitir struct de prediccion al detectar impacto.
 
-**Durante la semana:** P2 envia la capsula y el capuchon a imprimir en 3D (medidas y parametros de impresion en la seccion 7.1).
+* **Viernes 23/10 · Tarde (14:00 – 18:00 · P1 + P2 + P3):**
+  - P2 integra el modelo real en el firmware y enlaza Web App por BLE.
+  - Ensayos en mesa con 3 a 5 compañeros externos para medir precision en vivo fuera del dataset de entrenamiento.
+  - **Hito:** Precision medida en hardware real ($\ge 80\%$ avanza a integracion final; $60-80\%$ reentrenamiento; $< 60\%$ reducir alcance a 3 golpes).
+
+---
 
 ### Clase 4 · Viernes 30/10 · Integracion Total y Ensamble Definitivo
-**Materiales a llevar:** Piezas impresas en 3D (Capsula y Capuchon traidas por P2), adhesivo removible / masilla, herramientas menores para ensamble final.
+**Materiales a llevar:** Piezas impresas en 3D (Capsula y Capuchon traidas por P2), masilla/adhesivo removible, herramientas menores para ensamble.
 
-| P1 | P2 | P3 |
-| --- | --- | --- |
-| Calce en seco de la Pieza A (Portasensor) abrazando el pomo de madera, verificar paso holgado de chicotes internos hacia la Pieza B (Vaina ESP32), encastrar Pieza B sobre Pieza A y verificar alivio y acceso USB-C | Cargar modelo exportado de Edge Impulse en firmware y verificar estabilidad SPI a 1000 Hz | Enlazar Web App por BLE (struct 14 bytes) y validar refresco de UI con golpes en vivo |
+* **Semana previa (Asincronica):**
+  - P2 retira las piezas impresas en 3D y verifica tolerancias mecanicas.
+  - P3 integra feedback heuristico en tiempo real en la Web App.
+  - P1 prepara el codigo de firmware definitivo unificando adquisicion, filtro de orientacion, inferencia y BLE.
 
-**Tarde (los tres):** Prueba de humo de punta a punta con la paleta ensamblada. 20 golpes de cada tipo entre los integrantes del grupo para chequear autonomia y robustez mecanica.  
-**Hito:** Paleta armada en su carcasa definitiva, transmitiendo metricas al celular sin cables a la PC.
+* **Viernes 30/10 · Mañana (09:00 – 13:00 · P1 + P3):**
+  - Calce en seco de Pieza A (Portasensor) abrazando el pomo de madera.
+  - Verificar paso holgado de chicotes internos hacia Pieza B (vaina ESP32).
+  - Encastrar Pieza B sobre Pieza A y comprobar alivio y acceso del conector USB-C.
 
----
-
-### Clase 5 · Viernes 6/11 · Validacion Ciega y Ajuste Heuristico
-**Materiales a llevar:** Hardware 100% ensamblado y funcional, red y pelotas para las pruebas ciegas.
-
-| P1 | P2 | P3 |
-| --- | --- | --- |
-| Calibrar umbrales de trigger de impacto para eliminar falsos positivos por roces | Ajustar umbral de confianza en inferencia (descartar tiros ambiguos a clase 4) | Pulir reglas heuristicas de consejos segun cinematica teorica (angulos y pico de giro) |
-
-**Tarde:** Sesion de pruebas de usabilidad y acierto ciego con 3 a 5 compañeros ajenos a la carrera para medir la generalizacion del modelo.  
-**Congelamiento de codigo al finalizar la jornada.**  
-**Hito:** Precision $\ge 80\%$ validada en personas externas al entrenamiento y codigo 100% congelado.
-
-### Clase 6 · Viernes 13/11 · MVP Terminado
-**Materiales a llevar:** MVP completo, Powerbank cargado al 100%, camara o celular extra con buen almacenamiento y tripode para filmar la demo.
-
-- **Mañana:** Calibraciones menores y pruebas de estres de bateria/enlace BLE.
-- **Tarde:** Medicion de metricas finales (latencia, acierto, bateria), ensayo general y **filmacion de la demo de respaldo**.
-
-**Hito: MVP 100 % completado.**
+* **Viernes 30/10 · Tarde (14:00 – 18:00 · P1 + P2 + P3):**
+  - Prueba de humo de punta a punta con la paleta 100 % armada en su carcasa final.
+  - 20 golpes de cada tipo entre los 3 integrantes para chequear balance de inercia y robustez mecanica.
+  - **Hito:** Paleta armada en carcasa definitiva, transmitiendo metricas a celular sin cables a PC.
 
 ---
 
+### Clase 5 · Viernes 6/11 · Validacion Ciega y Congelamiento
+**Materiales a llevar:** Hardware 100 % ensamblado y funcional, red y pelotas para las pruebas ciegas.
+
+* **Semana previa (Asincronica):**
+  - P2 ajusta umbrales de confianza en inferencia para descartar tiros dudosos.
+  - P3 pule logica del modo tutorial y sintetizador de voz en la Web App.
+
+* **Viernes 6/11 · Mañana (09:00 – 13:00 · P1 + P3):**
+  - Ajuste fino de umbrales de trigger de Jerk para eliminar cualquier falso positivo residual por roces o movimientos previos.
+  - Verificacion de estabilidad del enlace BLE bajo movimientos rapidos.
+
+* **Viernes 6/11 · Tarde (14:00 – 18:00 · P1 + P2 + P3):**
+  - Sesion de pruebas ciegas con 3 a 5 jugadores externos ajenos al desarrollo.
+  - Ajuste final de reglas del modo tutorial segun cinematica real.
+  - **Congelamiento definitivo de codigo** al finalizar la jornada.
+  - **Hito:** Precision $\ge 80\%$ validada con personas externas y codigo 100% congelado.
+
+---
+
+### Clase 6 · Viernes 13/11 · Entrega del MVP
+**Materiales a llevar:** MVP completo, Powerbank cargado al 100%, celular extra con memoria y tripode para filmar la demo.
+
+* **Viernes 13/11 · Mañana (09:00 – 13:00 · P1 + P3):**
+  - Ensayos de estres de bateria y estabilidad termica/conexion.
+  - Checklist final de hardware y app web.
+
+* **Viernes 13/11 · Tarde (14:00 – 18:00 · P1 + P2 + P3):**
+  - Toma de metricas finales (latencia de prediccion, tasa de acierto, autonomia).
+  - Filmacion del video de respaldo de la demo completa.
+  - Presentacion y entrega del MVP.
+  - **Hito: MVP 100 % completado.**
+
+---
 
 ### 4.7 Calculo de Angulo y Filtro de Orientacion (Parte del MVP)
 
@@ -348,7 +398,8 @@ Diseña un **sistema modular de dos piezas acopladas directamente en el pomo** i
   2. Pegar un parche de cinta de pintor estirada (sacrificio) y encima cinta bifaz 3M VHB.
   3. Pegar el MPU-6500 presionando con fuerza directo contra el VHB. El acople debe ser rigido contra la madera para que la onda de choque no se filtre.
 - **Interconexion directa (Pieza A $\rightarrow$ Pieza B):**
-  - Soldar chicotes de cables flexibles cortos (2 a 3 cm) directo a los muñones de pines cortados al ras del MPU.
+  - Cortar 7 cables Dupont hembra-hembra a 3-4 cm, pelar y estañar las puntas para armar los chicotes (no se dispone de cables flexibles dedicados).
+  - Soldar los chicotes directo a los muñones de pines cortados al ras del MPU.
   - Pasar los chicotes por la ventana pasacables interna de la Pieza A y conectar al ESP32-S3 dentro de la Pieza B.
   - Encastrar la Pieza B sobre la Pieza A. El mango de la paleta queda 100 % limpio y libre de cables o cintas.
 - **Alimentacion hacia el cuerpo:**
