@@ -4,9 +4,9 @@
 
 **Calendario:** el MVP tiene que estar terminado el **viernes 13/11**. Despues viene la fase 2, hasta la entrega final.
 
-| Clase | 1 | 1.5 (suspendida) | 2 | 3 | 4 | 5 | 6 |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| Fecha | 9/10 | 14/10 (absorbida) | 16/10 | 23/10 | 30/10 | 6/11 | **13/11 · MVP** |
+| Clase | 1 | 2 | 3 | 4 | 5 | 6 |
+| --- | --- | --- | --- | --- | --- | --- |
+| Fecha | 9/10 | 16/10 | 23/10 | 30/10 | 6/11 | **13/11 · MVP** |
 
 No hay un viernes de colchon al final. El margen sale de dos lados: el bloque de cierre de 16:30 a 18:00 de cada viernes, y el 13/11, que esta pensado para cerrar y arreglar, no para agregar cosas.
 
@@ -24,7 +24,7 @@ YOLO-pose y el analisis de postura van en la **fase 2**, despues del 13/11.
 
 ### Diagnostico: Cuellos de botella y adaptacion
 
-1. **El cuello de botella de la Clase 2:** El plan original del 16/10 asumia llegar con la paleta ya armada, soldada y testeada en la clase 1.5. Al suspenderse esa sesion intermedia el 14/10, si el viernes no se reorganiza la mañana tecnica, el equipo gastaria la tarde soldando y perderia la mesa de ping pong, postergando la captura del Dataset v1 y retrasando el entrenamiento en Edge Impulse.
+1. **El cuello de botella de la Clase 2:** En la Clase 1 no se pudo probar el sensor con la paleta y no se logro un montaje funcional. Es necesario ir hacia atras: soldar un nuevo sensor desde cero en el pomo con chicotes protegidos y rehacer el conexionado. Si el viernes 16/10 no se reorganiza la mañana tecnica (09:00 a 13:00) para resolver el montaje antes del mediodia, el equipo gastaria la tarde soldando y perderia el acceso a la mesa de ping pong, postergando la captura del Dataset v1 y retrasando el entrenamiento en Edge Impulse.
 2. **La ausencia matutina de P2:** Toda actividad presencial de P2 se concentra obligatoriamente en la franja de 14:00 a 18:00. P3 acompaña activamente a P1 en el banco de hardware durante la mañana (09:00 a 13:00) para garantizar que la paleta este operativa antes del almuerzo.
 3. **Aprovechamiento del trabajo asincronico:** Habilitar el trabajo remoto en computadora entre semana permite desacoplar desarrollo de software, modelado 3D y analisis de datos de las horas de laboratorio fisico.
 
@@ -89,36 +89,27 @@ Con el nuevo horario de almuerzo (13:00 a 14:00) y la disponibilidad de P2 exclu
 
 ## 4. Fase 1: MVP, viernes por viernes
 
-### Clase 1 · Viernes 9/10 · Señal real y adquisicion a 1000 Hz (Alimentacion: Cable USB-C a PC)
-**Materiales a llevar:** Placa ESP32-S3, MPU-6500, cable USB-C largo (2-3 m), paleta, cinta de pintor, cinta bifaz 3M VHB, cinta aisladora / edge tape, pelotas de ping pong.
+### Clase 1 · Viernes 9/10 · Banco inicial (Retrospectiva: sin pruebas en paleta)
 
-| P1 | P2 | P3 |
-| --- | --- | --- |
-| Configurar IDE para ESP32-S3 y linkear `ml_inference.h` (prueba dummy). Mapear pines, conectar MPU-6500 por SPI $\ge 1	ext{ MHz}$, y configurar muestreo a 1000 Hz por interrupcion | Modelar capsula de la placa en Fusion 360 midiendo componentes. Validar aislacion del impacto real vs swings al aire | Algoritmo de orientacion (Madgwick/Mahony) en Python procesando las rafagas. Definir contrato de payload BLE (struct C) |
-
-**Tarde:** 
-1. **Montaje provisorio (13:30):** Pegar la plaqueta pelada del MPU-6500 a la madera usando cinta de pintor + VHB, y encintar los cables al canto (protocolo 7.3) para evitar ruido mecanico. Al terminar el dia se despega todo.
-2. **Grabacion:** 30-40 min de capturas con cable USB largo (swings al aire vs. golpes reales contra pelota).
-**Hito:** Señal limpia a 1000 Hz en PC y trigger de impacto validado sin falsos positivos.
-*⚠️ Salvavidas (Plan B):* Si a las 11:30 AM P1 no logra estabilizar las interrupciones de hardware, abortar y usar un bucle de *polling* bruto (`delayMicroseconds`) para garantizar la grabacion de la tarde.
+**Estado alcanzado:**
+- Se configuro el entorno del ESP32-S3 y se hicieron pruebas preliminares de conexion con el MPU-6500 en banco.
+- **No se pudo probar el sensor con la paleta:** surgieron dificultades mecanicas y de cableado que impidieron fijarlo de forma solida y capturar impactos reales.
+- El conexionado previo no resulto util para la adquisicion definitiva; es necesario ir hacia atras para soldar un nuevo sensor desde cero con chicotes limpios en el pomo y asegurar la integridad de la señal.
+- **Deuda tecnica arrastrada:** El montaje fisico completo y la adquisicion real se trasladan como maxima prioridad a la mañana de la Clase 2.
 
 ---
 
-### Clase 1.5 · Miercoles 14/10 · Sesion suspendida (Reorganizada como asincronica + rescate)
+### Trabajo asincronico previo a Clase 2 (Miercoles 14 y Jueves 15)
 
-La sesion extraordinaria presencial del Miercoles 14/10 fue **suspendida**. Para no comprometer la captura del Dataset v1 ni el hito del MVP, su alcance se redistribuyo en dos partes:
-1. **Trabajo asincronico en casa (Miercoles 14 y Jueves 15):** Preparacion de codigo, simulaciones y modelado 3D previo.
-2. **Rescate de Hardware en Clase 2 (Viernes 16/10, 09:00 - 13:00):** Montaje fisico, soldadura de chicotes y enlace SPI a cargo de P1 + P3 antes del almuerzo.
-
-#### A. Trabajo asincronico en casa (Miercoles 14 y Jueves 15)
+Aprovechando la habilitacion del trabajo remoto en computadora entre semana, se adelantan tareas de software, modelado 3D y analisis para llegar al viernes con todo listo para montar y grabar:
 
 * **P1 (Firmware):** Dejar preparado el proyecto base en el IDE para el ESP32-S3 con el bus SPI a 1000 Hz y la logica del calculo de Jerk (`|a[k]| - |a[k-1]|`).
 * **P2 (Datos & 3D):** Validar en su PC que `ver.py` y `segmentar.py` funcionen sin errores usando datos simulados; avanzar el modelado de la Pieza A y Pieza B en Fusion 360 con las medidas del pomo.
-* **P3 (App & Cinematica):** Probar el algoritmo de orientacion (Madgwick o filtro complementario) con series temporales sinteticas y dejar lista la UI de captura en la Web App.
+* **P3 (App & Cinematica):** Probar el algoritmo de orientacion (Madgwick o filtro complementario) con series temporales sinteticas y dejar lista la UI de captura en la Web App. Preparar asistencia tecnica para la mañana de montaje con P1.
 
 ---
 
-### Clase 2 · Viernes 16/10 · Rescate de Hardware y Grabacion Masiva (Alimentacion: Cable USB-C a PC)
+### Clase 2 · Viernes 16/10 · Montaje de Nuevo Sensor y Grabacion Masiva (Alimentacion: Cable USB-C a PC)
 
 **Materiales a llevar:**
 - Placa ESP32-S3 y modulo MPU-6500 (mas repuesto).
@@ -136,7 +127,7 @@ La sesion extraordinaria presencial del Miercoles 14/10 fue **suspendida**. Para
 
 #### Cronograma detallado de la jornada:
 
-* **09:00 – 11:30 (P1 + P3) · Rescate de soldadura y montaje en pomo:**
+* **09:00 – 11:30 (P1 + P3) · Soldadura y montaje del nuevo sensor en pomo:**
   - Cortar pines macho del MPU-6500 al ras dejando solo 1 mm de muñon (no desoldar).
   - Cortar 7 cables Dupont al ras de sus fichas para obtener chicotes de 3 a 4 cm; pelar y estañar puntas.
   - Soldar los 7 chicotes a las pistas SPI del MPU-6500 (`VCC`, `GND`, `SCL`, `SDA`, `AD0`, `NCS`, `INT`).
