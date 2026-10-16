@@ -103,7 +103,7 @@ Con el nuevo horario de almuerzo (13:00 a 14:00) y la disponibilidad de P2 exclu
 
 Aprovechando la habilitacion del trabajo remoto en computadora entre semana, se adelantan tareas de software, modelado 3D y analisis para llegar al viernes con todo listo para montar y grabar:
 
-* **P1 (Firmware):** Dejar preparado el proyecto base en el IDE para el ESP32-S3 con el bus SPI a 1000 Hz y la logica del calculo de Jerk (`|a[k]| - |a[k-1]|`).
+* **P1 (Firmware):** Dejar preparado el proyecto base en el IDE para el ESP32-S3 con el bus SPI a 1000 Hz y la logica del calculo de Jerk (`|a[k] - a[k-1]|`, resta de vectores: ver el estado al 16/10 mas abajo).
 * **P2 (Datos & 3D):** Validar en su PC que `ver.py` y `segmentar.py` funcionen sin errores usando datos simulados; avanzar el modelado de la Pieza A y Pieza B en Fusion 360 con las medidas del pomo.
   - *Dato critico para Pieza B:* La placa ESP32-S3 conserva sus dos tiras de pines macho de fabrica (desoldarlas con soldador comun arriesga levantar pistas). Por ende, el espesor de la placa pasa de 2 mm planos a **8–10 mm de grosor total**. La cavidad de la vaina debe contemplar esa profundidad para cerrar con holgura.
 * **P3 (App & Cinematica):** Probar el algoritmo de orientacion (Madgwick o filtro complementario) con series temporales sinteticas y dejar lista la UI de captura en la Web App. Preparar asistencia tecnica para la mañana de montaje con P1.
@@ -173,6 +173,26 @@ Aprovechando la habilitacion del trabajo remoto en computadora entre semana, se 
 
 **Hito de Clase 2:** Dataset v1 completo grabado con la paleta real en mesa, segmentado y disponible en Drive para iniciar entrenamiento en Edge Impulse.
 *⚠️ Criterio de Trigger (Plan B):* Si durante las grabaciones el trigger por Jerk muestra falsos positivos aislados, ajustar UMBRAL_JERK o elevar el refractario temporal antes de considerar sensores adicionales.
+
+#### Estado al 16/10 a las 12:00 (P1)
+
+**Hecho a la mañana** (PR #17, rama `firmware-jerk-pomo`):
+- **Jerk** = `|a[k] - a[k-1]|` (resta de vectores) con `UMBRAL_JERK_G = 1.5` en `paleta.ino`, el mismo calculo en `senal.py` y `ver.py`. No se usa la resta de modulos `|a[k]| - |a[k-1]|`: probada, la prueba de orientacion falla, `ejemplo.py` no detecta golpes y en toques reales detecta 1 de 3 (si el choque vibra de costado respecto de la aceleracion del swing, el modulo casi no cambia).
+- **Umbral medido** con el sensor en el pomo: swings al aire hasta 1141 °/s → Jerk de 0,2 a 1,02 g; pelota cayendo desde 30 cm → 1,38 a 6,3 g; toques con el dedo → 0,4 a 0,9 g (no se distinguen de acomodar la paleta, no sirven de criterio); apoyar la paleta en la mesa → 3,5 a 23 g (choques reales: para eso esta la clase `ruido`). **`segmentar.py` corta con la columna `impacto` de la placa**, asi que el umbral define las ventanas.
+- **Montaje provisorio** (la Pieza A no habia llegado): el modulo de la clase 1 pegado con VHB en la base del pomo, con los dupont de 20 cm. Sus offsets (0.033 / -0.012 / 0.460 g) y sus ejes (`x = -mz; y = my; z = mx`, chip hacia afuera) quedaron en `paleta.ino`.
+- **Herramientas nuevas:** `calibrar.py` (offset del acelerometro con 6 posiciones quietas) y `ejes.py` (cuerpo de `alinearEjes()` con 3 posiciones). Uso en el README.
+- **`L_PALETA_M = 0.18`** (base del pomo → centro de la cabeza, medido con regla).
+- **USB por el conector OTG** (USB nativo, `USB CDC On Boot: Enabled`). Por el TTL el chip CH340 pierde 15 a 24 muestras cada 30 s con el cable largo (y a veces pega dos lineas); por el OTG, con el mismo cable, 0. Un hueco dentro de un golpe deforma la ventana de 196 muestras. `grabar.py` ahora muestra las perdidas en vivo, descarta las lineas pegadas y tiene `--segundos`.
+
+**En curso:** llego la Pieza A. Se suelda el MPU de repuesto con chicotes de 4-5 cm y se monta en el pomo.
+
+**Pendiente para hoy:**
+1. Con el modulo nuevo, en este orden: `OFFSET_A*_G` en 0 y `alinearEjes()` sin cambios (`x = mx; y = my; z = mz`) → grabar 6 posiciones → `calibrar.py` → pegar los offsets → grabar 3 posiciones → `ejes.py` → pegar `alinearEjes()` → verificar (acostada roja arriba `az ≈ +1 g`, parada punta arriba `ax ≈ +1 g`). Los pines no cambian.
+2. 14:00: prueba de 5 min por el OTG: `python grabar.py --puerto COMx --jugador prueba5min --golpe libre --segundos 300` (el COM lo dice `--listar`). Tiene que terminar con 0 perdidas.
+3. 14:30: grabacion masiva. En la primera tanda de 36 pelotas se tienen que marcar 36 impactos; si no, ajustar `UMBRAL_JERK_G`.
+4. 17:00: `segmentar.py` y Drive. Las grabaciones de prueba de la mañana (`ejes`, `toques`, `swings`, `prueba*`) no van al dataset.
+
+**Abierto:** la rama `firmware-angulo` de P3 (el angulo en C++ para el firmware) no tiene PR todavia; `cinematica.py` tiene `SENSOR_A_CENTRO_M = 0.09`, que era con el sensor en el cuello (en el pomo es 0,18).
 
 ---
 

@@ -1,4 +1,4 @@
-// Paleta de ping pong inteligente — firmware de la clase 1
+// Paleta de ping pong inteligente — firmware de la clase 2
 //
 // Lee el MPU-6500 por SPI 1000 veces por segundo y manda cada muestra por el puerto serie:
 //   t_us,ax_g,ay_g,az_g,gx_dps,gy_dps,gz_dps,impacto
@@ -34,17 +34,29 @@ const float LSB_POR_G = 2048.0f;
 const float LSB_POR_DPS = 16.4f;
 
 // Offset del acelerómetro de ESTE módulo, en g y en los ejes del módulo: se resta a cada lectura.
-// El eje Z de este chip lee ≈ +0,46 g de más (la hoja de datos admite hasta ±0,08 g).
-// Medido el 9/10 con herramientas/calibrar.py. Si se cambia el módulo, hay que volver a medirlo.
+// Se mide con herramientas/calibrar.py y hay que volver a medirlo cada vez que se cambia el módulo.
+// Son los del módulo de la clase 1, que en la clase 2 se montó en el pomo sin soldar (sin Pieza A
+// todavía). Su eje Z lee ≈ +0,46 g de más (la hoja de datos admite hasta ±0,08 g). Medido el 9/10.
+// Cuando se suelde el módulo de repuesto en la Pieza A: calibrar.py → estos 3 valores, después
+// ejes.py → alinearEjes(), y volver a revisar UMBRAL_JERK_G. Los pines no cambian.
 const float OFFSET_AX_G = 0.033f;
 const float OFFSET_AY_G = -0.012f;
 const float OFFSET_AZ_G = 0.460f;
 
-// Detección de impacto: salto brusco de aceleración entre dos muestras seguidas.
-// El swing cambia la aceleración de a poco; el golpe con la pelota, de golpe.
-// Es un primer valor: ajustarlo con herramientas/ver.py sobre golpes reales.
-const float UMBRAL_SALTO_G = 1.5f;
+// Detección de impacto por Jerk: cuánto cambia el vector aceleración entre dos muestras seguidas,
+// |a[k] - a[k-1]|, en g por muestra (g/ms a 1000 Hz). El swing cambia la aceleración en
+// 30-100 ms; el choque con la pelota, en 1-2 ms (PLAN.md, 7.2).
+// Es la resta de vectores y no la de módulos (|a[k]| - |a[k-1]|) porque si la vibración del
+// choque es de costado respecto de la aceleración del swing, el módulo casi no cambia: con la
+// resta de módulos se perdían los golpes sintéticos de las pruebas y 2 de 3 toques reales.
+// Es un primer valor: con el sensor en el pomo el golpe llega más débil que en el cuello.
+// Ajustarlo con herramientas/ver.py --umbral sobre toques y swings reales.
+const float UMBRAL_JERK_G = 1.5f;
 const uint32_t REFRACTARIO_US = 300000;  // después de un impacto, ignorar 300 ms
+
+// Distancia del plano inferior del pomo (donde apoya el sensor) al centro de la cabeza de la paleta,
+// medida con regla el 16/10 (docs/CONTRATOS.md). Para la velocidad tangencial v = ω · L (vel_kmh).
+const float L_PALETA_M = 0.18f;
 
 uint32_t proximaMuestra = 0;
 uint32_t ultimaLectura = 0;   // micros() de la última muestra leída
@@ -122,12 +134,15 @@ void leerMPU(int16_t crudo[7]) {
 }
 
 // Pasa de los ejes del módulo a los ejes de la paleta (docs/CONTRATOS.md).
-// Si el módulo quedó montado girado, intercambiar o cambiar de signo acá.
+// En la base del pomo la plaqueta queda perpendicular al mango, así que hay que intercambiar ejes:
+// el cuerpo de esta función lo escribe herramientas/ejes.py a partir de 3 posiciones grabadas.
+// Módulo de la clase 1 pegado en el pomo con el chip hacia afuera (16/10, 2026-10-16_102554_ejes_libre.csv):
+// la punta de la paleta es -Z del módulo y la goma roja es +X del módulo.
 void alinearEjes(float &x, float &y, float &z) {
   float mx = x, my = y, mz = z;
-  x = mx;
+  x = -mz;
   y = my;
-  z = mz;
+  z = mx;
 }
 
 // Corre el modelo una vez al arrancar, para ver que está cargado y cuánto tarda.
@@ -215,8 +230,8 @@ void loop() {
   int impacto = 0;
   if (hayAnterior) {
     float dx = ax - axAnterior, dy = ay - ayAnterior, dz = az - azAnterior;
-    float salto = sqrtf(dx * dx + dy * dy + dz * dz);
-    if (salto > UMBRAL_SALTO_G && ahora - ultimoImpacto > REFRACTARIO_US) {
+    float jerk = sqrtf(dx * dx + dy * dy + dz * dz);
+    if (jerk > UMBRAL_JERK_G && ahora - ultimoImpacto > REFRACTARIO_US) {
       impacto = 1;
       ultimoImpacto = ahora;
     }

@@ -16,7 +16,7 @@ from senal import cargar_sesion, detectar_impactos, revisar_muestreo
 def main():
     parser = argparse.ArgumentParser(description="Grafica una sesión de la paleta")
     parser.add_argument("archivo")
-    parser.add_argument("--umbral", type=float, default=1.5, help="salto de aceleración en g (default 1.5)")
+    parser.add_argument("--umbral", type=float, default=1.5, help="umbral de Jerk en g por muestra (default 1.5)")
     parser.add_argument("--png", help="guardar el gráfico en un archivo en vez de mostrarlo")
     args = parser.parse_args()
 
@@ -27,7 +27,7 @@ def main():
     sesion = cargar_sesion(args.archivo)
     t, acel, giro = sesion["t"], sesion["acel"], sesion["giro"]
     fs, perdidas = revisar_muestreo(t)
-    impactos, salto = detectar_impactos(acel, umbral_g=args.umbral)
+    impactos, jerk = detectar_impactos(acel, umbral_g=args.umbral)
     de_la_placa = np.flatnonzero(sesion["impacto"] == 1)
 
     print(f"Duración: {t[-1]:.1f} s · muestreo: {fs:.0f} Hz · muestras perdidas: {perdidas}")
@@ -37,7 +37,7 @@ def main():
     for i, eje in enumerate("xyz"):
         ejes[0].plot(t, acel[:, i], lw=0.8, label=f"a{eje}")
         ejes[1].plot(t, giro[:, i], lw=0.8, label=f"g{eje}")
-    ejes[2].plot(t[1:], salto, lw=0.8, color="0.35", label="salto entre muestras")
+    ejes[2].plot(t[1:], jerk, lw=0.8, color="0.35", label="jerk: |a[k] - a[k-1]|")
     ejes[2].axhline(args.umbral, color="tab:red", ls="--", lw=1, label=f"umbral {args.umbral} g")
     if len(de_la_placa):
         ejes[2].plot(t[de_la_placa], np.full(len(de_la_placa), args.umbral), "v", color="tab:orange", label="impacto según la placa")
@@ -47,7 +47,7 @@ def main():
 
     ejes[0].set_ylabel("aceleración (g)")
     ejes[1].set_ylabel("giro (°/s)")
-    ejes[2].set_ylabel("salto (g)")
+    ejes[2].set_ylabel("jerk (g/muestra)")
     ejes[2].set_xlabel("tiempo (s)")
     for eje in ejes:
         eje.legend(loc="upper right", fontsize=8)
