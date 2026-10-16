@@ -34,8 +34,8 @@ Como solo trabajamos los viernes, **lo que no llega a tiempo nos hace perder una
 
 | ✓ | Material | Cant. | Buscar en ML | Para que / ojo con |
 | --- | --- | --- | --- | --- |
-| [ ] | Powerbank chico | 1 | — | Alimentar la placa en el MVP. Seguro alguno tiene. **Ojo:** muchos se apagan solos cuando el consumo es bajo. Probarlo antes con la placa encendida 10 minutos |
-| [ ] | Cable USB corto, 30–50 cm | 1 | `cable usb c corto 30cm` | Del powerbank a la placa |
+| [ ] | Powerbank chico | 1 | `powerbank modo baja corriente` | Alimentar la placa en el MVP. Seguro alguno tiene. **Ojo:** muchos se apagan solos si el consumo baja de 50–100 mA, y la placa con BLE anda cerca de eso. Probarlo con la placa encendida al menos 15 minutos (la prueba que vale es con BLE, clase 3). Si hay que comprar: uno con *modo de baja corriente* o *carga lenta* (confirmar en la ficha del modelo). Con 5000 mAh sobra |
+| ✓ | Cable USB-C flexible, 1–1,5 m o mas | 1 | — | Del powerbank en el bolsillo a la placa, subiendo por la manga con comba en el codo (PLAN 7.3). Sirve el de 2 m que ya tenemos |
 | [ ] | Abrojo (velcro) con adhesivo | 1 m | `abrojo adhesivo` | Sujetar el cable al brazo o armar una pulsera |
 | [ ] | Goma EVA | 1 plancha | `goma eva` | Amortiguar la placa dentro de la capsula |
 | [ ] | Tornillos M2 × 8 mm | 1 bolsita | `tornillos m2 x 8` | Cerrar la capsula |
