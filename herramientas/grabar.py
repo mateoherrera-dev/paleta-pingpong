@@ -11,6 +11,7 @@ golpe en el nombre. Si se pierden muestras en el camino (huecos en t_us), lo avi
 import argparse
 import datetime
 import pathlib
+import re
 import time
 
 import serial
@@ -20,6 +21,11 @@ from senal import COLUMNAS, GOLPES
 
 CARPETA = pathlib.Path(__file__).resolve().parent.parent / "datos" / "crudos"
 BUFFER_PUERTO = 1 << 20  # 1 MB: si Windows se traba un momento, que el buffer del puerto no se llene
+
+# Una muestra tal como la imprime paleta.ino: t_us y 3 decimales en g, 1 decimal en °/s.
+# Si se pierden bytes en el camino, dos líneas pueden quedar pegadas y tener igual 8 columnas
+# (pasó el 16/10: "6505765060257,..."): el formato exacto y el tiempo las delatan.
+MUESTRA = re.compile(r"\d{1,10}(,-?\d+\.\d{3}){3}(,-?\d+\.\d){3},[01]")
 
 
 def lineas(puerto):
@@ -58,7 +64,7 @@ def main():
     ruta = CARPETA / f"{marca}_{args.jugador}_{args.golpe}.csv"
 
     muestras = impactos = perdidas = rotas = 0
-    t_anterior = None
+    t_anterior = t_rechazado = None
     with serial.Serial(args.puerto, args.baudios, timeout=1) as puerto, open(ruta, "w", newline="") as archivo:
         if hasattr(puerto, "set_buffer_size"):  # solo existe en Windows
             puerto.set_buffer_size(rx_size=BUFFER_PUERTO)
@@ -71,15 +77,23 @@ def main():
                 if linea.startswith("#"):
                     print(f"\n{linea}")
                     continue
-                campos = linea.split(",")
-                if len(campos) != len(COLUMNAS) or not campos[0].isdigit():
-                    # vacía o cortada; antes de la primera muestra es el arranque de la placa
+                if not MUESTRA.fullmatch(linea):
+                    # vacía, cortada o pegada; antes de la primera muestra es el arranque de la placa
                     rotas += linea != "" and t_anterior is not None
                     continue
+                campos = linea.split(",")
                 t = int(campos[0])
-                if t_anterior is not None and t - t_anterior > 1500:  # una muestra cada ~1000 µs
+                if t_anterior is not None and not 0 < t - t_anterior < 1_000_000:
+                    # Tiempo imposible: la línea quedó pegada con otra, o la placa se reinició.
+                    # Si sigue a la que se rechazó recién, es un reinicio: se acepta y se sigue de ahí.
+                    if t_rechazado is None or not 0 < t - t_rechazado < 2000:
+                        t_rechazado = t
+                        rotas += 1
+                        continue
+                elif t_anterior is not None and t - t_anterior > 1500:  # una muestra cada ~1000 µs
                     perdidas += round((t - t_anterior) / 1000) - 1
                 t_anterior = t
+                t_rechazado = None
                 archivo.write(linea + "\n")
                 muestras += 1
                 impactos += campos[-1] == "1"
