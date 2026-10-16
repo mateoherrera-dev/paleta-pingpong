@@ -8,6 +8,8 @@ Uso:
 Busca los tramos en que el módulo no gira y elige el offset que hace que en todos la
 aceleración total dé 1 g. Las posiciones no tienen que ser exactas, solo distintas entre sí.
 Si paleta.ino ya resta un offset, lo que da este script se SUMA al que ya tiene.
+El offset va en los ejes del módulo: grabar con alinearEjes() sin cambios (x = mx, y = my,
+z = mz). Con un módulo nuevo, primero calibrar y después correr ejes.py.
 """
 import argparse
 

@@ -128,7 +128,8 @@ void leerMPU(int16_t crudo[7]) {
 }
 
 // Pasa de los ejes del módulo a los ejes de la paleta (docs/CONTRATOS.md).
-// Si el módulo quedó montado girado, intercambiar o cambiar de signo acá.
+// En la base del pomo la plaqueta queda perpendicular al mango, así que hay que intercambiar ejes:
+// el cuerpo de esta función lo escribe herramientas/ejes.py a partir de 3 posiciones grabadas.
 void alinearEjes(float &x, float &y, float &z) {
   float mx = x, my = y, mz = z;
   x = mx;
