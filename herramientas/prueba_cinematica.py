@@ -28,6 +28,10 @@ def main():
     omega = suavizar(omega_swing(giro))
     fallas = []
 
+    print(f"Impactos detectados: {len(impactos)} de {len(sim.impactos)}")
+    if len(impactos) != len(sim.impactos):
+        fallas.append("impactos")  # sin esto, la prueba pasaba aunque no detectara ningún golpe
+
     r, n, r2 = estimar_radio(acel, giro, q, impactos)
     print(f"Radio eje → sensor: real {BRAZO_M:.3f} m · estimado {r:.3f} m ({n} muestras, R² = {r2:.3f})")
     if abs(r - BRAZO_M) > 0.02:
