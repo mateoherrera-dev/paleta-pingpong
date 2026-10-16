@@ -1,4 +1,4 @@
-// Paleta de ping pong inteligente — firmware de la clase 1
+// Paleta de ping pong inteligente — firmware de la clase 2
 //
 // Lee el MPU-6500 por SPI 1000 veces por segundo y manda cada muestra por el puerto serie:
 //   t_us,ax_g,ay_g,az_g,gx_dps,gy_dps,gz_dps,impacto
@@ -34,11 +34,12 @@ const float LSB_POR_G = 2048.0f;
 const float LSB_POR_DPS = 16.4f;
 
 // Offset del acelerómetro de ESTE módulo, en g y en los ejes del módulo: se resta a cada lectura.
-// El eje Z de este chip lee ≈ +0,46 g de más (la hoja de datos admite hasta ±0,08 g).
-// Medido el 9/10 con herramientas/calibrar.py. Si se cambia el módulo, hay que volver a medirlo.
-const float OFFSET_AX_G = 0.033f;
-const float OFFSET_AY_G = -0.012f;
-const float OFFSET_AZ_G = 0.460f;
+// Se mide con herramientas/calibrar.py y hay que volver a medirlo cada vez que se cambia el módulo.
+// En 0 hasta calibrar el módulo nuevo del pomo (clase 2). El de la clase 1 tenía el eje Z
+// con +0,46 g de más (0.033 / -0.012 / 0.460).
+const float OFFSET_AX_G = 0.0f;
+const float OFFSET_AY_G = 0.0f;
+const float OFFSET_AZ_G = 0.0f;
 
 // Detección de impacto: salto brusco de aceleración entre dos muestras seguidas.
 // El swing cambia la aceleración de a poco; el golpe con la pelota, de golpe.
