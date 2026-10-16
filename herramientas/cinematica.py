@@ -22,7 +22,7 @@ from orientacion import angulo_en_impacto, madgwick
 from senal import FS, cargar_sesion, detectar_impactos
 
 L_M = 0.3                   # provisorio: es lo que implica el PLAN (800 °/s ≈ 15 km/h)
-SENSOR_A_CENTRO_M = 0.09    # del sensor (en el cuello) al centro de la paleta, medido con regla el 9/10
+SENSOR_A_CENTRO_M = 0.18    # base del pomo (donde va el sensor) → centro de la paleta: L_PALETA_M del firmware, medido el 16/10
 SUAVIZAR_S = 0.005          # promedio móvil para que la vibración del golpe no cuente como pico
 PICO_ANTES_S = 0.2          # dónde se busca el pico de giro: 200 ms antes del impacto...
 PICO_DESPUES_S = 0.05       # ...hasta 50 ms después
