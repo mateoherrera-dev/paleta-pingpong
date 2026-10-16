@@ -3,8 +3,10 @@
 Uso:
     python grabar.py --listar
     python grabar.py --puerto COM5 --jugador mateo --golpe topspin_derecha
+    python grabar.py --puerto COM5 --jugador prueba --golpe libre --segundos 300
 
-Cortar con Ctrl+C. El archivo queda en datos/crudos/ con fecha, jugador y golpe en el nombre.
+Cortar con Ctrl+C (o esperar --segundos). El archivo queda en datos/crudos/ con fecha, jugador y
+golpe en el nombre. Si se pierden muestras en el camino (huecos en t_us), lo avisa en vivo y al final.
 """
 import argparse
 import datetime
@@ -17,6 +19,21 @@ from serial.tools import list_ports
 from senal import COLUMNAS, GOLPES
 
 CARPETA = pathlib.Path(__file__).resolve().parent.parent / "datos" / "crudos"
+BUFFER_PUERTO = 1 << 20  # 1 MB: si Windows se traba un momento, que el buffer del puerto no se llene
+
+
+def lineas(puerto):
+    """Lee el puerto de a bloques y devuelve las líneas completas.
+
+    readline() de pyserial pide byte por byte: a 1000 líneas por segundo son ~50.000 llamadas
+    por segundo, la compu se atrasa, el buffer del puerto se llena y se pierden líneas.
+    """
+    resto = b""
+    while True:
+        resto += puerto.read(puerto.in_waiting or 1)
+        *completas, resto = resto.split(b"\n")
+        for cruda in completas:
+            yield cruda.decode("ascii", errors="ignore").strip()
 
 
 def main():
@@ -25,6 +42,7 @@ def main():
     parser.add_argument("--jugador", help="nombre de quien juega, sin espacios")
     parser.add_argument("--golpe", choices=GOLPES + ["libre"])
     parser.add_argument("--baudios", type=int, default=921600)
+    parser.add_argument("--segundos", type=float, help="cortar solo después de estos segundos")
     parser.add_argument("--listar", action="store_true", help="muestra los puertos disponibles")
     args = parser.parse_args()
 
@@ -39,31 +57,44 @@ def main():
     marca = datetime.datetime.now().strftime("%Y-%m-%d_%H%M%S")
     ruta = CARPETA / f"{marca}_{args.jugador}_{args.golpe}.csv"
 
-    muestras = impactos = 0
+    muestras = impactos = perdidas = rotas = 0
+    t_anterior = None
     with serial.Serial(args.puerto, args.baudios, timeout=1) as puerto, open(ruta, "w", newline="") as archivo:
+        if hasattr(puerto, "set_buffer_size"):  # solo existe en Windows
+            puerto.set_buffer_size(rx_size=BUFFER_PUERTO)
         archivo.write(",".join(COLUMNAS) + "\n")
         puerto.reset_input_buffer()
         print(f"Grabando {args.golpe} de {args.jugador}. Ctrl+C para terminar.")
-        ultimo_aviso = time.monotonic()
+        inicio = ultimo_aviso = time.monotonic()
         try:
-            while True:
-                linea = puerto.readline().decode("ascii", errors="ignore").strip()
+            for linea in lineas(puerto):
                 if linea.startswith("#"):
                     print(f"\n{linea}")
                     continue
                 campos = linea.split(",")
-                if len(campos) != len(COLUMNAS):
-                    continue  # línea vacía o cortada
+                if len(campos) != len(COLUMNAS) or not campos[0].isdigit():
+                    # vacía o cortada; antes de la primera muestra es el arranque de la placa
+                    rotas += linea != "" and t_anterior is not None
+                    continue
+                t = int(campos[0])
+                if t_anterior is not None and t - t_anterior > 1500:  # una muestra cada ~1000 µs
+                    perdidas += round((t - t_anterior) / 1000) - 1
+                t_anterior = t
                 archivo.write(linea + "\n")
                 muestras += 1
                 impactos += campos[-1] == "1"
-                if time.monotonic() - ultimo_aviso >= 1:
-                    print(f"\r{muestras} muestras · {impactos} impactos", end="", flush=True)
-                    ultimo_aviso = time.monotonic()
+                ahora = time.monotonic()
+                if ahora - ultimo_aviso >= 1:
+                    print(f"\r{muestras} muestras · {impactos} impactos · {perdidas} perdidas", end="", flush=True)
+                    ultimo_aviso = ahora
+                if args.segundos and ahora - inicio >= args.segundos:
+                    break
         except KeyboardInterrupt:
             pass
 
     print(f"\nGuardado en {ruta} ({muestras} muestras, {impactos} impactos)")
+    if perdidas or rotas:
+        print(f"Ojo: se perdieron {perdidas} muestras en el camino y llegaron {rotas} líneas rotas")
 
 
 if __name__ == "__main__":
