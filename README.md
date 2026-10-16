@@ -26,7 +26,9 @@ Configuracion de la placa en el Arduino IDE (la camara no se usa):
 - Flash Size: **16MB**
 - PSRAM: **OPI PSRAM**
 - Partition Scheme: **16M Flash (3MB APP/9.9MB FATFS)**
-- Si se usa el USB nativo para el monitor serie: USB CDC On Boot → **Enabled**
+- USB CDC On Boot: **Enabled** y USB Mode: **Hardware CDC and JTAG**
+
+El cable USB va en el conector **OTG** (USB nativo de la ESP32), no en el **TTL**. El TTL pasa por un chip CH340 que con el cable largo de 2-3 m pierde bytes: el 16/10 se perdian 15-24 muestras cada 30 s y a veces dos lineas quedaban pegadas. Por el OTG, con el mismo cable, 0 perdidas. En Windows aparece como *USB Serial Device* (VID 303A) con otro numero de COM que el TTL.
 
 Conexion del MPU-6500 por SPI (con los nombres que trae impresos el modulo):
 
@@ -43,7 +45,7 @@ Conexion del MPU-6500 por SPI (con los nombres que trae impresos el modulo):
 
 Antes de conectar, revisar en el pinout de su placa que esos GPIO esten libres. Si no, cambiar los `PIN_...` al principio de `paleta.ino`. Al arrancar, el monitor serie tiene que mostrar `# MPU-6500 encontrado (WHO_AM_I = 0x70)`.
 
-Abrir `firmware/paleta/paleta.ino`, cargarlo y abrir el monitor serie a **921600 baudios**.
+Abrir `firmware/paleta/paleta.ino`, cargarlo y abrir el monitor serie (por el USB nativo los baudios no importan).
 
 ### Herramientas en Python (modulos B y D)
 
@@ -58,8 +60,10 @@ Con la placa conectada:
 
 ```bash
 python grabar.py --listar
-python grabar.py --puerto COM5 --jugador mateo --golpe topspin_derecha
+python grabar.py --puerto COM7 --jugador mateo --golpe topspin_derecha
 ```
+
+`--listar` marca cual es el USB nativo de la ESP32. Mientras graba, `grabar.py` muestra las muestras perdidas en vivo: tiene que dar 0.
 
 ### App (modulo C)
 
