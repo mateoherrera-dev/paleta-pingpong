@@ -54,7 +54,9 @@ def main():
 
     if args.listar or not args.puerto:
         for puerto in list_ports.comports():
-            print(f"{puerto.device}  {puerto.description}")
+            nota = {0x303A: "  ← USB nativo de la ESP32 (conector OTG): usar este",
+                    0x1A86: "  ← CH340 (conector TTL): con cable largo pierde datos"}.get(puerto.vid, "")
+            print(f"{puerto.device}  {puerto.description}{nota}")
         return
     if not args.jugador or not args.golpe:
         parser.error("faltan --jugador y --golpe")
