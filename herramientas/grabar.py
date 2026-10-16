@@ -42,6 +42,13 @@ def lineas(puerto):
             yield cruda.decode("ascii", errors="ignore").strip()
 
 
+def listar_puertos():
+    for puerto in list_ports.comports():
+        nota = {0x303A: "  ← USB nativo de la ESP32 (conector OTG): usar este",
+                0x1A86: "  ← CH340 (conector TTL): con cable largo pierde datos"}.get(puerto.vid, "")
+        print(f"{puerto.device}  {puerto.description}{nota}")
+
+
 def main():
     parser = argparse.ArgumentParser(description="Graba una sesión de la paleta")
     parser.add_argument("--puerto", help="por ejemplo COM5 en Windows o /dev/ttyACM0 en Linux")
@@ -53,13 +60,20 @@ def main():
     args = parser.parse_args()
 
     if args.listar or not args.puerto:
-        for puerto in list_ports.comports():
-            nota = {0x303A: "  ← USB nativo de la ESP32 (conector OTG): usar este",
-                    0x1A86: "  ← CH340 (conector TTL): con cable largo pierde datos"}.get(puerto.vid, "")
-            print(f"{puerto.device}  {puerto.description}{nota}")
+        listar_puertos()
         return
     if not args.jugador or not args.golpe:
         parser.error("faltan --jugador y --golpe")
+
+    try:
+        puerto = serial.Serial(args.puerto, args.baudios, timeout=1)
+    except serial.SerialException as error:
+        ocupado = "denegado" in str(error) or "PermissionError" in str(error)
+        print(f"No puedo abrir {args.puerto}: "
+              + ("lo está usando otro programa (¿el Serial Monitor del IDE?)." if ocupado else "no existe."))
+        print("Puertos disponibles:")
+        listar_puertos()
+        return
 
     CARPETA.mkdir(parents=True, exist_ok=True)
     marca = datetime.datetime.now().strftime("%Y-%m-%d_%H%M%S")
@@ -67,7 +81,7 @@ def main():
 
     muestras = impactos = perdidas = rotas = 0
     t_anterior = t_rechazado = None
-    with serial.Serial(args.puerto, args.baudios, timeout=1) as puerto, open(ruta, "w", newline="") as archivo:
+    with puerto, open(ruta, "w", newline="") as archivo:
         if hasattr(puerto, "set_buffer_size"):  # solo existe en Windows
             puerto.set_buffer_size(rx_size=BUFFER_PUERTO)
         archivo.write(",".join(COLUMNAS) + "\n")
