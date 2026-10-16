@@ -54,6 +54,10 @@ const float OFFSET_AZ_G = 0.460f;
 const float UMBRAL_JERK_G = 1.5f;
 const uint32_t REFRACTARIO_US = 300000;  // después de un impacto, ignorar 300 ms
 
+// Distancia del plano inferior del pomo (donde apoya el sensor) al centro de la cabeza de la paleta,
+// medida con regla el 16/10 (docs/CONTRATOS.md). Para la velocidad tangencial v = ω · L (vel_kmh).
+const float L_PALETA_M = 0.18f;
+
 uint32_t proximaMuestra = 0;
 uint32_t ultimaLectura = 0;   // micros() de la última muestra leída
 uint32_t ultimoMensaje = 0;   // para no mandar avisos por serie más de una vez por segundo
