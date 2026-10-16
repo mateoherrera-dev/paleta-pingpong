@@ -41,10 +41,15 @@ const float OFFSET_AX_G = 0.0f;
 const float OFFSET_AY_G = 0.0f;
 const float OFFSET_AZ_G = 0.0f;
 
-// Detección de impacto: salto brusco de aceleración entre dos muestras seguidas.
-// El swing cambia la aceleración de a poco; el golpe con la pelota, de golpe.
-// Es un primer valor: ajustarlo con herramientas/ver.py sobre golpes reales.
-const float UMBRAL_SALTO_G = 1.5f;
+// Detección de impacto por Jerk: cuánto cambia el vector aceleración entre dos muestras seguidas,
+// |a[k] - a[k-1]|, en g por muestra (g/ms a 1000 Hz). El swing cambia la aceleración en
+// 30-100 ms; el choque con la pelota, en 1-2 ms (PLAN.md, 7.2).
+// Es la resta de vectores y no la de módulos (|a[k]| - |a[k-1]|) porque si la vibración del
+// choque es de costado respecto de la aceleración del swing, el módulo casi no cambia: con la
+// resta de módulos se perdían los golpes sintéticos de las pruebas y 2 de 3 toques reales.
+// Es un primer valor: con el sensor en el pomo el golpe llega más débil que en el cuello.
+// Ajustarlo con herramientas/ver.py --umbral sobre toques y swings reales.
+const float UMBRAL_JERK_G = 1.5f;
 const uint32_t REFRACTARIO_US = 300000;  // después de un impacto, ignorar 300 ms
 
 uint32_t proximaMuestra = 0;
@@ -216,8 +221,8 @@ void loop() {
   int impacto = 0;
   if (hayAnterior) {
     float dx = ax - axAnterior, dy = ay - ayAnterior, dz = az - azAnterior;
-    float salto = sqrtf(dx * dx + dy * dy + dz * dz);
-    if (salto > UMBRAL_SALTO_G && ahora - ultimoImpacto > REFRACTARIO_US) {
+    float jerk = sqrtf(dx * dx + dy * dy + dz * dz);
+    if (jerk > UMBRAL_JERK_G && ahora - ultimoImpacto > REFRACTARIO_US) {
       impacto = 1;
       ultimoImpacto = ahora;
     }
