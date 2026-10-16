@@ -132,11 +132,13 @@ void leerMPU(int16_t crudo[7]) {
 // Pasa de los ejes del módulo a los ejes de la paleta (docs/CONTRATOS.md).
 // En la base del pomo la plaqueta queda perpendicular al mango, así que hay que intercambiar ejes:
 // el cuerpo de esta función lo escribe herramientas/ejes.py a partir de 3 posiciones grabadas.
+// Módulo de la clase 1 pegado en el pomo con el chip hacia afuera (16/10, 2026-10-16_102554_ejes_libre.csv):
+// la punta de la paleta es -Z del módulo y la goma roja es +X del módulo.
 void alinearEjes(float &x, float &y, float &z) {
   float mx = x, my = y, mz = z;
-  x = mx;
+  x = -mz;
   y = my;
-  z = mz;
+  z = mx;
 }
 
 // Corre el modelo una vez al arrancar, para ver que está cargado y cuánto tarda.
