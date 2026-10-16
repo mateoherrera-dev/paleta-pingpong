@@ -63,7 +63,16 @@ python grabar.py --listar
 python grabar.py --puerto COM7 --jugador mateo --golpe topspin_derecha
 ```
 
-`--listar` marca cual es el USB nativo de la ESP32. Mientras graba, `grabar.py` muestra las muestras perdidas en vivo: tiene que dar 0.
+`--listar` marca cual es el USB nativo de la ESP32. Mientras graba, `grabar.py` muestra las muestras perdidas en vivo: tiene que dar 0. Con `--segundos 300` corta solo (prueba de 5 minutos).
+
+Cada vez que se cambia o se vuelve a pegar el modulo MPU-6500, en este orden:
+
+```bash
+python calibrar.py ../datos/crudos/ARCHIVO.csv   # 6 posiciones quietas: roja arriba/abajo, punta arriba/abajo, los dos cantos
+python ejes.py ../datos/crudos/ARCHIVO.csv       # 3 posiciones: acostada roja arriba, parada punta arriba, de canto
+```
+
+Antes de grabar para `calibrar.py`, poner `OFFSET_A*_G` en 0 y `alinearEjes()` sin cambios (`x = mx; y = my; z = mz`) en `paleta.ino`. Cada script imprime las lineas para pegar en el `.ino`.
 
 ### App (modulo C)
 
