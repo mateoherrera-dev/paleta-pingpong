@@ -240,6 +240,23 @@ Aprovechando que entre semana se trabaja en desarrollo en computadora, el ciclo 
 
 **Pendiente hoy:** 14:00 prueba de 5 min (`grabar.py --puerto COM7 --jugador prueba5min --golpe libre --segundos 300 --carpeta ../datos/pruebas`, el COM lo dice `--listar`); 14:30 grabacion masiva (en la primera tanda de 36 se tienen que marcar 36 impactos); 17:00 `segmentar.py` y Drive.
 
+#### Estado al 23/10 a las 15:45 (P1)
+
+**Dataset v1 grabado y en el Drive** (`paleta-pingpong · datos`): **343 ventanas validas** en `segmentados/`, todas de 196 muestras y sin huecos. Los descartes de cada tanda (red, afuera, golpes sin querer) estan en `segmentados_descartados/` y anotados en `crudos/NOTAS.md`.
+
+| Clase | Validas | Quien |
+| --- | --- | --- |
+| topspin_derecha | 62 | p2 + p1 |
+| topspin_reves | 68 | p2 + p1 |
+| empuje_derecha | 78 | p1 + p2 |
+| empuje_reves | 63 | p1 + p2 |
+| ruido | 72 | p1 + p2 |
+
+- A la mañana cada golpe lo grabo una sola persona (topspins p2, empujes p1): el modelo podia aprender quien pega y no que golpe. A la tarde se grabaron las **tandas cruzadas** y ahora los 4 golpes tienen a p1 y a p2.
+- **Para P2:** ya se puede entrenar con las 343. Los swings al aire y la caminata casi no marcan impactos, asi que en `ruido` casi todo es rebotes y golpes contra la mesa (ver `NOTAS.md`).
+- **Falta:** las tandas de Mateo (p3) con los 4 golpes, para despues.
+- **El USB se corta seguido** (~0,5 s, hasta 4 veces por tanda, a veces con la paleta quieta). `grabar.py` ahora se reconecta solo, pero en el empuje de reves de p2 dos cortes cayeron en medio de un swing y esos golpes se perdieron. Hay que revisar el cable y el conector OTG.
+
 ---
 
 ### Clase 4 · Viernes 30/10 · Integracion Total y Ensamble Definitivo
