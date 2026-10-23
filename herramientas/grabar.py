@@ -113,48 +113,51 @@ def main():
 
     muestras = impactos = perdidas = rotas = 0
     t_anterior = t_rechazado = None
-    with puerto, open(ruta, "w", newline="") as archivo:
-        if hasattr(puerto, "set_buffer_size"):  # solo existe en Windows
-            puerto.set_buffer_size(rx_size=BUFFER_PUERTO)
-        archivo.write(",".join(COLUMNAS) + "\n")
-        puerto.reset_input_buffer()
-        print(f"Grabando {args.golpe} de {args.jugador}. Ctrl+C para terminar.")
-        inicio = ultimo_aviso = time.monotonic()
-        try:
-            for linea in lineas_con_reconexion(puerto):
-                if linea.startswith("#"):
-                    print(f"\n{linea}")
-                    continue
-                if not MUESTRA.fullmatch(linea):
-                    # vacía, cortada o pegada; antes de la primera muestra es el arranque de la placa
-                    rotas += linea != "" and t_anterior is not None
-                    continue
-                campos = linea.split(",")
-                t = int(campos[0])
-                if t_anterior is not None and not 0 < t - t_anterior < 1_000_000:
-                    # Tiempo imposible: la línea quedó pegada con otra, o la placa se reinició.
-                    # Si sigue a la que se rechazó recién, es un reinicio: se acepta y se sigue de ahí.
-                    if t_rechazado is None or not 0 < t - t_rechazado < 2000:
-                        t_rechazado = t
-                        rotas += 1
+    try:
+        with puerto, open(ruta, "w", newline="") as archivo:
+            if hasattr(puerto, "set_buffer_size"):  # solo existe en Windows
+                puerto.set_buffer_size(rx_size=BUFFER_PUERTO)
+            archivo.write(",".join(COLUMNAS) + "\n")
+            puerto.reset_input_buffer()
+            print(f"Grabando {args.golpe} de {args.jugador}. Ctrl+C para terminar.")
+            inicio = ultimo_aviso = time.monotonic()
+            try:
+                for linea in lineas_con_reconexion(puerto):
+                    if linea.startswith("#"):
+                        print(f"\n{linea}")
                         continue
-                    if t > t_anterior:  # el tiempo siguió: no fue un reinicio sino un corte largo del USB
+                    if not MUESTRA.fullmatch(linea):
+                        # vacía, cortada o pegada; antes de la primera muestra es el arranque de la placa
+                        rotas += linea != "" and t_anterior is not None
+                        continue
+                    campos = linea.split(",")
+                    t = int(campos[0])
+                    if t_anterior is not None and not 0 < t - t_anterior < 1_000_000:
+                        # Tiempo imposible: la línea quedó pegada con otra, o la placa se reinició.
+                        # Si sigue a la que se rechazó recién, es un reinicio: se acepta y se sigue de ahí.
+                        if t_rechazado is None or not 0 < t - t_rechazado < 2000:
+                            t_rechazado = t
+                            rotas += 1
+                            continue
+                        if t > t_anterior:  # el tiempo siguió: no fue un reinicio sino un corte largo del USB
+                            perdidas += round((t - t_anterior) / 1000) - 1
+                    elif t_anterior is not None and t - t_anterior > 1500:  # una muestra cada ~1000 µs
                         perdidas += round((t - t_anterior) / 1000) - 1
-                elif t_anterior is not None and t - t_anterior > 1500:  # una muestra cada ~1000 µs
-                    perdidas += round((t - t_anterior) / 1000) - 1
-                t_anterior = t
-                t_rechazado = None
-                archivo.write(linea + "\n")
-                muestras += 1
-                impactos += campos[-1] == "1"
-                ahora = time.monotonic()
-                if ahora - ultimo_aviso >= 1:
-                    print(f"\r{muestras} muestras · {impactos} impactos · {perdidas} perdidas", end="", flush=True)
-                    ultimo_aviso = ahora
-                if args.segundos and ahora - inicio >= args.segundos:
-                    break
-        except KeyboardInterrupt:
-            pass
+                    t_anterior = t
+                    t_rechazado = None
+                    archivo.write(linea + "\n")
+                    muestras += 1
+                    impactos += campos[-1] == "1"
+                    ahora = time.monotonic()
+                    if ahora - ultimo_aviso >= 1:
+                        print(f"\r{muestras} muestras · {impactos} impactos · {perdidas} perdidas", end="", flush=True)
+                        ultimo_aviso = ahora
+                    if args.segundos and ahora - inicio >= args.segundos:
+                        break
+            except KeyboardInterrupt:
+                pass
+    except KeyboardInterrupt:
+        pass  # un segundo Ctrl+C mientras se cerraba el puerto: el archivo igual queda guardado
 
     print(f"\nGuardado en {ruta} ({muestras} muestras, {impactos} impactos)")
     if perdidas or rotas:
