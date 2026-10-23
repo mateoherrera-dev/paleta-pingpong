@@ -4,6 +4,7 @@ Uso:
     python grabar.py --listar
     python grabar.py --puerto COM5 --jugador mateo --golpe topspin_derecha
     python grabar.py --puerto COM5 --jugador prueba --golpe libre --segundos 300
+    python grabar.py --puerto COM7 --jugador calibracion --golpe libre --carpeta ../datos/pruebas
 
 Cortar con Ctrl+C (o esperar --segundos). El archivo queda en datos/crudos/ con fecha, jugador y
 golpe en el nombre. Si se pierden muestras en el camino (huecos en t_us), lo avisa en vivo y al final.
@@ -56,6 +57,9 @@ def main():
     parser.add_argument("--golpe", choices=GOLPES + ["libre"])
     parser.add_argument("--baudios", type=int, default=921600)
     parser.add_argument("--segundos", type=float, help="cortar solo después de estos segundos")
+    parser.add_argument("--carpeta", type=pathlib.Path, default=CARPETA,
+                        help="dónde guardar el CSV (default datos/crudos, que es solo para el dataset; "
+                             "para pruebas: ../datos/pruebas)")
     parser.add_argument("--listar", action="store_true", help="muestra los puertos disponibles")
     args = parser.parse_args()
 
@@ -75,9 +79,9 @@ def main():
         listar_puertos()
         return
 
-    CARPETA.mkdir(parents=True, exist_ok=True)
+    args.carpeta.mkdir(parents=True, exist_ok=True)
     marca = datetime.datetime.now().strftime("%Y-%m-%d_%H%M%S")
-    ruta = CARPETA / f"{marca}_{args.jugador}_{args.golpe}.csv"
+    ruta = args.carpeta / f"{marca}_{args.jugador}_{args.golpe}.csv"
 
     muestras = impactos = perdidas = rotas = 0
     t_anterior = t_rechazado = None
