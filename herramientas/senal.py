@@ -31,7 +31,7 @@ def revisar_muestreo(t):
     return 1 / periodo, perdidas
 
 
-def detectar_impactos(acel, umbral_g=1.5, refractario_s=0.3, fs=FS):
+def detectar_impactos(acel, umbral_g=1.0, refractario_s=0.3, fs=FS):
     """Busca impactos por Jerk: cambios bruscos del vector aceleración entre muestras seguidas.
 
     jerk[k] = |a[k] - a[k-1]|, en g por muestra (g/ms a 1000 Hz). El swing cambia la

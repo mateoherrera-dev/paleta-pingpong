@@ -49,9 +49,12 @@ const float OFFSET_AZ_G = 0.264f;
 // Es la resta de vectores y no la de módulos (|a[k]| - |a[k-1]|) porque si la vibración del
 // choque es de costado respecto de la aceleración del swing, el módulo casi no cambia: con la
 // resta de módulos se perdían los golpes sintéticos de las pruebas y 2 de 3 toques reales.
-// Es un primer valor: con el sensor en el pomo el golpe llega más débil que en el cuello.
-// Ajustarlo con herramientas/ver.py --umbral sobre toques y swings reales.
-const float UMBRAL_JERK_G = 1.5f;
+// Medido el 23/10 con el módulo firme en la Pieza A (datos/pruebas/2026-10-23_104715_umbral_libre.csv):
+// pelota cayendo desde 30 cm → 1,28 a 18,5 g; swings al aire hasta 606 °/s → 0,06 a 0,17 g.
+// 1,0 g agarra los golpes suaves (empujes) con mucho margen sobre los swings. Con el montaje
+// provisorio del 16/10 (dupont colgando) los swings llegaban a 1,02 g y se usaba 1,5.
+// Revisarlo con herramientas/ver.py --umbral si cambia el montaje.
+const float UMBRAL_JERK_G = 1.0f;
 const uint32_t REFRACTARIO_US = 300000;  // después de un impacto, ignorar 300 ms
 
 // Distancia del plano inferior del pomo (donde apoya el sensor) al centro de la cabeza de la paleta,
