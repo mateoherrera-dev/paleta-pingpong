@@ -115,6 +115,24 @@ La placa entra por arriba, deslizando: en el armado, la vaina sube desde abajo y
 
 **Paredes del teton:** el interior lo atraviesa, asi que quedan de 2,2 y 1,9 mm ((35,45 − 31) / 2 y (24,8 − 21) / 2).
 
+### Como quedo en el archivo de Fusion (23/10)
+
+El archivo de Tomas (`paleta-ping-pong.f3d`) no tiene el teton que describe esta guia: la tapa es una **placa de 4 mm** (dos escalones de 2, el de arriba 0,2 mas chico por lado y con chamfer de 1 en el borde) que apoya plana contra el aro de la Pieza A. Por eso el chamfer no se toco. Los cambios hechos en la version `paleta-ping-pong-v2.f3d`:
+
+| Cota | Antes | Ahora |
+| --- | --- | --- |
+| Boceto14 (cuerpo): d59 × d60 | 31 × 19 | **35 × 25** |
+| Boceto14: d65 (origen → borde del cuerpo) | 7,5 | **12,1** |
+| Boceto15 (interior): d68 × d69 | 27 × 15 | **31 × 21** |
+| Boceto15: d70 (borde del interior → origen) | 9,5 | **10,9** |
+| Boceto16 (agujero USB): d73 × d74 | 14 × 8 | **26 × 13** (ranura) |
+| Boceto16: d82, d81 (posicion) | 11,5 y 6 | **17,5 y 12,5** |
+| Fillet4 (union cuerpo-placa) | 2 | **1,5**, rehecho: con el cuerpo de 25 a la placa le quedan ~1,9 al costado |
+
+- Todo queda centrado en x = 0 e y = −0,4, que es el centro de la placa (va de −14,77 a 14,03). Los bocetos 14 y 15 no estaban fijos a lo ancho y se movieron a mano al centro.
+- Resultado medido en el modelo: cuerpo de −17,5 a 17,5 por −12,9 a 12,1; interior de 31 × 21 desde la cara de arriba de la placa hasta 2,3 del fondo (77,7 de largo); ranura de x −13 a 13 por y −6,9 a 6,1.
+- El aviso de "base mango" (un lienzo con una cara perdida) ya estaba antes y no afecta a la vaina.
+
 ### Paso a paso
 
 Se hace en el **mismo archivo que la Pieza A, como un cuerpo nuevo**, para poder proyectar los contornos de la pestaña.
