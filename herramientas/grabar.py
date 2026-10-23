@@ -22,6 +22,7 @@ from senal import COLUMNAS, GOLPES
 
 CARPETA = pathlib.Path(__file__).resolve().parent.parent / "datos" / "crudos"
 BUFFER_PUERTO = 1 << 20  # 1 MB: si Windows se traba un momento, que el buffer del puerto no se llene
+RECONEXION_S = 20  # si se corta el USB, cuánto esperar a que vuelva antes de cortar la grabación
 
 # Una muestra tal como la imprime paleta.ino: t_us y 3 decimales en g, 1 decimal en °/s.
 # Si se pierden bytes en el camino, dos líneas pueden quedar pegadas y tener igual 8 columnas
@@ -41,6 +42,33 @@ def lineas(puerto):
         *completas, resto = resto.split(b"\n")
         for cruda in completas:
             yield cruda.decode("ascii", errors="ignore").strip()
+
+
+def lineas_con_reconexion(puerto):
+    """Como lineas(), pero si se corta el USB espera y se reconecta solo.
+
+    Pasó el 23/10 en una tanda de reveses: un tirón del cable cortó el USB un instante (la placa
+    no se reinició) y grabar.py se cerraba con error. Las muestras del corte quedan como pérdidas.
+    """
+    while True:
+        try:
+            yield from lineas(puerto)
+        except serial.SerialException:
+            puerto.close()
+            print("\nSe cortó el USB: revisá el cable en el conector OTG. Reconectando...", flush=True)
+            limite = time.monotonic() + RECONEXION_S
+            while True:
+                time.sleep(0.5)
+                try:
+                    puerto.open()
+                    break
+                except serial.SerialException:
+                    if time.monotonic() > limite:
+                        print(f"No volvió en {RECONEXION_S} s: corto la grabación.")
+                        return
+            if hasattr(puerto, "set_buffer_size"):
+                puerto.set_buffer_size(rx_size=BUFFER_PUERTO)
+            print("Reconectado: sigue grabando en el mismo archivo.", flush=True)
 
 
 def listar_puertos():
@@ -93,7 +121,7 @@ def main():
         print(f"Grabando {args.golpe} de {args.jugador}. Ctrl+C para terminar.")
         inicio = ultimo_aviso = time.monotonic()
         try:
-            for linea in lineas(puerto):
+            for linea in lineas_con_reconexion(puerto):
                 if linea.startswith("#"):
                     print(f"\n{linea}")
                     continue
@@ -110,6 +138,8 @@ def main():
                         t_rechazado = t
                         rotas += 1
                         continue
+                    if t > t_anterior:  # el tiempo siguió: no fue un reinicio sino un corte largo del USB
+                        perdidas += round((t - t_anterior) / 1000) - 1
                 elif t_anterior is not None and t - t_anterior > 1500:  # una muestra cada ~1000 µs
                     perdidas += round((t - t_anterior) / 1000) - 1
                 t_anterior = t
