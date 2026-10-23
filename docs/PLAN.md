@@ -225,6 +225,22 @@ Aprovechando que entre semana se trabaja en desarrollo en computadora, el ciclo 
 
 ---
 
+#### Estado al 23/10 a las 18:30 (P2)
+
+**Modelo v1 entrenado y empaquetado para el ESP32-S3.**
+
+**Hecho a la tarde** (PR de la rama `datos-segmentar-ruido`):
+- **Segmentador con soporte para ruido:** se actualizo `herramientas/segmentar.py` para detectar picos de giro (|w| > 250 °/s) en swings al aire y ventanas periodicas en caminata/grip cuando no hay impacto por Jerk.
+- **Dataset balanceado (348 ventanas en total):** se recuperaron los swings al aire de p2 y se balanceo la clase ruido al 22,1 % (77 ventanas) segun el protocolo (62 topspin derecha, 68 topspin reves, 78 empuje derecha, 63 empuje reves, 77 ruido).
+- **Entrenamiento en Edge Impulse:**
+  - El bloque *Spectral Analysis* (FFT) destruia el signo de rotacion (confundia derecha y reves) y daba 32 % de acierto. Se paso a **Raw Data + normalizacion**, levantando la precision a 85,7 %.
+  - Se optimizo la arquitectura en Keras con un MLP denso (64 -> Dropout 0.2 -> 32 -> 5) eliminando el cuello de botella previo de 20-10 neuronas.
+  - **Resultado en int8 cuantizado:** **92,9 % de precision global** (100 % en empujes y topspin derecha, 92 % en topspin reves, 77 % en ruido; 97,7 % en golpes tecnicos). Supera el 80 % exigido por el MVP.
+- **Libreria generada:** exportada en C++ int8 y empaquetada con `armar_libreria_arduino.py` (`ping-pong-classifier-cpp-mcu-v3-impulse-#1_arduino.zip`). Subida al Google Drive en `modelos/`.
+- **Carcasa 3D:** Pieza B impresa. Tiene holgura; se fija con suplemento interno (cinta de papel/goma EVA) y vuelta de cinta aisladora en la union para asegurar modularidad y absorcion de impacto sin agregar peso.
+
+---
+
 ### Clase 4 · Viernes 30/10 · Integracion Total y Ensamble Definitivo
 **Materiales a llevar:** Piezas impresas en 3D (Capsula y Capuchon traidas por P2), masilla/adhesivo removible, herramientas menores para ensamble.
 
