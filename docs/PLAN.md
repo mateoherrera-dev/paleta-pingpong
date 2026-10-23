@@ -234,11 +234,9 @@ Aprovechando que entre semana se trabaja en desarrollo en computadora, el ciclo 
 - **Umbral de Jerk bajado a 1,0 g**: pelota desde 30 cm → 1,28 a 18,5 g; swings al aire → 0,06 a 0,17 g. Con el modulo firme los swings casi no dan Jerk (con los dupont colgando llegaban a 1,02 g).
 - `grabar.py --carpeta ../datos/pruebas` para las pruebas: `datos/crudos/` queda solo para el dataset (`segmentar.py` procesa todo lo que hay ahi).
 
-**Pieza B: no entra la placa.** Mientras tanto la placa va sujeta con cinta. Para rehacerla (P2) medir con calibre la placa sin camara:
-- Largo (punta de la antena → cara de los USB-C), ancho, alto arriba (lo mas alto del lado del chip) y alto abajo (pines + conectores dupont enchufados: un dupont mide ~14 mm; el plan pedia 10-12 mm de profundidad).
-- Holgura: +0,5 mm por lado en ancho y espesor, +1-2 mm de largo.
-- Abertura de abajo para los **dos** USB-C (~26 × 8 mm), que deje pasar la ficha del cable (~12 × 7 mm). **Se usa el OTG** (por el TTL se pierden datos con el cable largo).
-- Ojo: GND, G21 (NCS) y G14 (AD0) estan en la punta de los USB-C, a ~5 cm del extremo de la antena: los chicotes tienen que llegar.
+**Pieza B: la primera impresion no entro.** Mateo hizo el rediseño en `hardware/CAPSULA.md` (PR #21): interior de 31 × 21 mm y ranura de 26 × 13 mm que deja a la vista los dos USB-C (se usa el OTG). Mientras tanto la placa va sujeta con cinta. Dos cosas de hoy que cambian ese documento:
+- **Se le saco la camara** a la placa: queda mas finita que los 18,1 mm que se midieron con camara.
+- **Los chicotes de 4-5 cm con dupont no alcanzan** para el armado en la Pieza B: GND, G21 (NCS) y G14 (AD0) estan del lado de los USB-C, a unos 45-50 mm de la punta de la antena. Hay que rehacerlos con el largo de `CAPSULA.md` (35 mm + la distancia del pin a la punta de la antena).
 
 **Pendiente hoy:** 14:00 prueba de 5 min (`grabar.py --puerto COM7 --jugador prueba5min --golpe libre --segundos 300 --carpeta ../datos/pruebas`, el COM lo dice `--listar`); 14:30 grabacion masiva (en la primera tanda de 36 se tienen que marcar 36 impactos); 17:00 `segmentar.py` y Drive.
 
