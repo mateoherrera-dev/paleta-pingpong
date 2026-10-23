@@ -35,13 +35,13 @@ const float LSB_POR_DPS = 16.4f;
 
 // Offset del acelerómetro de ESTE módulo, en g y en los ejes del módulo: se resta a cada lectura.
 // Se mide con herramientas/calibrar.py y hay que volver a medirlo cada vez que se cambia el módulo.
-// Son los del módulo de la clase 1, que en la clase 2 se montó en el pomo sin soldar (sin Pieza A
-// todavía). Su eje Z lee ≈ +0,46 g de más (la hoja de datos admite hasta ±0,08 g). Medido el 9/10.
-// Cuando se suelde el módulo de repuesto en la Pieza A: calibrar.py → estos 3 valores, después
-// ejes.py → alinearEjes(), y volver a revisar UMBRAL_JERK_G. Los pines no cambian.
-const float OFFSET_AX_G = 0.033f;
-const float OFFSET_AY_G = -0.012f;
-const float OFFSET_AZ_G = 0.460f;
+// Módulo de repuesto soldado con chicotes (clase 3), calibrado el 23/10 con 6 posiciones
+// (datos/pruebas/2026-10-23_094814_calibracion_libre.csv, error residual 0,021 g).
+// Su eje Z también lee de más (+0,26 g; la hoja de datos admite ±0,08 g): el de la clase 1 tenía
+// +0,46 g (0.033 / -0.012 / 0.460). Parece del lote de módulos: calibrar siempre cada uno.
+const float OFFSET_AX_G = 0.028f;
+const float OFFSET_AY_G = -0.002f;
+const float OFFSET_AZ_G = 0.264f;
 
 // Detección de impacto por Jerk: cuánto cambia el vector aceleración entre dos muestras seguidas,
 // |a[k] - a[k-1]|, en g por muestra (g/ms a 1000 Hz). El swing cambia la aceleración en
