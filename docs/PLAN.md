@@ -223,6 +223,25 @@ Aprovechando que entre semana se trabaja en desarrollo en computadora, el ciclo 
   - Ensayos en mesa con 3 a 5 compañeros externos para medir precision en vivo fuera del dataset de entrenamiento.
   - **Hito:** Precision medida en hardware real ($\ge 80\%$ avanza a integracion final; $60-80\%$ reentrenamiento; $< 60\%$ reducir alcance a 3 golpes).
 
+#### Estado al 23/10 a las 11:00 (P1)
+
+**El dataset v1 no se grabo el 16/10.** Hoy a la mañana se armo la paleta y a la tarde se graba el dataset. Propuesta (a confirmar entre los tres): P2 entrena en Edge Impulse durante la semana y el modelo real, el powerbank y NimBLE pasan a la clase 4.
+
+**Hecho a la mañana** (PR de la rama `firmware-modulo-nuevo`):
+- **MPU de repuesto** soldado con chicotes y pegado con VHB en la base del pomo, adentro de la **Pieza A** (encastra bien). Se le saco la camara a la placa (no se usa, y la placa queda mas finita).
+- **Calibrado** con `calibrar.py`: offset +0,028 / -0,002 / +0,264 g. **Su eje Z tambien viene corrido** (+0,26 g; el modulo de la clase 1 tenia +0,46; la hoja de datos dice ±0,08): parece del lote, hay que calibrar cada modulo.
+- **Ejes** con `ejes.py`: `x = -mz; y = my; z = mx` (chip hacia afuera, igual que el provisorio).
+- **Umbral de Jerk bajado a 1,0 g**: pelota desde 30 cm → 1,28 a 18,5 g; swings al aire → 0,06 a 0,17 g. Con el modulo firme los swings casi no dan Jerk (con los dupont colgando llegaban a 1,02 g).
+- `grabar.py --carpeta ../datos/pruebas` para las pruebas: `datos/crudos/` queda solo para el dataset (`segmentar.py` procesa todo lo que hay ahi).
+
+**Pieza B: no entra la placa.** Mientras tanto la placa va sujeta con cinta. Para rehacerla (P2) medir con calibre la placa sin camara:
+- Largo (punta de la antena → cara de los USB-C), ancho, alto arriba (lo mas alto del lado del chip) y alto abajo (pines + conectores dupont enchufados: un dupont mide ~14 mm; el plan pedia 10-12 mm de profundidad).
+- Holgura: +0,5 mm por lado en ancho y espesor, +1-2 mm de largo.
+- Abertura de abajo para los **dos** USB-C (~26 × 8 mm), que deje pasar la ficha del cable (~12 × 7 mm). **Se usa el OTG** (por el TTL se pierden datos con el cable largo).
+- Ojo: GND, G21 (NCS) y G14 (AD0) estan en la punta de los USB-C, a ~5 cm del extremo de la antena: los chicotes tienen que llegar.
+
+**Pendiente hoy:** 14:00 prueba de 5 min (`grabar.py --puerto COM7 --jugador prueba5min --golpe libre --segundos 300 --carpeta ../datos/pruebas`, el COM lo dice `--listar`); 14:30 grabacion masiva (en la primera tanda de 36 se tienen que marcar 36 impactos); 17:00 `segmentar.py` y Drive.
+
 ---
 
 ### Clase 4 · Viernes 30/10 · Integracion Total y Ensamble Definitivo
