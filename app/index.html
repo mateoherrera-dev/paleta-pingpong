@@ -73,12 +73,14 @@
 const SERVICIO_UART = '6e400001-b5a3-f393-e0a9-e50e24dcca9e';
 const CARACT_TX = '6e400003-b5a3-f393-e0a9-e50e24dcca9e';
 const GOLPES = { TD: 'Topspin de derecha', TR: 'Topspin de revés', ED: 'Empuje de derecha', ER: 'Empuje de revés', '??': 'Golpe no reconocido' };
+const TIPOS = ['TD', 'TR', 'ED', 'ER'];  // tipo_golpe del struct; 4 (desconocido o ruido) y cualquier otro es '??'
+const TAM_EVENTO = 14;
 
 // Rangos de ángulo de la cara en el impacto (negativo = cerrada, positivo = abierta),
 // sacados de docs/GOLPES.md. Hay que ajustarlos con el jugador de referencia.
 const CRITERIOS = {
-  TD: { angulo: [-40, -20], pico: true },
-  TR: { angulo: [-35, -15], pico: true },
+  TD: { angulo: [-50, -30], pico: true },
+  TR: { angulo: [-45, -25], pico: true },
   ED: { angulo: [30, 50], pico: false },
   ER: { angulo: [25, 45], pico: false },
 };
@@ -87,16 +89,12 @@ const PICO_ANTES_MS = -25;  // si el pico de giro llega antes que esto, el jugad
 const sesion = { golpes: [], conteo: {} };
 const $ = (id) => document.getElementById(id);
 
-function numeroONulo(texto) {
-  return texto === '-' || texto === '' ? null : Number(texto);
-}
-
-function parsearEvento(linea) {
-  const p = linea.trim().split(',');
-  if (p.length !== 6 || !(p[1] in GOLPES)) return null;
+// Struct BlePayload de 14 bytes, little-endian (posición de cada campo en CONTRATOS.md)
+function parsearEvento(datos, i = 0) {
   return {
-    n: Number(p[0]), golpe: p[1], conf: numeroONulo(p[2]),
-    vel: numeroONulo(p[3]), ang: numeroONulo(p[4]), pico: numeroONulo(p[5]),
+    t: datos.getUint32(i, true), n: datos.getUint16(i + 4, true),
+    golpe: TIPOS[datos.getUint8(i + 6)] ?? '??', conf: datos.getUint8(i + 7),
+    vel: datos.getInt16(i + 8, true), ang: datos.getInt16(i + 10, true), pico: datos.getInt16(i + 12, true),
   };
 }
 
@@ -140,15 +138,13 @@ function mostrar(e) {
     .map((g) => `<li><span>#${g.n} ${GOLPES[g.golpe]}</span><span>${g.vel ?? '–'} km/h · ${g.ang ?? '–'}°</span></li>`).join('');
 }
 
-// Bluetooth: la placa manda líneas de texto; pueden llegar cortadas en varios paquetes
-let pendiente = '';
+// Bluetooth: cada notificación trae un struct de 14 bytes (entra entero en un paquete).
+// Si llega de otro tamaño, se lee lo que alcance y se avisa: firmware y app no coinciden.
 function recibir(evento) {
-  pendiente += new TextDecoder().decode(evento.target.value);
-  const lineas = pendiente.split('\n');
-  pendiente = lineas.pop();
-  for (const linea of lineas) {
-    const e = parsearEvento(linea);
-    if (e) mostrar(e);
+  const datos = evento.target.value;
+  for (let i = 0; i + TAM_EVENTO <= datos.byteLength; i += TAM_EVENTO) mostrar(parsearEvento(datos, i));
+  if (datos.byteLength % TAM_EVENTO) {
+    $('estado').textContent = `Llegó un mensaje de ${datos.byteLength} bytes y se esperaban ${TAM_EVENTO}: revisar el struct del firmware.`;
   }
 }
 
@@ -183,14 +179,20 @@ function alternarSimulador() {
     $('estado').textContent = 'Simulador detenido.';
     return;
   }
-  const codigos = ['TD', 'TR', 'ED', 'ER'];
   const azar = (a, b) => Math.round(a + Math.random() * (b - a));
+  const inicio = Date.now();
   simulador = setInterval(() => {
-    const g = codigos[azar(0, 3)];
-    const topspin = g.startsWith('T');
-    const linea = [++nSim, g, azar(60, 99), topspin ? azar(30, 60) : azar(10, 25),
-      topspin ? azar(-45, 0) : azar(15, 60), topspin ? azar(-60, 10) : '-'].join(',');
-    recibir({ target: { value: new TextEncoder().encode(linea + '\n') } });
+    const tipo = Math.random() < 0.1 ? 4 : azar(0, 3);
+    const topspin = tipo < 2;
+    const datos = new DataView(new ArrayBuffer(TAM_EVENTO));
+    datos.setUint32(0, Date.now() - inicio, true);
+    datos.setUint16(4, ++nSim, true);
+    datos.setUint8(6, tipo);
+    datos.setUint8(7, azar(60, 99));
+    datos.setInt16(8, topspin ? azar(30, 60) : azar(10, 25), true);
+    datos.setInt16(10, topspin ? azar(-65, -15) : azar(15, 60), true);
+    datos.setInt16(12, azar(-60, 10), true);
+    recibir({ target: { value: datos } });
   }, 2500);
   $('simular').textContent = 'Detener simulador';
   $('estado').textContent = 'Simulador: golpes inventados cada 2,5 s.';

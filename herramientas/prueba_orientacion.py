@@ -14,7 +14,7 @@ import sys
 
 import numpy as np
 
-from orientacion import angulo_en_impacto, angulo_roja, madgwick
+from orientacion import angulo_en_impacto, angulo_roja, madgwick, verificar_swings
 from senal import COLUMNAS, FS, detectar_impactos
 
 RUTA = pathlib.Path(__file__).resolve().parent.parent / "datos" / "crudos" / "prueba_orientacion.csv"
@@ -135,6 +135,19 @@ def main():
         ingenuo = ingenuo if cara == "roja" else -ingenuo
         errores.append(abs(ang - verdad) if cara_calc == cara else np.inf)
         print(f"  {i / FS:6.2f} s {cara:6s} {verdad:+6.1f}° {ang:+9.1f}° {ingenuo:+15.1f}° {cara_calc:>16s}")
+
+    swings = verificar_swings(acel, giro)
+    # además de los golpes encuentra los giros de muñeca rápidos: también son swings válidos
+    encontrados = sum(any(a <= i <= b for a, b, *_ in swings) for i, _ in sim.impactos)
+    print(f"\n--verificar: {len(swings)} swings entre tramos quietos, "
+          f"con {encontrados} de los {len(sim.impactos)} golpes adentro")
+    if encontrados != len(sim.impactos):
+        errores.append(np.inf)
+    for a, b, _, _, por_giro, por_acel in swings:
+        # el acelerómetro quieto tiene que coincidir con el ángulo real, y el giroscopio con los dos
+        errores.append(abs(por_acel - real[b:b + 200].mean()))
+        errores.append(abs(por_giro - por_acel))
+        print(f"  {a / FS:6.2f}–{b / FS:5.2f} s  real {real[b]:+6.1f}°  giroscopio {por_giro:+6.1f}°  acelerómetro {por_acel:+6.1f}°")
 
     RUTA.parent.mkdir(parents=True, exist_ok=True)
     marca = np.zeros(len(acel), dtype=int)

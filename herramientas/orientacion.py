@@ -5,6 +5,7 @@ Uso:
     python orientacion.py ../datos/crudos/ARCHIVO.csv --png angulo.png
     python orientacion.py ../datos/crudos/ARCHIVO.csv --quieta     # prueba con la paleta quieta
     python orientacion.py ../datos/crudos/ARCHIVO.csv --cara roja  # forzar la cara que golpea
+    python orientacion.py ../datos/crudos/ARCHIVO.csv --verificar  # swings que arrancan y terminan quietos
 
 Cómo funciona (docs/PLAN.md, sección 4.7):
 1. Un filtro Madgwick sigue la orientación de la paleta en toda la sesión: integra
@@ -29,6 +30,13 @@ from senal import FS, cargar_sesion, detectar_impactos
 BETA = 0.1          # ganancia del Madgwick (la misma que trae MadgwickAHRS de Arduino)
 CONGELAR_S = 0.15   # cuánto antes del impacto se deja de usar el acelerómetro
 CARA_S = 0.02       # ventana antes del impacto para decidir qué cara golpeó
+
+# Para --verificar (swings que arrancan y terminan con la paleta quieta)
+QUIETO_GIRO_DPS = 15   # girando menos que esto, la paleta está quieta
+QUIETO_ACEL_G = 0.1    # y el acelerómetro mide 1 g ± esto (solo la gravedad)
+QUIETO_MIN_S = 0.3     # cuánto tiene que durar quieta para usarla de referencia
+SWING_MIN_DPS = 200    # giro mínimo para que el movimiento entre dos quietos cuente como swing
+SATURA_DPS = 1990      # el MPU-6500 mide hasta ±2000 °/s
 
 
 def cuaternion_inicial(a):
@@ -109,6 +117,14 @@ def cara_que_golpea(giro, i, fs=FS):
     return "roja" if gy < 0 else "negra"
 
 
+def integrar_giro(q, giro, fs=FS):
+    """Parte de la orientación q y suma solo el giroscopio (giro en °/s), sin el acelerómetro."""
+    q = list(q)
+    for g in np.radians(giro).tolist():
+        q = paso_madgwick(q, g, (0.0, 0.0, 0.0), 1 / fs, beta=0)
+    return q
+
+
 def angulo_en_impacto(q_sesion, giro, i, fs=FS, congelar_s=CONGELAR_S, cara="auto"):
     """Ángulo de la cara que golpea en el impacto i (en grados) y qué cara fue.
 
@@ -116,14 +132,43 @@ def angulo_en_impacto(q_sesion, giro, i, fs=FS, congelar_s=CONGELAR_S, cara="aut
     solo el giroscopio hasta el impacto, para que el swing no falsee la vertical.
     """
     j = max(0, i - int(round(congelar_s * fs)))
-    q = q_sesion[j].tolist()
-    giro_rad = np.radians(giro[j:i]).tolist()
-    for g in giro_rad:
-        q = paso_madgwick(q, g, (0.0, 0.0, 0.0), 1 / fs, beta=0)
+    q = integrar_giro(q_sesion[j], giro[j:i], fs)
     if cara == "auto":
         cara = cara_que_golpea(giro, i, fs)
     ang = float(angulo_roja(q))
     return (ang if cara == "roja" else -ang), cara
+
+
+def tramos_quietos(acel, giro, fs=FS):
+    """Tramos (inicio, fin) donde la paleta está quieta: casi no gira y el acelerómetro mide solo la gravedad."""
+    quieta = ((np.linalg.norm(giro, axis=1) < QUIETO_GIRO_DPS)
+              & (np.abs(np.linalg.norm(acel, axis=1) - 1) < QUIETO_ACEL_G))
+    cambios = np.diff(np.concatenate([[0], quieta.astype(int), [0]]))
+    inicios, fines = np.flatnonzero(cambios == 1), np.flatnonzero(cambios == -1)
+    return [(a, b) for a, b in zip(inicios, fines) if b - a >= QUIETO_MIN_S * fs]
+
+
+def verificar_swings(acel, giro, fs=FS):
+    """Mide cuánto error acumula el giroscopio en swings que arrancan y terminan con la paleta quieta.
+
+    Con la paleta quieta el acelerómetro da el ángulo bien. Se parte del ángulo que mide quieta
+    antes del swing, se suma solo el giroscopio durante el swing (como en el impacto) y se compara
+    con lo que mide el acelerómetro cuando vuelve a quedar quieta. El swing dura más que los
+    CONGELAR_S del impacto, así que el error en el impacto es menor que este.
+    Devuelve una lista de (inicio, fin, giro máximo °/s, saturó, ángulo por giroscopio, ángulo por acelerómetro).
+    """
+    tramos = tramos_quietos(acel, giro, fs)
+    resultados = []
+    for (a0, a1), (b0, b1) in zip(tramos, tramos[1:]):
+        giro_max = np.linalg.norm(giro[a1:b0], axis=1).max()
+        if giro_max < SWING_MIN_DPS:
+            continue  # se movió poco: no es un swing
+        q = integrar_giro(cuaternion_inicial(acel[a0:a1].mean(axis=0)), giro[a1:b0], fs)
+        a = acel[b0:b1].mean(axis=0)
+        por_acel = np.degrees(np.arcsin(np.clip(a[2] / np.linalg.norm(a), -1, 1)))
+        satura = bool(np.abs(giro[a1:b0]).max() >= SATURA_DPS)
+        resultados.append((a1, b0, giro_max, satura, float(angulo_roja(q)), float(por_acel)))
+    return resultados
 
 
 def main():
@@ -137,6 +182,8 @@ def main():
                         help="cara que golpea (default: auto, según el sentido del swing)")
     parser.add_argument("--quieta", action="store_true",
                         help="prueba con la paleta quieta: muestra el ángulo de la roja cada medio segundo")
+    parser.add_argument("--verificar", action="store_true",
+                        help="swings que arrancan y terminan quietos: error que acumula el giroscopio en cada uno")
     parser.add_argument("--png", help="guardar el gráfico en un archivo en vez de mostrarlo")
     args = parser.parse_args()
 
@@ -162,6 +209,23 @@ def main():
         for k in range(0, len(t) - bloque + 1, bloque):
             tramo = roja[k:k + bloque]
             print(f"{t[k]:7.1f} s {t[k + bloque - 1]:6.1f} s {tramo.mean():8.1f}° {np.ptp(tramo):9.1f}°")
+
+    if args.verificar:
+        swings = verificar_swings(acel, giro)
+        print(f"Swings que arrancan y terminan quietos: {len(swings)}")
+        if swings:
+            print("   n   desde   duración   giro máx   solo giroscopio   acelerómetro   error")
+            errores = []
+            for n, (a, b, giro_max, satura, por_giro, por_acel) in enumerate(swings, 1):
+                error = por_giro - por_acel
+                errores.append(abs(error))
+                aviso = "  ¡saturó!" if satura else ""
+                print(f"{n:4d} {t[a]:6.1f} s {(b - a) / FS:7.2f} s {giro_max:7.0f} °/s"
+                      f" {por_giro:+12.1f}° {por_acel:+13.1f}° {error:+7.1f}°{aviso}")
+            print(f"Error típico: {np.median(errores):.1f}° · peor: {max(errores):.1f}°")
+        else:
+            print("No encontré ninguno: cada swing tiene que tener al menos "
+                  f"{QUIETO_MIN_S:.1f} s quieta antes y después.")
 
     resultados = []
     for i in impactos:

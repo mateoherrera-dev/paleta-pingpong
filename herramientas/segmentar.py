@@ -1,81 +1,184 @@
 """Segmenta los archivos crudos en ventanas individuales para Edge Impulse.
 
+Corta ventanas de 196 ms (120 ms antes del centro, 76 ms después) a 1000 Hz,
+coincidiendo exactamente con ML_BUFFER_LONGITUD_ESPERADA en firmware/paleta/ml_inference.h.
+
+Soporta:
+  1. Golpes técnicos: segmentación por trigger de impacto (df['impacto'] == 1).
+  2. Ruido / not_a_swing:
+     - Impactos físicos accidentales (toques, malabares, mesa).
+     - Swings al aire sin choque: detección de picos de rotación (|ω| > 250 °/s).
+     - Caminata y manipulación: ventanas periódicas con movimiento activo.
+
 Uso:
     python herramientas/segmentar.py
+    python herramientas/segmentar.py --crudos datos/crudos --salida datos/segmentados
 """
-import pandas as pd
+import argparse
 import pathlib
+import numpy as np
+import pandas as pd
+
+# Parámetros de la ventana (1000 Hz): 120 ms antes, 76 ms después = 196 ms total.
+VENTANA_PRE = 120
+VENTANA_POST = 76
+LONGITUD_VENTANA = VENTANA_PRE + VENTANA_POST  # 196 muestras
+
+GOLPES_VALIDOS = ["topspin_derecha", "topspin_reves", "empuje_derecha", "empuje_reves", "ruido"]
+
+
+def exportar_ventana(df, idx_centro, ruta_salida):
+    """Recorta 196 muestras alrededor de idx_centro y guarda el CSV para Edge Impulse."""
+    inicio = idx_centro - VENTANA_PRE
+    fin = idx_centro + VENTANA_POST
+    if inicio < 0 or fin > len(df):
+        return False
+
+    ventana = df.iloc[inicio:fin].copy()
+    ventana["timestamp"] = ((ventana["t_us"] - ventana["t_us"].iloc[0]) / 1000).astype(int)
+    columnas_exportar = ["timestamp", "ax_g", "ay_g", "az_g", "gx_dps", "gy_dps", "gz_dps"]
+    ventana[columnas_exportar].to_csv(ruta_salida, index=False)
+    return True
+
+
+def detectar_picos_giro(df, min_dps=250.0, distancia=400, indices_excluidos=None):
+    """Detecta picos de rotación (swings al aire) donde la paleta gira rápido pero sin choque."""
+    if indices_excluidos is None:
+        indices_excluidos = []
+
+    omega = np.sqrt(df["gx_dps"] ** 2 + df["gy_dps"] ** 2 + df["gz_dps"] ** 2).to_numpy()
+    n = len(omega)
+    picos = []
+    mitad = distancia // 2
+
+    for i in range(VENTANA_PRE, n - VENTANA_POST):
+        val = omega[i]
+        if val < min_dps:
+            continue
+
+        # Evitar solapamiento con impactos u otros picos ya tomados
+        if any(abs(i - excl) < distancia for excl in (indices_excluidos + picos)):
+            continue
+
+        # Verificar si es el máximo local en su entorno
+        vecindad = omega[max(0, i - mitad) : min(n, i + mitad + 1)]
+        if val == np.max(vecindad):
+            picos.append(i)
+
+    return picos
+
+
+def detectar_movimiento_continuo(df, paso=1000, indices_excluidos=None):
+    """Extrae ventanas periódicas durante caminata, recogida de pelotas o reacomodo de grip."""
+    if indices_excluidos is None:
+        indices_excluidos = []
+
+    omega = np.sqrt(df["gx_dps"] ** 2 + df["gy_dps"] ** 2 + df["gz_dps"] ** 2).to_numpy()
+    ax = df["ax_g"].to_numpy()
+    ay = df["ay_g"].to_numpy()
+    az = df["az_g"].to_numpy()
+    n = len(df)
+    muestras_mov = []
+
+    for i in range(VENTANA_PRE, n - VENTANA_POST, paso):
+        if any(abs(i - excl) < 300 for excl in (indices_excluidos + muestras_mov)):
+            continue
+
+        inicio = i - VENTANA_PRE
+        fin = i + VENTANA_POST
+        sub_omega = omega[inicio:fin]
+        sub_ax = ax[inicio:fin]
+        sub_ay = ay[inicio:fin]
+        sub_az = az[inicio:fin]
+
+        std_a = (np.std(sub_ax) + np.std(sub_ay) + np.std(sub_az)) / 3.0
+        mean_w = np.mean(sub_omega)
+
+        # Movimiento activo perceptible (evita paleta quieta apoyada sobre la mesa)
+        if std_a > 0.04 or mean_w > 20.0:
+            muestras_mov.append(i)
+
+    return muestras_mov
+
+
+def inferir_etiqueta(nombre_archivo):
+    """Deduce la clase a partir del nombre del archivo."""
+    for golpe in GOLPES_VALIDOS:
+        if golpe in nombre_archivo:
+            return golpe
+    return "desconocido"
+
 
 def main():
-    crudos_dir = pathlib.Path("datos/crudos")
-    salida_dir = pathlib.Path("datos/segmentados")
-    
+    parser = argparse.ArgumentParser(description="Segmenta CSVs crudos de IMU en ventanas para Edge Impulse.")
+    parser.add_argument("--crudos", type=str, default="datos/crudos", help="Carpeta con archivos CSV crudos")
+    parser.add_argument("--salida", type=str, default="datos/segmentados", help="Carpeta de salida para ventanas")
+    args = parser.parse_args()
+
+    crudos_dir = pathlib.Path(args.crudos)
+    salida_dir = pathlib.Path(args.salida)
+
     if not crudos_dir.exists():
-        print(f"No existe la carpeta {crudos_dir}. Asegurate de grabar datos primero.")
+        print(f"No existe la carpeta '{crudos_dir}'. Asegurate de colocar los archivos crudos allí.")
         return
 
     salida_dir.mkdir(parents=True, exist_ok=True)
-
-    # Parámetros de la ventana (1000 Hz): 120 ms antes, 76 ms después = 196 ms total.
-    # Tiene que coincidir con lo que espera el modelo: ML_BUFFER_LONGITUD_ESPERADA / 6 ejes
-    # en firmware/paleta/ml_inference.h (y con el buffer circular del firmware).
-    VENTANA_PRE = 120
-    VENTANA_POST = 76
-
-    archivos = list(crudos_dir.glob("*.csv"))
+    archivos = sorted(list(crudos_dir.glob("*.csv")))
     if not archivos:
-        print(f"No hay archivos CSV en {crudos_dir}")
+        print(f"No hay archivos CSV en '{crudos_dir}'.")
         return
 
     total_ventanas = 0
 
     for ruta_csv in archivos:
-        df = pd.read_csv(ruta_csv)
-        
-        # Validación rápida para asegurarse de que sea un archivo de la placa
-        if 'impacto' not in df.columns or 't_us' not in df.columns:
+        try:
+            df = pd.read_csv(ruta_csv)
+        except Exception as e:
+            print(f"Error al leer {ruta_csv.name}: {e}")
             continue
 
-        indices_impacto = df.index[df['impacto'] == 1].tolist()
-        if not indices_impacto:
+        # Validación mínima de columnas requeridas
+        columnas_requeridas = {"t_us", "ax_g", "ay_g", "az_g", "gx_dps", "gy_dps", "gz_dps"}
+        if not columnas_requeridas.issubset(df.columns):
             continue
-            
-        print(f"Procesando {ruta_csv.name} ({len(indices_impacto)} impactos encontrados)...")
 
-        # Inferir la etiqueta a partir del nombre original
-        # GOLPES permitidos según senal.py
-        etiqueta = "desconocido"
-        for golpe in ["topspin_derecha", "topspin_reves", "empuje_derecha", "empuje_reves"]:
-            if golpe in ruta_csv.name:
-                etiqueta = golpe
-                break
+        etiqueta = inferir_etiqueta(ruta_csv.name)
+        indices_impacto = df.index[df["impacto"] == 1].tolist() if "impacto" in df.columns else []
+        ventanas_este_archivo = 0
 
+        # 1. Ventanas por impacto físico (golpes técnicos o choques de ruido)
         for i, idx in enumerate(indices_impacto):
-            inicio = idx - VENTANA_PRE
-            fin = idx + VENTANA_POST
-            
-            # Si el impacto está muy cerca del borde del archivo, lo descartamos
-            if inicio < 0 or fin > len(df):
-                continue
-                
-            ventana = df.iloc[inicio:fin].copy()
-            
-            # Reindexar el timestamp para que arranque en 0 ms
-            ventana['timestamp'] = ((ventana['t_us'] - ventana['t_us'].iloc[0]) / 1000).astype(int)
-            
-            # Exportar manteniendo los nombres de columnas originales del proyecto
-            columnas_exportar = ['timestamp', 'ax_g', 'ay_g', 'az_g', 'gx_dps', 'gy_dps', 'gz_dps']
-            ventana_limpia = ventana[columnas_exportar]
-            
-            # Formato de nombre especial para Edge Impulse: "etiqueta.identificador.csv"
-            # Esto permite que Edge Impulse infiera la etiqueta "topspin_derecha" automáticamente.
-            nombre_archivo = salida_dir / f"{etiqueta}.{ruta_csv.stem}_impacto_{i+1}.csv"
-            
-            ventana_limpia.to_csv(nombre_archivo, index=False)
-            total_ventanas += 1
+            nombre_salida = salida_dir / f"{etiqueta}.{ruta_csv.stem}_impacto_{i+1}.csv"
+            if exportar_ventana(df, idx, nombre_salida):
+                ventanas_este_archivo += 1
+
+        # 2. Si es archivo de ruido, extraer también swings al aire y movimientos sin choque
+        if etiqueta == "ruido":
+            # Swings al aire (|ω| > 250 °/s sin impacto)
+            picos_swing = detectar_picos_giro(df, min_dps=250.0, distancia=400, indices_excluidos=indices_impacto)
+            for j, idx in enumerate(picos_swing):
+                nombre_salida = salida_dir / f"{etiqueta}.{ruta_csv.stem}_swing_{j+1}.csv"
+                if exportar_ventana(df, idx, nombre_salida):
+                    ventanas_este_archivo += 1
+
+            # Movimiento continuo (caminata, manipulación de paleta)
+            excluidos_totales = indices_impacto + picos_swing
+            muestras_mov = detectar_movimiento_continuo(df, paso=1000, indices_excluidos=excluidos_totales)
+            for k, idx in enumerate(muestras_mov):
+                nombre_salida = salida_dir / f"{etiqueta}.{ruta_csv.stem}_movimiento_{k+1}.csv"
+                if exportar_ventana(df, idx, nombre_salida):
+                    ventanas_este_archivo += 1
+
+            detalles_ruido = f"({len(indices_impacto)} impactos, {len(picos_swing)} swings al aire, {len(muestras_mov)} caminata/mov)"
+            print(f"Procesando {ruta_csv.name} [{etiqueta}]: {ventanas_este_archivo} ventanas {detalles_ruido}")
+        else:
+            print(f"Procesando {ruta_csv.name} [{etiqueta}]: {ventanas_este_archivo} impactos")
+
+        total_ventanas += ventanas_este_archivo
 
     print(f"\n¡Listo! Se generaron {total_ventanas} ventanas en '{salida_dir}'.")
     print("Podés subir esta carpeta directamente a Edge Impulse.")
+
 
 if __name__ == "__main__":
     main()
