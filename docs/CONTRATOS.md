@@ -66,7 +66,7 @@ Para aislar el codigo de adquisicion de hardware (P1) del modelo de Machine Lear
 
 ## 5. Evento de golpe BLE (P1 ↔ P3)
 
-Para evitar el bloqueo de interrupciones en el ESP32 causado por el parseo y concatenacion de strings, el Bluetooth Low Energy transmite un **Struct de C empaquetado (Packed Struct)** binario. Ocupa solo 14 bytes y entra sobradamente en un paquete BLE estandar (MTU 20).
+Para evitar el bloqueo de interrupciones en el ESP32 causado por el parseo y concatenacion de strings, el Bluetooth Low Energy transmite un **Struct de C empaquetado (Packed Struct)** binario. Ocupa **20 bytes** (los 14 de siempre + 6 de la orientacion) y entra justo en un paquete BLE estandar: con el MTU por defecto de 23 bytes, una notificacion lleva hasta 20 de datos.
 
 - **Servicio Custom:** `6e400001-b5a3-f393-e0a9-e50e24dcca9e`.
 - **Caracteristica de Notificacion (Notify):** `6e400003-b5a3-f393-e0a9-e50e24dcca9e`.
@@ -82,7 +82,8 @@ struct BlePayload {
     int16_t  vel_kmh;       // 2 bytes: Velocidad tangencial estimada
     int16_t  ang_deg;       // 2 bytes: Angulo de la cara (- cerrada, + abierta; ver abajo)
     int16_t  pico_ms;       // 2 bytes: Tiempo del pico giro vs impacto (- es antes)
-}; // Total: 14 bytes
+    int16_t  q1, q2, q3;    // 6 bytes: Orientacion en el impacto, cuaternion x 32767 (ver abajo)
+}; // Total: 20 bytes
 #pragma pack(pop)
 ```
 
@@ -103,10 +104,31 @@ Misma convencion que [`GOLPES.md`](GOLPES.md), donde estan los rangos de cada go
 | **Negativo** | **Cerrada**: mira hacia la mesa | Topspin (ideal entre −50° y −30° sobre bola neutra) |
 | **Positivo** | **Abierta**: mira hacia el techo | Empuje (ideal entre +25° y +50°) |
 
+### Orientacion en el impacto (`q1`, `q2`, `q3`)
+
+Para el visor 3D de la app (acordado entre los tres el 30/10). Es la orientacion completa de la paleta en la muestra del impacto, la misma de la que sale `ang_deg` (`angulo_en_impacto()` en `firmware/paleta/angulo.cpp`).
+
+- **Que es:** un cuaternion unitario (q0, q1, q2, q3), q0 la parte real, que **lleva los vectores de la paleta al mundo**: v_mundo = q · v_paleta · q*. Es la misma convencion que `Object3D.quaternion` de Three.js.
+- **Ejes de la paleta:** los de la seccion 1 (X a lo largo del mango hacia la paleta, Z saliendo por la goma roja, Y = Z × X).
+- **Ejes del mundo:** **Z para arriba** (lo fija la gravedad). X es la direccion horizontal hacia donde apuntaba el mango al prender la paleta, e Y = Z × X.
+- **Rumbo (giro alrededor de Z del mundo):** el sensor no tiene magnetometro, asi que no hay norte. Se mide desde el arranque integrando el giroscopio y **se corre con el tiempo** (unos grados por minuto, menos si la paleta arranco quieta y se calibro el giroscopio). La app no tiene que confiar en el rumbo: conviene ignorarlo o ponerlo en cero en cada golpe para mostrar.
+- **Como se manda:** solo q1, q2 y q3, multiplicados por 32767 y redondeados a `int16`. El firmware elige el signo para que q0 ≥ 0 (q y −q son la misma orientacion), asi la app lo reconstruye:
+  q0 = √(1 − q1² − q2² − q3²), con q1..q3 ya divididos por 32767 (si por redondeo da negativo adentro de la raiz, usar 0).
+- **Caso de prueba:** paleta acostada con la goma roja para arriba y el mango apuntando hacia donde apuntaba al arrancar → q = (1, 0, 0, 0), o sea q1 = q2 = q3 = 0.
+- **Three.js usa Y para arriba.** Si el modelo 3D se arma con nuestros ejes rotados a los de Three.js (x → x, z → y, y → −z), el cuaternion para Three.js es `(x, y, z, w) = (q1, q3, −q2, q0)`.
+- **Calibracion del giroscopio:** al arrancar, el firmware promedia 1 s de giroscopio con la paleta quieta y lo resta en todo lo que manda (tambien en el CSV de `grabar.py`). Si la paleta se movio, avisa por serie y no calibra.
+
 ### Recepcion (Web App P3)
 P3 se suscribe a la caracteristica usando la **Web Bluetooth API**. Al recibir el buffer binario, lo decodifica usando un `DataView` estandar de JavaScript en formato **Little-Endian**:
 ```javascript
 let timestamp = dataView.getUint32(0, true);
 let tipo_golpe = dataView.getUint8(6);
 let vel_kmh = dataView.getInt16(8, true);
+// solo si llegaron 20 bytes (el firmware viejo manda 14):
+let q1 = dataView.getInt16(14, true) / 32767;
+let q2 = dataView.getInt16(16, true) / 32767;
+let q3 = dataView.getInt16(18, true) / 32767;
+let q0 = Math.sqrt(Math.max(0, 1 - q1 * q1 - q2 * q2 - q3 * q3));
 ```
+
+**Compatibilidad:** los primeros 14 bytes no cambian de lugar. La app acepta mensajes de **14 o 20 bytes** segun `byteLength`: con 14 no hay orientacion (como hasta el 30/10) y con 20 si. Asi el firmware y la app se pueden actualizar por separado.
