@@ -36,7 +36,101 @@
   .conteo { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; font-size: .9rem; }
   label { font-size: .9rem; display: flex; gap: 6px; align-items: center; }
   .vacio { color: var(--muted); }
+  .visor-wrap {
+    position: relative;
+    width: 100%;
+    height: 200px;
+    background: radial-gradient(circle at center, rgba(27, 79, 145, 0.08) 0%, rgba(0, 0, 0, 0.03) 70%);
+    border-radius: 10px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--line);
+    margin: 4px 0;
+  }
+  @media (prefers-color-scheme: dark) {
+    .visor-wrap {
+      background: radial-gradient(circle at center, rgba(116, 171, 239, 0.12) 0%, rgba(0, 0, 0, 0.3) 70%);
+    }
+  }
+  #canvas3d-container {
+    width: 100%;
+    height: 100%;
+    cursor: grab;
+  }
+  #canvas3d-container:active {
+    cursor: grabbing;
+  }
+  #canvas3d-container canvas {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+  }
+  .visor-indicador {
+    position: absolute;
+    bottom: 8px;
+    right: 10px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 3px 8px;
+    text-align: right;
+    pointer-events: none;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+  }
+  .visor-indicador span {
+    font-size: 1rem;
+    font-weight: 700;
+    display: block;
+    line-height: 1.1;
+  }
+  .visor-indicador small {
+    font-size: 0.7rem;
+    color: var(--muted);
+  }
+    .visor-selector {
+    position: absolute;
+    top: 6px;
+    right: 8px;
+    display: flex;
+    gap: 3px;
+    background: rgba(120, 130, 145, 0.15);
+    backdrop-filter: blur(6px);
+    border-radius: 6px;
+    padding: 2px;
+    z-index: 10;
+  }
+  .btn-m {
+    font-size: 0.72rem;
+    padding: 3px 8px;
+    border-radius: 4px;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    font-weight: 500;
+  }
+  .btn-m.activo {
+    background: var(--card);
+    color: var(--fg);
+    font-weight: 700;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+  }
+  .visor-ayuda {
+    position: absolute;
+    top: 8px;
+    left: 10px;
+    font-size: 0.72rem;
+    color: var(--muted);
+    pointer-events: none;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+  }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 </head>
 <body>
 <main>
@@ -50,6 +144,19 @@
   <section class="card" id="ultimo">
     <div class="golpe" id="golpe">Esperando un golpe…</div>
     <div class="certeza" id="certeza"></div>
+
+    <div class="visor-wrap">
+      <div id="canvas3d-container"></div>
+      <div class="visor-ayuda">Orientación 3D del impacto</div>
+      <div class="visor-selector">
+        <button id="btn-m1" class="btn-m activo" type="button">8 KB</button>
+        <button id="btn-m2" class="btn-m" type="button">156 KB</button>
+      </div>
+      <div class="visor-indicador">
+        <span id="visor-angulo">–°</span>
+        <small id="visor-etiqueta">Cara vertical</small>
+      </div>
+    </div>
     <div class="stats">
       <div class="stat"><small>Velocidad</small><b id="vel">–</b></div>
       <div class="stat"><small>Ángulo</small><b id="ang">–</b></div>
@@ -92,12 +199,260 @@ const sesion = { golpes: [], conteo: {} };
 const $ = (id) => document.getElementById(id);
 
 // Struct BlePayload de 14 bytes, little-endian (posición de cada campo en CONTRATOS.md)
-function parsearEvento(datos, i = 0) {
-  return {
-    t: datos.getUint32(i, true), n: datos.getUint16(i + 4, true),
-    golpe: TIPOS[datos.getUint8(i + 6)] ?? '??', conf: datos.getUint8(i + 7),
-    vel: datos.getInt16(i + 8, true), ang: datos.getInt16(i + 10, true), pico: datos.getInt16(i + 12, true),
+
+// --- Visor 3D de la Paleta (Three.js + GLTFLoader) ---
+let scene3d, camera3d, renderer3d, paletaGroup, animFrameId;
+let targetRotX = 0, currentRotX = 0;
+let targetRotY = 0.25, currentRotY = 0.25, rotYDrag = 0;
+let targetRotZ = 0, currentRotZ = 0;
+let isDragging = false, prevMouseX = 0;
+let mixer = null;
+const clock3d = new THREE.Clock();
+let modeloActual = 'paleta.glb';
+
+function cargarModelo(archivo) {
+  if (!paletaGroup) return;
+  modeloActual = archivo;
+  
+  while (paletaGroup.children.length > 0) {
+    paletaGroup.remove(paletaGroup.children[0]);
+  }
+  if (mixer) {
+    mixer.stopAllAction();
+    mixer = null;
+  }
+
+  const loader = new THREE.GLTFLoader();
+  loader.load(archivo, (gltf) => {
+    const model = gltf.scene;
+
+    if (archivo === 'paleta2.glb') {
+      // Modelo 156 KB (escena Sketchfab con pelota y animación)
+      model.rotation.x = -Math.PI / 2;
+      model.position.set(0, -0.6, 0);
+      model.scale.set(1.35, 1.35, 1.35);
+
+      if (gltf.animations && gltf.animations.length > 0) {
+        mixer = new THREE.AnimationMixer(model);
+        const action = mixer.clipAction(gltf.animations[0]);
+        action.play();
+      }
+    } else {
+      // Modelo 8 KB (paleta pura orientada con sus materiales rojo/negro/madera)
+      model.position.set(0, -2.1, 0);
+      model.scale.set(1.05, 1.05, 1.05);
+    }
+    paletaGroup.add(model);
+  }, undefined, (err) => {
+    console.warn('Error cargando ' + archivo + ', usando fallback:', err);
+    crearFallbackProcedural();
+  });
+}
+
+function crearFallbackProcedural() {
+  const maderaGeo = new THREE.CylinderGeometry(1.0, 1.0, 0.1, 32);
+  const pala = new THREE.Mesh(maderaGeo, new THREE.MeshStandardMaterial({ color: 0xdd9944, roughness: 0.6 }));
+  pala.rotation.x = Math.PI / 2;
+  pala.scale.set(1.1, 0.08, 1.3);
+
+  const gomaGeo = new THREE.CylinderGeometry(0.98, 0.98, 0.02, 32);
+  const gomaRoja = new THREE.Mesh(gomaGeo, new THREE.MeshStandardMaterial({ color: 0xf44336 }));
+  gomaRoja.rotation.x = Math.PI / 2;
+  gomaRoja.position.z = 0.05;
+  gomaRoja.scale.set(1.1, 1, 1.3);
+  pala.add(gomaRoja);
+
+  const mangoGeo = new THREE.BoxGeometry(0.35, 1.4, 0.22);
+  const mango = new THREE.Mesh(mangoGeo, new THREE.MeshStandardMaterial({ color: 0xc88530 }));
+  mango.position.set(0, -1.8, 0);
+  pala.add(mango);
+
+  paletaGroup.add(pala);
+}
+
+function iniciarVisor3D() {
+  const container = $('canvas3d-container');
+  if (!container || !window.THREE) return;
+
+  const w = container.clientWidth || 300;
+  const h = container.clientHeight || 200;
+
+  scene3d = new THREE.Scene();
+  camera3d = new THREE.PerspectiveCamera(38, w / h, 0.1, 50);
+  camera3d.position.set(0.1, 0.0, 6.0);
+
+  renderer3d = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer3d.setSize(w, h);
+  renderer3d.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer3d.outputEncoding = THREE.sRGBEncoding;
+  container.appendChild(renderer3d.domElement);
+
+  // Iluminación realista
+  const ambient = new THREE.AmbientLight(0xffffff, 0.95);
+  scene3d.add(ambient);
+  const dirLight1 = new THREE.DirectionalLight(0xffffff, 0.75);
+  dirLight1.position.set(3, 5, 4);
+  scene3d.add(dirLight1);
+  const dirLight2 = new THREE.DirectionalLight(0xffffff, 0.35);
+  dirLight2.position.set(-3, -2, -2);
+  scene3d.add(dirLight2);
+
+  paletaGroup = new THREE.Group();
+  scene3d.add(paletaGroup);
+
+  // Cargar por defecto la paleta deportiva limpia de 8 KB
+  cargarModelo('paleta.glb');
+
+  // Botones de selección de modelo
+  const b1 = $('btn-m1');
+  const b2 = $('btn-m2');
+  if (b1 && b2) {
+    b1.addEventListener('click', () => {
+      b1.classList.add('activo');
+      b2.classList.remove('activo');
+      cargarModelo('paleta.glb');
+    });
+    b2.addEventListener('click', () => {
+      b2.classList.add('activo');
+      b1.classList.remove('activo');
+      cargarModelo('paleta2.glb');
+    });
+  }
+
+  // Interacción táctil / mouse para girar levemente en Y
+  container.addEventListener('pointerdown', (ev) => {
+    isDragging = true;
+    prevMouseX = ev.clientX;
+  });
+  window.addEventListener('pointermove', (ev) => {
+    if (!isDragging) return;
+    const dx = ev.clientX - prevMouseX;
+    prevMouseX = ev.clientX;
+    rotYDrag += dx * 0.01;
+  });
+  window.addEventListener('pointerup', () => { isDragging = false; });
+
+  window.addEventListener('resize', () => {
+    if (!container || !renderer3d || !camera3d) return;
+    const nw = container.clientWidth;
+    const nh = container.clientHeight;
+    camera3d.aspect = nw / nh;
+    camera3d.updateProjectionMatrix();
+    renderer3d.setSize(nw, nh);
+  });
+
+  animarVisor();
+}
+
+function animarVisor() {
+  animFrameId = requestAnimationFrame(animarVisor);
+
+  const delta = clock3d.getDelta();
+  if (mixer) mixer.update(delta);
+
+  if (paletaGroup) {
+    if (usaCuaternion) {
+      // Interpolación esférica (SLERP) matemática para cuaternión
+      paletaGroup.quaternion.slerp(targetQuat, 0.1);
+    } else {
+      // Interpolación Euler en 3 ejes
+      currentRotX += (targetRotX - currentRotX) * 0.09;
+      currentRotY += ((targetRotY + rotYDrag) - currentRotY) * 0.09;
+      currentRotZ += (targetRotZ - currentRotZ) * 0.09;
+      paletaGroup.rotation.set(currentRotX, currentRotY, currentRotZ);
+    }
+  }
+  if (renderer3d && scene3d && camera3d) {
+    renderer3d.render(scene3d, camera3d);
+  }
+}
+
+let targetQuat = new THREE.Quaternion();
+let usaCuaternion = false;
+
+function actualizarVisor3D(ang, golpe, q = null) {
+  if (ang === null || ang === undefined) return;
+
+  if (q) {
+    // Modo 20 bytes: Cuaternión real completo
+    usaCuaternion = true;
+    // Mapeo de marco del sensor (X mango, Y canto, Z roja con Z mundo arriba)
+    // a Three.js (Y mango, X canto, Z roja con Y mundo arriba):
+    // Reorientamos para que con q=(1,0,0,0) la cara roja mire al techo
+    const qSensor = new THREE.Quaternion(q.x, q.y, q.z, q.w);
+    // Matriz de cambio de base hacia el visor de Three.js
+    const rotBase = new THREE.Quaternion().setFromEuler(new THREE.Euler(-Math.PI / 2, 0, rotYDrag));
+    targetQuat.copy(qSensor).multiply(rotBase);
+  } else {
+    // Modo 14 bytes: Fallback con postura biomecánica calculada
+    usaCuaternion = false;
+    targetRotX = THREE.MathUtils.degToRad(-ang);
+    if (golpe === 'TD') {
+      targetRotY = 0.32;
+      targetRotZ = -0.30;
+    } else if (golpe === 'TR') {
+      targetRotY = -0.28;
+      targetRotZ = 0.38;
+    } else if (golpe === 'ED') {
+      targetRotY = 0.18;
+      targetRotZ = -0.16;
+    } else if (golpe === 'ER') {
+      targetRotY = -0.15;
+      targetRotZ = 0.22;
+    } else {
+      targetRotY = 0.25;
+      targetRotZ = 0.0;
+    }
+  }
+
+  $('visor-angulo').textContent = `${ang}°`;
+  const elVisorEtiqueta = $('visor-etiqueta');
+  const c = CRITERIOS[golpe];
+  if (c && c.angulo) {
+    if (ang < c.angulo[0]) {
+      elVisorEtiqueta.textContent = 'Demasiado cerrada';
+      elVisorEtiqueta.style.color = 'var(--bad)';
+    } else if (ang > c.angulo[1]) {
+      elVisorEtiqueta.textContent = 'Demasiado abierta';
+      elVisorEtiqueta.style.color = 'var(--bad)';
+    } else {
+      elVisorEtiqueta.textContent = 'Ángulo ideal';
+      elVisorEtiqueta.style.color = 'var(--ok)';
+    }
+  } else {
+    elVisorEtiqueta.textContent = ang < 0 ? 'Cara cerrada' : (ang > 0 ? 'Cara abierta' : 'Cara vertical');
+    elVisorEtiqueta.style.color = 'var(--muted)';
+  }
+}
+
+const TAM_MINIMO = 14;
+const TAM_COMPLETO = 20;
+
+function parsearEvento(datos, i = 0, tam = 14) {
+  const evento = {
+    t: datos.getUint32(i, true),
+    n: datos.getUint16(i + 4, true),
+    golpe: TIPOS[datos.getUint8(i + 6)] ?? '??',
+    conf: datos.getUint8(i + 7),
+    vel: datos.getInt16(i + 8, true),
+    ang: datos.getInt16(i + 10, true),
+    pico: datos.getInt16(i + 12, true),
+    q: null,
+    tam: tam
   };
+
+  // Si el struct viene con cuaternión de 20 bytes (q1, q2, q3 en int16 x 32767)
+  if (tam >= 20 && (i + 20 <= datos.byteLength)) {
+    const q1 = datos.getInt16(i + 14, true) / 32767.0;
+    const q2 = datos.getInt16(i + 16, true) / 32767.0;
+    const q3 = datos.getInt16(i + 18, true) / 32767.0;
+    // q0 se reconstruye con norma unitaria (el firmware garantiza q0 >= 0)
+    const sumaSq = q1 * q1 + q2 * q2 + q3 * q3;
+    const q0 = Math.sqrt(Math.max(0, 1.0 - sumaSq));
+    evento.q = { w: q0, x: q1, y: q2, z: q3 };
+  }
+
+  return evento;
 }
 
 function formatearPico(pico) {
@@ -138,6 +493,7 @@ function mostrar(e) {
   $('vel').textContent = e.vel === null ? '–' : `${e.vel} km/h`;
   $('ang').textContent = e.ang === null ? '–' : `${e.ang}°`;
   $('pico').textContent = formatearPico(e.pico);
+  actualizarVisor3D(e.ang, e.golpe, e.q);
   $('certeza').textContent = e.conf !== null ? `Certeza del modelo: ${e.conf} %` : '';
   $('consejo').textContent = c.texto;
   $('consejo').classList.toggle('ok', c.ok);
@@ -154,9 +510,15 @@ function mostrar(e) {
 // Si llega de otro tamaño, se lee lo que alcance y se avisa: firmware y app no coinciden.
 function recibir(evento) {
   const datos = evento.target.value;
-  for (let i = 0; i + TAM_EVENTO <= datos.byteLength; i += TAM_EVENTO) mostrar(parsearEvento(datos, i));
-  if (datos.byteLength % TAM_EVENTO) {
-    $('estado').textContent = `Llegó un mensaje de ${datos.byteLength} bytes y se esperaban ${TAM_EVENTO}: revisar el struct del firmware.`;
+  // Detección automática: 20 bytes (cuaternión) o 14 bytes (base)
+  const tam = (datos.byteLength >= 20 && datos.byteLength % 20 === 0) ? 20 : 14;
+  for (let i = 0; i + tam <= datos.byteLength; i += tam) {
+    mostrar(parsearEvento(datos, i, tam));
+  }
+  if (datos.byteLength % tam !== 0) {
+    $('estado').textContent = `Llegó un mensaje de ${datos.byteLength} bytes: revisar el struct del firmware.`;
+  } else {
+    $('estado').textContent = `Conectada (${tam} B${tam === 20 ? ' · Cuaternión 3D' : ''}).`;
   }
 }
 
@@ -196,14 +558,25 @@ function alternarSimulador() {
   simulador = setInterval(() => {
     const tipo = Math.random() < 0.1 ? 4 : azar(0, 3);
     const topspin = tipo < 2;
-    const datos = new DataView(new ArrayBuffer(TAM_EVENTO));
+    const anguloSim = topspin ? azar(-55, -25) : azar(20, 50);
+    const datos = new DataView(new ArrayBuffer(TAM_COMPLETO));
     datos.setUint32(0, Date.now() - inicio, true);
     datos.setUint16(4, ++nSim, true);
     datos.setUint8(6, tipo);
     datos.setUint8(7, azar(60, 99));
     datos.setInt16(8, topspin ? azar(30, 60) : azar(10, 25), true);
-    datos.setInt16(10, topspin ? azar(-65, -15) : azar(15, 60), true);
+    datos.setInt16(10, anguloSim, true);
     datos.setInt16(12, azar(-60, 10), true);
+
+    // Cuaternión simulado en 3 ejes: q1 (pitch), q2 (yaw), q3 (roll)
+    const pitchRad = (-anguloSim * Math.PI) / 360;
+    const rollRad = (topspin ? (tipo === 0 ? -15 : 20) : (tipo === 2 ? -8 : 10)) * Math.PI / 360;
+    const q1 = Math.sin(pitchRad);
+    const q3 = Math.sin(rollRad);
+    datos.setInt16(14, Math.round(q1 * 32767), true);
+    datos.setInt16(16, 0, true);
+    datos.setInt16(18, Math.round(q3 * 32767), true);
+
     recibir({ target: { value: datos } });
   }, 2500);
   $('simular').textContent = 'Detener simulador';
@@ -212,6 +585,9 @@ function alternarSimulador() {
 
 $('conectar').addEventListener('click', conectar);
 $('simular').addEventListener('click', alternarSimulador);
+
+window.addEventListener('DOMContentLoaded', iniciarVisor3D);
+if (document.readyState !== 'loading') iniciarVisor3D();
 </script>
 </body>
 </html>
