@@ -114,19 +114,98 @@ struct BlePayload {
 #pragma pack(pop)
 static_assert(sizeof(BlePayload) == 14, "BlePayload tiene que medir 14 bytes (CONTRATOS.md)");
 
+BLEServer *servidor = nullptr;
 BLECharacteristic *caracteristica = nullptr;
-volatile bool celularConectado = false;
 uint16_t golpes = 0;
 
+// Conexiones BLE. El 30/10 un celular que tenía la paleta guardada se conectaba solo al arrancar
+// y, como se aceptaba una sola conexión, la app nunca la encontraba. Ahora:
+// 1. Se aceptan hasta 3 a la vez (CONFIG_BT_NIMBLE_MAX_CONNECTIONS del core) y se sigue anunciando.
+// 2. La app, al conectarse, se suscribe a las notificaciones (startNotifications en app/index.html).
+//    La conexión que en 10 s no se suscribió no es la app: se corta.
+// No es seguridad (alguien que conozca el UUID puede suscribirse): solo evita que la ocupen.
+const int MAX_CONEXIONES = 3;
+const uint32_t SUSCRIBIRSE_MS = 10000;
+struct Conexion {
+  bool usada;
+  uint16_t id;      // conn_handle de NimBLE
+  uint32_t desde;   // millis() de la conexión (o del último intento de cortarla)
+  bool suscrita;
+};
+Conexion conexiones[MAX_CONEXIONES];
+portMUX_TYPE muxConexiones = portMUX_INITIALIZER_UNLOCKED;  // los callbacks corren en la tarea del BLE
+
+// En la ESP32-S3 la librería BLE del core usa NimBLE por debajo: la conexión viene en ble_gap_conn_desc
 class AlConectar : public BLEServerCallbacks {
-  void onConnect(BLEServer *servidor) override {
-    celularConectado = true;
+  void onConnect(BLEServer *s, ble_gap_conn_desc *conexion) override {
+    int usadas = 0;
+    bool guardada = false;
+    portENTER_CRITICAL(&muxConexiones);
+    for (Conexion &c : conexiones) {
+      if (!c.usada && !guardada) {
+        c = {true, conexion->conn_handle, millis(), false};
+        guardada = true;
+      }
+      usadas += c.usada;
+    }
+    portEXIT_CRITICAL(&muxConexiones);
+    const uint8_t *mac = conexion->peer_ota_addr.val;  // NimBLE la guarda al revés
+    Serial.printf("# BLE: se conectó %02X:%02X:%02X:%02X:%02X:%02X (%d de %d)\n",
+                  mac[5], mac[4], mac[3], mac[2], mac[1], mac[0], usadas, MAX_CONEXIONES);
+    if (usadas < MAX_CONEXIONES) BLEDevice::startAdvertising();  // NimBLE deja de anunciar al conectarse
   }
-  void onDisconnect(BLEServer *servidor) override {
-    celularConectado = false;
-    BLEDevice::startAdvertising();  // para que el celular se pueda volver a conectar
+  void onDisconnect(BLEServer *s, ble_gap_conn_desc *conexion) override {
+    portENTER_CRITICAL(&muxConexiones);
+    for (Conexion &c : conexiones) {
+      if (c.usada && c.id == conexion->conn_handle) c.usada = false;
+    }
+    portEXIT_CRITICAL(&muxConexiones);
+    BLEDevice::startAdvertising();
+    Serial.println("# BLE: se desconectó uno; anunciando");
   }
 };
+
+class AlSuscribirse : public BLECharacteristicCallbacks {
+  void onSubscribe(BLECharacteristic *car, ble_gap_conn_desc *conexion, uint16_t valor) override {
+    portENTER_CRITICAL(&muxConexiones);
+    for (Conexion &c : conexiones) {
+      if (c.usada && c.id == conexion->conn_handle) c.suscrita = valor & 1;  // bit 0: notificaciones
+    }
+    portEXIT_CRITICAL(&muxConexiones);
+    Serial.printf("# BLE: la conexión %u %s a los golpes\n", conexion->conn_handle,
+                  (valor & 1) ? "se suscribió" : "se desuscribió");
+  }
+};
+
+bool hayAppSuscrita() {
+  bool hay = false;
+  portENTER_CRITICAL(&muxConexiones);
+  for (Conexion &c : conexiones) hay |= c.usada && c.suscrita;
+  portEXIT_CRITICAL(&muxConexiones);
+  return hay;
+}
+
+// Corta las conexiones que pasaron SUSCRIBIRSE_MS sin suscribirse. Se llama desde loop().
+void revisarConexiones() {
+  static uint32_t ultimaRevision = 0;
+  if (millis() - ultimaRevision < 500) return;
+  ultimaRevision = millis();
+  uint16_t cortar[MAX_CONEXIONES];
+  int n = 0;
+  portENTER_CRITICAL(&muxConexiones);
+  for (Conexion &c : conexiones) {
+    if (c.usada && !c.suscrita && millis() - c.desde > SUSCRIBIRSE_MS) {
+      cortar[n++] = c.id;
+      c.desde = millis();  // si no se corta, se vuelve a intentar en 10 s
+    }
+  }
+  portEXIT_CRITICAL(&muxConexiones);
+  for (int i = 0; i < n; i++) {
+    Serial.printf("# BLE: la conexión %u no se suscribió en %lu s: se corta\n", cortar[i],
+                  (unsigned long)(SUSCRIBIRSE_MS / 1000));
+    servidor->disconnect(cortar[i]);
+  }
+}
 
 uint32_t proximaMuestra = 0;
 uint32_t ultimaLectura = 0;   // micros() de la última muestra leída
@@ -230,10 +309,11 @@ void probarModelo() {
 
 void iniciarBLE() {
   BLEDevice::init(NOMBRE_BLE);
-  BLEServer *servidor = BLEDevice::createServer();
+  servidor = BLEDevice::createServer();
   servidor->setCallbacks(new AlConectar());
   BLEService *servicio = servidor->createService(UUID_SERVICIO);
   caracteristica = servicio->createCharacteristic(UUID_NOTIFY, BLECharacteristic::PROPERTY_NOTIFY);
+  caracteristica->setCallbacks(new AlSuscribirse());
   caracteristica->addDescriptor(new BLE2902());  // lo que escribe el celular para suscribirse
   servicio->start();
   BLEAdvertising *anuncio = BLEDevice::getAdvertising();
@@ -288,7 +368,7 @@ void mandarGolpe() {
   p.ang_deg = 0;     // falta angulo.cpp (rama firmware-angulo de Mateo)
   p.pico_ms = (int16_t)((int32_t)kPico - (int32_t)i);  // 1 muestra = 1 ms
 
-  bool enviado = celularConectado;
+  bool enviado = hayAppSuscrita();
   if (enviado) {
     caracteristica->setValue((uint8_t *)&p, sizeof(p));
     caracteristica->notify();
@@ -296,7 +376,7 @@ void mandarGolpe() {
   const char *nombres[] = {"TD", "TR", "ED", "ER", "ruido"};
   Serial.printf("# Golpe %u: %s %u %% (modelo en %.1f ms), %d km/h (%.0f °/s), pico %+d ms%s\n", p.numero_golpe,
                 nombres[p.tipo_golpe], p.confianza, msModelo, p.vel_kmh, w, p.pico_ms,
-                enviado ? ", enviado por BLE" : ", sin celular conectado");
+                enviado ? ", enviado por BLE" : ", sin la app conectada");
 }
 
 void setup() {
@@ -355,6 +435,7 @@ bool tocaLeer() {
 }
 
 void loop() {
+  revisarConexiones();
   if (!tocaLeer()) return;
   uint32_t ahora = micros();
   ultimaLectura = ahora;
