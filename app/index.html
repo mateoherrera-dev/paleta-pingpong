@@ -136,43 +136,22 @@
     transform: scale(1.04);
     box-shadow: 0 3px 8px rgba(0,0,0,0.12);
   }
-  .agarre-bar {
+  .agarre-info {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
+    justify-content: center;
     gap: 8px;
-    font-size: 0.8rem;
+    font-size: 0.78rem;
     color: var(--muted);
     margin-top: 10px;
-    padding: 8px 12px;
+    padding: 6px 12px;
     background: rgba(120, 130, 145, 0.08);
     border: 1px solid var(--line);
-    border-radius: 8px;
-  }
-  .agarre-btn-group {
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
-  }
-  .btn-agarre {
-    font-size: 0.78rem;
-    padding: 5px 10px;
     border-radius: 6px;
-    border: 1px solid var(--line);
-    background: var(--card);
+    text-align: center;
+  }
+  .agarre-info b {
     color: var(--text);
-    cursor: pointer;
-    transition: background 0.15s, border-color 0.15s;
-  }
-  .btn-agarre:hover {
-    border-color: var(--link);
-  }
-  .btn-agarre.activo {
-    background: var(--link);
-    color: #fff;
-    border-color: var(--link);
-    font-weight: 700;
   }
   .cara-roja {
     color: #d32f2f;
@@ -280,12 +259,8 @@
       </div>
     </div>
 
-    <div class="agarre-bar">
-      <span>Paleta física:</span>
-      <div class="agarre-btn-group">
-        <button type="button" id="btn-agarre-negra" class="btn-agarre activo" title="Configurar golpe de derecha con goma negra">⚫ Negra (Derecha) / 🔴 Roja (Revés)</button>
-        <button type="button" id="btn-agarre-roja" class="btn-agarre" title="Configurar golpe de derecha con goma roja">🔴 Roja (Derecha) / ⚫ Negra (Revés)</button>
-      </div>
+    <div class="agarre-info">
+      <span>Agarre fijado (CONTRATOS.md):</span> <b>⚫ Negra en Derecha / 🔴 Roja en Revés</b>
     </div>
 
     <div class="stats">
@@ -520,35 +495,20 @@ function animarVisor() {
 
 let targetQuat = new THREE.Quaternion();
 let usaCuaternion = false;
-let gomaEnDerecha = localStorage.getItem('pingpong_goma_derecha') || 'negra';
 let caraForzadaManual = null;
 let ultimoEvento = null;
 let caraActual = 'negra';
 
-function setGomaEnDerecha(valor) {
-  gomaEnDerecha = valor;
-  localStorage.setItem('pingpong_goma_derecha', valor);
-  const bNegra = $('btn-agarre-negra');
-  const bRoja = $('btn-agarre-roja');
-  if (bNegra && bRoja) {
-    bNegra.classList.toggle('activo', valor === 'negra');
-    bRoja.classList.toggle('activo', valor === 'roja');
-  }
-  caraForzadaManual = null;
-  if (ultimoEvento) mostrar(ultimoEvento, false);
-}
-
 function calcularCaraSensor(ang, q) {
   if (!q || ang === null || ang === undefined) return null;
-  // Ángulo de la cara roja (+Z en sensor) según Madgwick (misma cuenta que angulo.cpp / orientacion.py):
+  // Ángulo de la cara roja (+Z en sensor) según Madgwick (angulo.cpp / orientacion.py):
   const vert = q.w * q.w - q.x * q.x - q.y * q.y + q.z * q.z;
   const angRojaSensor = Math.asin(Math.max(-1, Math.min(1, vert))) * 180 / Math.PI;
-  // En firmware: ang = cara_roja ? roja : -roja;
-  // Si ang y angRojaSensor tienen el mismo signo, el sensor físico golpeó por +Z (roja del sensor):
+  // En firmware (angulo.cpp): r.grados = r.cara_roja ? roja : -roja;
+  // Si ang y angRojaSensor tienen el mismo signo, el sensor físico golpeó por +Z (roja del sensor / revés):
   if (Math.abs(angRojaSensor) > 2.0 && Math.abs(ang) > 2.0) {
     const sensorDetectoRoja = (ang * angRojaSensor > 0);
-    // Si la paleta está configurada con negra en derecha (+Z del módulo):
-    return (gomaEnDerecha === 'negra') ? (sensorDetectoRoja ? 'negra' : 'roja') : (sensorDetectoRoja ? 'roja' : 'negra');
+    return sensorDetectoRoja ? 'roja' : 'negra';
   }
   return null;
 }
@@ -556,19 +516,18 @@ function calcularCaraSensor(ang, q) {
 function determinarCara(golpe, ang = null, q = null) {
   if (caraForzadaManual) return caraForzadaManual;
 
-  // 1. Clasificación por modelo TinyML (si no es desconocido '??')
-  const esDerecha = (golpe === 'TD' || golpe === 'ED');
-  const esReves = (golpe === 'TR' || golpe === 'ER');
+  // 1. Clasificación oficial de TinyML (CONTRATOS.md):
+  // Derecha (TD, ED) = Goma Negra
+  // Revés (TR, ER) = Goma Roja
+  if (golpe === 'TD' || golpe === 'ED') return 'negra';
+  if (golpe === 'TR' || golpe === 'ER') return 'roja';
 
-  if (esDerecha) return (gomaEnDerecha === 'negra') ? 'negra' : 'roja';
-  if (esReves) return (gomaEnDerecha === 'negra') ? 'roja' : 'negra';
-
-  // 2. Si el golpe no fue reconocido ('??'), deducir la cara real por orientación física y cuaternión
+  // 2. Si el golpe no fue reconocido ('??'), deducir la cara real por orientación y giroscopio
   const caraSensor = calcularCaraSensor(ang, q);
   if (caraSensor) return caraSensor;
 
-  // 3. Fallback: usar la goma configurada de derecha por defecto
-  return gomaEnDerecha;
+  // 3. Fallback: negra por defecto
+  return 'negra';
 }
 
 function actualizarVisor3D(ang, golpe, q = null, caraOverride = null) {
@@ -813,14 +772,7 @@ function alternarSimulador() {
 $('conectar').addEventListener('click', conectar);
 $('simular').addEventListener('click', alternarSimulador);
 
-const btnAgNegra = $('btn-agarre-negra');
-const btnAgRoja = $('btn-agarre-roja');
-if (btnAgNegra && btnAgRoja) {
-  btnAgNegra.classList.toggle('activo', gomaEnDerecha === 'negra');
-  btnAgRoja.classList.toggle('activo', gomaEnDerecha === 'roja');
-  btnAgNegra.addEventListener('click', () => setGomaEnDerecha('negra'));
-  btnAgRoja.addEventListener('click', () => setGomaEnDerecha('roja'));
-}
+
 
 const badgeEl = $('visor-cara');
 if (badgeEl) {
