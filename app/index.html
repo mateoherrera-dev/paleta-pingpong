@@ -28,6 +28,7 @@
   .stat { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px; text-align: center; }
   .stat small { display: block; color: var(--muted); font-size: .75rem; }
   .stat b { font-size: 1.2rem; font-variant-numeric: tabular-nums; }
+  .certeza { font-size: .8rem; color: var(--muted); margin-top: -6px; }
   .consejo { background: var(--soft); border-radius: 8px; padding: 10px; }
   .consejo.ok { color: var(--ok); }
   ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; font-size: .9rem; }
@@ -48,10 +49,11 @@
 
   <section class="card" id="ultimo">
     <div class="golpe" id="golpe">Esperando un golpe…</div>
+    <div class="certeza" id="certeza"></div>
     <div class="stats">
       <div class="stat"><small>Velocidad</small><b id="vel">–</b></div>
       <div class="stat"><small>Ángulo</small><b id="ang">–</b></div>
-      <div class="stat"><small>Confianza</small><b id="conf">–</b></div>
+      <div class="stat"><small>Timing (pico)</small><b id="pico">–</b></div>
     </div>
     <div class="consejo" id="consejo">Pegá un golpe para ver el análisis.</div>
     <label><input type="checkbox" id="voz"> Leer los consejos en voz alta</label>
@@ -98,7 +100,13 @@ function parsearEvento(datos, i = 0) {
   };
 }
 
+function formatearPico(pico) {
+  if (pico === null || pico === undefined) return '–';
+  return (pico > 0 ? `+${pico}` : `${pico}`) + ' ms';
+}
+
 function consejo(e) {
+  if (e.conf !== null && e.conf < 55) return { texto: 'Gesto poco claro: repetí el golpe con mayor definición.', ok: false };
   const c = CRITERIOS[e.golpe];
   if (!c) return { texto: 'No se reconoció el golpe.', ok: false };
   const avisos = [];
@@ -106,7 +114,10 @@ function consejo(e) {
     if (e.ang < c.angulo[0]) avisos.push('Paleta demasiado cerrada: abrila un poco al pegar.');
     if (e.ang > c.angulo[1]) avisos.push('Paleta demasiado abierta: cerrala un poco al pegar.');
   }
-  if (c.pico && e.pico !== null && e.pico < PICO_ANTES_MS) avisos.push('Estás frenando antes de la pelota: acelerá a través del golpe.');
+  if (c.pico && e.pico !== null) {
+    if (e.pico < PICO_ANTES_MS) avisos.push('Estás frenando antes de la pelota: acelerá a través del golpe.');
+    else if (e.pico > 5) avisos.push('Aceleraste tarde: el latigazo debe ser justo antes del contacto.');
+  }
   return avisos.length ? { texto: avisos.join(' '), ok: false } : { texto: 'Buen golpe.', ok: true };
 }
 
@@ -126,7 +137,8 @@ function mostrar(e) {
   $('golpe').textContent = GOLPES[e.golpe];
   $('vel').textContent = e.vel === null ? '–' : `${e.vel} km/h`;
   $('ang').textContent = e.ang === null ? '–' : `${e.ang}°`;
-  $('conf').textContent = e.conf === null ? '–' : `${e.conf} %`;
+  $('pico').textContent = formatearPico(e.pico);
+  $('certeza').textContent = e.conf !== null ? `Certeza del modelo: ${e.conf} %` : '';
   $('consejo').textContent = c.texto;
   $('consejo').classList.toggle('ok', c.ok);
   decir(c.texto);
@@ -135,7 +147,7 @@ function mostrar(e) {
     .filter((k) => sesion.conteo[k])
     .map((k) => `<span>${GOLPES[k]}</span><b>${sesion.conteo[k]}</b>`).join('');
   $('historial').innerHTML = sesion.golpes.slice(0, 15)
-    .map((g) => `<li><span>#${g.n} ${GOLPES[g.golpe]}</span><span>${g.vel ?? '–'} km/h · ${g.ang ?? '–'}°</span></li>`).join('');
+    .map((g) => `<li><span>#${g.n} ${GOLPES[g.golpe]}</span><span>${g.vel ?? '–'} km/h · ${g.ang ?? '–'}° · ${formatearPico(g.pico)}</span></li>`).join('');
 }
 
 // Bluetooth: cada notificación trae un struct de 14 bytes (entra entero en un paquete).
