@@ -67,6 +67,37 @@
     width: 100% !important;
     height: 100% !important;
   }
+  .visor-badge-cara {
+    position: absolute;
+    bottom: 8px;
+    left: 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    padding: 3px 9px;
+    border-radius: 6px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+    pointer-events: none;
+    z-index: 5;
+  }
+  .cara-roja {
+    color: #d32f2f;
+    border-color: rgba(211, 47, 47, 0.35);
+  }
+  .cara-negra {
+    color: #121c28;
+    border-color: rgba(50, 50, 50, 0.4);
+  }
+  @media (prefers-color-scheme: dark) {
+    .cara-negra {
+      color: #e6edf5;
+      border-color: rgba(180, 190, 205, 0.4);
+    }
+  }
   .visor-indicador {
     position: absolute;
     bottom: 8px;
@@ -148,6 +179,7 @@
     <div class="visor-wrap">
       <div id="canvas3d-container"></div>
       <div class="visor-ayuda">Orientación 3D del impacto</div>
+      <div class="visor-badge-cara cara-roja" id="visor-cara">🔴 Goma Roja</div>
       <div class="visor-selector">
         <button id="btn-m1" class="btn-m activo" type="button">8 KB</button>
         <button id="btn-m2" class="btn-m" type="button">156 KB</button>
@@ -370,34 +402,54 @@ function animarVisor() {
 let targetQuat = new THREE.Quaternion();
 let usaCuaternion = false;
 
+function determinarCara(golpe, q) {
+  // En tenis de mesa clásico:
+  // - Golpes de derecha (TD / ED) se juegan con la goma ROJA
+  // - Golpes de revés (TR / ER) se juegan con la goma NEGRA
+  if (golpe === 'TR' || golpe === 'ER') return 'negra';
+  if (golpe === 'TD' || golpe === 'ED') return 'roja';
+  return 'roja';
+}
+
 function actualizarVisor3D(ang, golpe, q = null) {
   if (ang === null || ang === undefined) return;
+
+  const cara = determinarCara(golpe, q);
+  const badgeCara = $('visor-cara');
+  if (badgeCara) {
+    if (cara === 'roja') {
+      badgeCara.textContent = '🔴 Goma Roja';
+      badgeCara.className = 'visor-badge-cara cara-roja';
+    } else {
+      badgeCara.textContent = '⚫ Goma Negra';
+      badgeCara.className = 'visor-badge-cara cara-negra';
+    }
+  }
 
   if (q) {
     // Modo 20 bytes: Cuaternión real completo
     usaCuaternion = true;
-    // Mapeo de marco del sensor (X mango, Y canto, Z roja con Z mundo arriba)
-    // a Three.js (Y mango, X canto, Z roja con Y mundo arriba):
-    // Reorientamos para que con q=(1,0,0,0) la cara roja mire al techo
     const qSensor = new THREE.Quaternion(q.x, q.y, q.z, q.w);
-    // Matriz de cambio de base hacia el visor de Three.js
-    const rotBase = new THREE.Quaternion().setFromEuler(new THREE.Euler(-Math.PI / 2, 0, rotYDrag));
+    const rotBase = new THREE.Quaternion().setFromEuler(new THREE.Euler(-Math.PI / 2, cara === 'negra' ? Math.PI : 0, rotYDrag));
     targetQuat.copy(qSensor).multiply(rotBase);
   } else {
     // Modo 14 bytes: Fallback con postura biomecánica calculada
     usaCuaternion = false;
     targetRotX = THREE.MathUtils.degToRad(-ang);
+
     if (golpe === 'TD') {
       targetRotY = 0.32;
       targetRotZ = -0.30;
     } else if (golpe === 'TR') {
-      targetRotY = -0.28;
+      // De revés: gira 180° en Y para mostrar la goma negra al frente hacia la mesa
+      targetRotY = Math.PI - 0.28;
       targetRotZ = 0.38;
     } else if (golpe === 'ED') {
       targetRotY = 0.18;
       targetRotZ = -0.16;
     } else if (golpe === 'ER') {
-      targetRotY = -0.15;
+      // Empuje de revés: cara negra hacia arriba/frente
+      targetRotY = Math.PI - 0.15;
       targetRotZ = 0.22;
     } else {
       targetRotY = 0.25;
@@ -503,7 +555,7 @@ function mostrar(e) {
     .filter((k) => sesion.conteo[k])
     .map((k) => `<span>${GOLPES[k]}</span><b>${sesion.conteo[k]}</b>`).join('');
   $('historial').innerHTML = sesion.golpes.slice(0, 15)
-    .map((g) => `<li><span>#${g.n} ${GOLPES[g.golpe]}</span><span>${g.vel ?? '–'} km/h · ${g.ang ?? '–'}° · ${formatearPico(g.pico)}</span></li>`).join('');
+    .map((g) => `<li><span>#${g.n} ${GOLPES[g.golpe]}</span><span>${(g.golpe === 'TR' || g.golpe === 'ER') ? '⚫ Negra' : '🔴 Roja'} · ${g.vel ?? '–'} km/h · ${g.ang ?? '–'}° · ${formatearPico(g.pico)}</span></li>`).join('');
 }
 
 // Bluetooth: cada notificación trae un struct de 14 bytes (entra entero en un paquete).
