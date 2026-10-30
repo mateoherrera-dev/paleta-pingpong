@@ -149,8 +149,8 @@
       <div id="canvas3d-container"></div>
       <div class="visor-ayuda">Orientación 3D del impacto</div>
       <div class="visor-selector">
-        <button id="btn-m1" class="btn-m" type="button">8 KB</button>
-        <button id="btn-m2" class="btn-m activo" type="button">156 KB</button>
+        <button id="btn-m1" class="btn-m activo" type="button">8 KB</button>
+        <button id="btn-m2" class="btn-m" type="button">156 KB</button>
       </div>
       <div class="visor-indicador">
         <span id="visor-angulo">–°</span>
@@ -203,16 +203,17 @@ const $ = (id) => document.getElementById(id);
 // --- Visor 3D de la Paleta (Three.js + GLTFLoader) ---
 let scene3d, camera3d, renderer3d, paletaGroup, animFrameId;
 let targetRotX = 0, currentRotX = 0;
-let isDragging = false, prevMouseX = 0, rotYOffset = 0.35;
+let targetRotY = 0.25, currentRotY = 0.25, rotYDrag = 0;
+let targetRotZ = 0, currentRotZ = 0;
+let isDragging = false, prevMouseX = 0;
 let mixer = null;
 const clock3d = new THREE.Clock();
-let modeloActual = 'paleta2.glb';
+let modeloActual = 'paleta.glb';
 
 function cargarModelo(archivo) {
   if (!paletaGroup) return;
   modeloActual = archivo;
   
-  // Limpiar modelo anterior
   while (paletaGroup.children.length > 0) {
     paletaGroup.remove(paletaGroup.children[0]);
   }
@@ -237,9 +238,9 @@ function cargarModelo(archivo) {
         action.play();
       }
     } else {
-      // Modelo 8 KB (paleta pura con materiales de madera y gomas roja/negra)
+      // Modelo 8 KB (paleta pura orientada con sus materiales rojo/negro/madera)
       model.position.set(0, -2.1, 0);
-      model.scale.set(1.0, 1.0, 1.0);
+      model.scale.set(1.05, 1.05, 1.05);
     }
     paletaGroup.add(model);
   }, undefined, (err) => {
@@ -277,8 +278,8 @@ function iniciarVisor3D() {
   const h = container.clientHeight || 200;
 
   scene3d = new THREE.Scene();
-  camera3d = new THREE.PerspectiveCamera(40, w / h, 0.1, 50);
-  camera3d.position.set(0.2, 0.1, 6.2);
+  camera3d = new THREE.PerspectiveCamera(38, w / h, 0.1, 50);
+  camera3d.position.set(0.1, 0.0, 6.0);
 
   renderer3d = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer3d.setSize(w, h);
@@ -286,10 +287,10 @@ function iniciarVisor3D() {
   renderer3d.outputEncoding = THREE.sRGBEncoding;
   container.appendChild(renderer3d.domElement);
 
-  // Iluminación
+  // Iluminación realista
   const ambient = new THREE.AmbientLight(0xffffff, 0.95);
   scene3d.add(ambient);
-  const dirLight1 = new THREE.DirectionalLight(0xffffff, 0.7);
+  const dirLight1 = new THREE.DirectionalLight(0xffffff, 0.75);
   dirLight1.position.set(3, 5, 4);
   scene3d.add(dirLight1);
   const dirLight2 = new THREE.DirectionalLight(0xffffff, 0.35);
@@ -299,8 +300,8 @@ function iniciarVisor3D() {
   paletaGroup = new THREE.Group();
   scene3d.add(paletaGroup);
 
-  // Cargar por defecto el modelo de 156 KB solicitado
-  cargarModelo('paleta2.glb');
+  // Cargar por defecto la paleta deportiva limpia de 8 KB
+  cargarModelo('paleta.glb');
 
   // Botones de selección de modelo
   const b1 = $('btn-m1');
@@ -327,7 +328,7 @@ function iniciarVisor3D() {
     if (!isDragging) return;
     const dx = ev.clientX - prevMouseX;
     prevMouseX = ev.clientX;
-    rotYOffset += dx * 0.01;
+    rotYDrag += dx * 0.01;
   });
   window.addEventListener('pointerup', () => { isDragging = false; });
 
@@ -346,15 +347,18 @@ function iniciarVisor3D() {
 function animarVisor() {
   animFrameId = requestAnimationFrame(animarVisor);
 
-  // Actualizar animación del modelo si existe (rebote de pelota)
   const delta = clock3d.getDelta();
   if (mixer) mixer.update(delta);
 
-  // Interpolación suave (LERP) hacia el ángulo objetivo
-  currentRotX += (targetRotX - currentRotX) * 0.1;
+  // Interpolación fluida (LERP) en los 3 ejes simultáneos
+  currentRotX += (targetRotX - currentRotX) * 0.09;
+  currentRotY += ((targetRotY + rotYDrag) - currentRotY) * 0.09;
+  currentRotZ += (targetRotZ - currentRotZ) * 0.09;
+
   if (paletaGroup) {
     paletaGroup.rotation.x = currentRotX;
-    paletaGroup.rotation.y = rotYOffset;
+    paletaGroup.rotation.y = currentRotY;
+    paletaGroup.rotation.z = currentRotZ;
   }
   if (renderer3d && scene3d && camera3d) {
     renderer3d.render(scene3d, camera3d);
@@ -363,9 +367,34 @@ function animarVisor() {
 
 function actualizarVisor3D(ang, golpe) {
   if (ang === null || ang === undefined) return;
+
+  // 1. Eje X (Cabeceo de la cara medido por el sensor):
   // Negativo = cerrada (inclina la pala hacia adelante / abajo, hacia la mesa)
   // Positivo = abierta (inclina la pala hacia atrás / arriba, hacia el techo)
   targetRotX = THREE.MathUtils.degToRad(-ang);
+
+  // 2. Ejes Y y Z (Postura biomecánica 3D según derecha vs revés):
+  if (golpe === 'TD') {
+    // Topspin de Derecha: inclinación natural de antebrazo derecho, ángulo de ataque
+    targetRotY = 0.32;   // ~18° perfil hacia el frente-izquierda
+    targetRotZ = -0.30;  // ~ -17° mango abajo-derecha, cabeza arriba-izquierda
+  } else if (golpe === 'TR') {
+    // Topspin de Revés: brazo cruzando el pecho, inclinación opuesta
+    targetRotY = -0.28;  // ~ -16°
+    targetRotZ = 0.38;   // ~ +22° mango hacia la izquierda del cuerpo
+  } else if (golpe === 'ED') {
+    // Empuje de Derecha: paleta más horizontal sobre la mesa
+    targetRotY = 0.18;
+    targetRotZ = -0.16;
+  } else if (golpe === 'ER') {
+    // Empuje de Revés: paleta frente al torso, horizontal abierta
+    targetRotY = -0.15;
+    targetRotZ = 0.22;
+  } else {
+    // Golpe no reconocido o neutro
+    targetRotY = 0.25;
+    targetRotZ = 0.0;
+  }
 
   $('visor-angulo').textContent = `${ang}°`;
   const elVisorEtiqueta = $('visor-etiqueta');
