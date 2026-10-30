@@ -350,50 +350,59 @@ function animarVisor() {
   const delta = clock3d.getDelta();
   if (mixer) mixer.update(delta);
 
-  // Interpolación fluida (LERP) en los 3 ejes simultáneos
-  currentRotX += (targetRotX - currentRotX) * 0.09;
-  currentRotY += ((targetRotY + rotYDrag) - currentRotY) * 0.09;
-  currentRotZ += (targetRotZ - currentRotZ) * 0.09;
-
   if (paletaGroup) {
-    paletaGroup.rotation.x = currentRotX;
-    paletaGroup.rotation.y = currentRotY;
-    paletaGroup.rotation.z = currentRotZ;
+    if (usaCuaternion) {
+      // Interpolación esférica (SLERP) matemática para cuaternión
+      paletaGroup.quaternion.slerp(targetQuat, 0.1);
+    } else {
+      // Interpolación Euler en 3 ejes
+      currentRotX += (targetRotX - currentRotX) * 0.09;
+      currentRotY += ((targetRotY + rotYDrag) - currentRotY) * 0.09;
+      currentRotZ += (targetRotZ - currentRotZ) * 0.09;
+      paletaGroup.rotation.set(currentRotX, currentRotY, currentRotZ);
+    }
   }
   if (renderer3d && scene3d && camera3d) {
     renderer3d.render(scene3d, camera3d);
   }
 }
 
-function actualizarVisor3D(ang, golpe) {
+let targetQuat = new THREE.Quaternion();
+let usaCuaternion = false;
+
+function actualizarVisor3D(ang, golpe, q = null) {
   if (ang === null || ang === undefined) return;
 
-  // 1. Eje X (Cabeceo de la cara medido por el sensor):
-  // Negativo = cerrada (inclina la pala hacia adelante / abajo, hacia la mesa)
-  // Positivo = abierta (inclina la pala hacia atrás / arriba, hacia el techo)
-  targetRotX = THREE.MathUtils.degToRad(-ang);
-
-  // 2. Ejes Y y Z (Postura biomecánica 3D según derecha vs revés):
-  if (golpe === 'TD') {
-    // Topspin de Derecha: inclinación natural de antebrazo derecho, ángulo de ataque
-    targetRotY = 0.32;   // ~18° perfil hacia el frente-izquierda
-    targetRotZ = -0.30;  // ~ -17° mango abajo-derecha, cabeza arriba-izquierda
-  } else if (golpe === 'TR') {
-    // Topspin de Revés: brazo cruzando el pecho, inclinación opuesta
-    targetRotY = -0.28;  // ~ -16°
-    targetRotZ = 0.38;   // ~ +22° mango hacia la izquierda del cuerpo
-  } else if (golpe === 'ED') {
-    // Empuje de Derecha: paleta más horizontal sobre la mesa
-    targetRotY = 0.18;
-    targetRotZ = -0.16;
-  } else if (golpe === 'ER') {
-    // Empuje de Revés: paleta frente al torso, horizontal abierta
-    targetRotY = -0.15;
-    targetRotZ = 0.22;
+  if (q) {
+    // Modo 20 bytes: Cuaternión real completo
+    usaCuaternion = true;
+    // Mapeo de marco del sensor (X mango, Y canto, Z roja con Z mundo arriba)
+    // a Three.js (Y mango, X canto, Z roja con Y mundo arriba):
+    // Reorientamos para que con q=(1,0,0,0) la cara roja mire al techo
+    const qSensor = new THREE.Quaternion(q.x, q.y, q.z, q.w);
+    // Matriz de cambio de base hacia el visor de Three.js
+    const rotBase = new THREE.Quaternion().setFromEuler(new THREE.Euler(-Math.PI / 2, 0, rotYDrag));
+    targetQuat.copy(qSensor).multiply(rotBase);
   } else {
-    // Golpe no reconocido o neutro
-    targetRotY = 0.25;
-    targetRotZ = 0.0;
+    // Modo 14 bytes: Fallback con postura biomecánica calculada
+    usaCuaternion = false;
+    targetRotX = THREE.MathUtils.degToRad(-ang);
+    if (golpe === 'TD') {
+      targetRotY = 0.32;
+      targetRotZ = -0.30;
+    } else if (golpe === 'TR') {
+      targetRotY = -0.28;
+      targetRotZ = 0.38;
+    } else if (golpe === 'ED') {
+      targetRotY = 0.18;
+      targetRotZ = -0.16;
+    } else if (golpe === 'ER') {
+      targetRotY = -0.15;
+      targetRotZ = 0.22;
+    } else {
+      targetRotY = 0.25;
+      targetRotZ = 0.0;
+    }
   }
 
   $('visor-angulo').textContent = `${ang}°`;
@@ -416,12 +425,34 @@ function actualizarVisor3D(ang, golpe) {
   }
 }
 
-function parsearEvento(datos, i = 0) {
-  return {
-    t: datos.getUint32(i, true), n: datos.getUint16(i + 4, true),
-    golpe: TIPOS[datos.getUint8(i + 6)] ?? '??', conf: datos.getUint8(i + 7),
-    vel: datos.getInt16(i + 8, true), ang: datos.getInt16(i + 10, true), pico: datos.getInt16(i + 12, true),
+const TAM_MINIMO = 14;
+const TAM_COMPLETO = 20;
+
+function parsearEvento(datos, i = 0, tam = 14) {
+  const evento = {
+    t: datos.getUint32(i, true),
+    n: datos.getUint16(i + 4, true),
+    golpe: TIPOS[datos.getUint8(i + 6)] ?? '??',
+    conf: datos.getUint8(i + 7),
+    vel: datos.getInt16(i + 8, true),
+    ang: datos.getInt16(i + 10, true),
+    pico: datos.getInt16(i + 12, true),
+    q: null,
+    tam: tam
   };
+
+  // Si el struct viene con cuaternión de 20 bytes (q1, q2, q3 en int16 x 32767)
+  if (tam >= 20 && (i + 20 <= datos.byteLength)) {
+    const q1 = datos.getInt16(i + 14, true) / 32767.0;
+    const q2 = datos.getInt16(i + 16, true) / 32767.0;
+    const q3 = datos.getInt16(i + 18, true) / 32767.0;
+    // q0 se reconstruye con norma unitaria (el firmware garantiza q0 >= 0)
+    const sumaSq = q1 * q1 + q2 * q2 + q3 * q3;
+    const q0 = Math.sqrt(Math.max(0, 1.0 - sumaSq));
+    evento.q = { w: q0, x: q1, y: q2, z: q3 };
+  }
+
+  return evento;
 }
 
 function formatearPico(pico) {
@@ -462,7 +493,7 @@ function mostrar(e) {
   $('vel').textContent = e.vel === null ? '–' : `${e.vel} km/h`;
   $('ang').textContent = e.ang === null ? '–' : `${e.ang}°`;
   $('pico').textContent = formatearPico(e.pico);
-  actualizarVisor3D(e.ang, e.golpe);
+  actualizarVisor3D(e.ang, e.golpe, e.q);
   $('certeza').textContent = e.conf !== null ? `Certeza del modelo: ${e.conf} %` : '';
   $('consejo').textContent = c.texto;
   $('consejo').classList.toggle('ok', c.ok);
@@ -479,9 +510,15 @@ function mostrar(e) {
 // Si llega de otro tamaño, se lee lo que alcance y se avisa: firmware y app no coinciden.
 function recibir(evento) {
   const datos = evento.target.value;
-  for (let i = 0; i + TAM_EVENTO <= datos.byteLength; i += TAM_EVENTO) mostrar(parsearEvento(datos, i));
-  if (datos.byteLength % TAM_EVENTO) {
-    $('estado').textContent = `Llegó un mensaje de ${datos.byteLength} bytes y se esperaban ${TAM_EVENTO}: revisar el struct del firmware.`;
+  // Detección automática: 20 bytes (cuaternión) o 14 bytes (base)
+  const tam = (datos.byteLength >= 20 && datos.byteLength % 20 === 0) ? 20 : 14;
+  for (let i = 0; i + tam <= datos.byteLength; i += tam) {
+    mostrar(parsearEvento(datos, i, tam));
+  }
+  if (datos.byteLength % tam !== 0) {
+    $('estado').textContent = `Llegó un mensaje de ${datos.byteLength} bytes: revisar el struct del firmware.`;
+  } else {
+    $('estado').textContent = `Conectada (${tam} B${tam === 20 ? ' · Cuaternión 3D' : ''}).`;
   }
 }
 
@@ -521,14 +558,25 @@ function alternarSimulador() {
   simulador = setInterval(() => {
     const tipo = Math.random() < 0.1 ? 4 : azar(0, 3);
     const topspin = tipo < 2;
-    const datos = new DataView(new ArrayBuffer(TAM_EVENTO));
+    const anguloSim = topspin ? azar(-55, -25) : azar(20, 50);
+    const datos = new DataView(new ArrayBuffer(TAM_COMPLETO));
     datos.setUint32(0, Date.now() - inicio, true);
     datos.setUint16(4, ++nSim, true);
     datos.setUint8(6, tipo);
     datos.setUint8(7, azar(60, 99));
     datos.setInt16(8, topspin ? azar(30, 60) : azar(10, 25), true);
-    datos.setInt16(10, topspin ? azar(-65, -15) : azar(15, 60), true);
+    datos.setInt16(10, anguloSim, true);
     datos.setInt16(12, azar(-60, 10), true);
+
+    // Cuaternión simulado en 3 ejes: q1 (pitch), q2 (yaw), q3 (roll)
+    const pitchRad = (-anguloSim * Math.PI) / 360;
+    const rollRad = (topspin ? (tipo === 0 ? -15 : 20) : (tipo === 2 ? -8 : 10)) * Math.PI / 360;
+    const q1 = Math.sin(pitchRad);
+    const q3 = Math.sin(rollRad);
+    datos.setInt16(14, Math.round(q1 * 32767), true);
+    datos.setInt16(16, 0, true);
+    datos.setInt16(18, Math.round(q3 * 32767), true);
+
     recibir({ target: { value: datos } });
   }, 2500);
   $('simular').textContent = 'Detener simulador';
