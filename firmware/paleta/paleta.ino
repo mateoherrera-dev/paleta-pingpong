@@ -50,6 +50,13 @@ const float OFFSET_AX_G = 0.028f;
 const float OFFSET_AY_G = -0.002f;
 const float OFFSET_AZ_G = 0.264f;
 
+// Offset del giróscopo, en °/s y en los ejes del módulo. No es fijo como el del acelerómetro
+// (cambia con la temperatura), así que se mide en cada arranque con la paleta quieta (calibrarGiro).
+// Sin esto el rumbo (yaw) del cuaternión que va por BLE se corre varios grados por minuto.
+float offsetGiro[3] = {0, 0, 0};
+const int CALIBRAR_GIRO_MUESTRAS = 1000;   // 1 s a 1000 Hz
+const float CALIBRAR_GIRO_QUIETA_DPS = 5;  // si alguna muestra se aleja más que esto, se movió
+
 // Detección de impacto por Jerk: cuánto cambia el vector aceleración entre dos muestras seguidas,
 // |a[k] - a[k-1]|, en g por muestra (g/ms a 1000 Hz). El swing cambia la aceleración en
 // 30-100 ms; el choque con la pelota, en 1-2 ms (PLAN.md, 7.2).
@@ -103,7 +110,8 @@ const char *NOMBRE_BLE = "Paleta";
 const char *UUID_SERVICIO = "6e400001-b5a3-f393-e0a9-e50e24dcca9e";
 const char *UUID_NOTIFY = "6e400003-b5a3-f393-e0a9-e50e24dcca9e";
 
-// Evento de golpe (docs/CONTRATOS.md, sección 5): 14 bytes, little-endian (el ESP32 ya lo es)
+// Evento de golpe (docs/CONTRATOS.md, sección 5): 20 bytes, little-endian (el ESP32 ya lo es).
+// Los primeros 14 son los de siempre; el cuaternión va al final para que una app que lea 14 siga andando.
 #pragma pack(push, 1)
 struct BlePayload {
   uint32_t timestamp;     // ms desde el arranque, en el impacto
@@ -113,9 +121,10 @@ struct BlePayload {
   int16_t vel_kmh;
   int16_t ang_deg;        // − cerrada, + abierta
   int16_t pico_ms;        // − el pico de giro fue antes del impacto
+  int16_t q1, q2, q3;     // orientación en el impacto × 32767 (q0 = √(1 − q1² − q2² − q3²), siempre ≥ 0)
 };
 #pragma pack(pop)
-static_assert(sizeof(BlePayload) == 14, "BlePayload tiene que medir 14 bytes (CONTRATOS.md)");
+static_assert(sizeof(BlePayload) == 20, "BlePayload tiene que medir 20 bytes (CONTRATOS.md)");
 
 BLEServer *servidor = nullptr;
 BLECharacteristic *caracteristica = nullptr;
@@ -298,6 +307,31 @@ void alinearEjes(float &x, float &y, float &z) {
   z = mx;
 }
 
+// Promedia el giro durante 1 s al arrancar. Si la paleta se movió, no calibra (queda en 0)
+// y avisa: el ángulo y el cuaternión andan igual, pero el rumbo se corre más rápido.
+void calibrarGiro() {
+  float suma[3] = {0, 0, 0}, minimo[3], maximo[3];
+  for (int n = 0; n < CALIBRAR_GIRO_MUESTRAS; n++) {
+    int16_t crudo[7];
+    leerMPU(crudo);
+    for (int e = 0; e < 3; e++) {
+      float g = crudo[4 + e] / LSB_POR_DPS;
+      suma[e] += g;
+      minimo[e] = n ? fminf(minimo[e], g) : g;
+      maximo[e] = n ? fmaxf(maximo[e], g) : g;
+    }
+    delayMicroseconds(PERIODO_US);
+  }
+  for (int e = 0; e < 3; e++) {
+    if (maximo[e] - minimo[e] > 2 * CALIBRAR_GIRO_QUIETA_DPS) {
+      Serial.println("# Giróscopo: la paleta se movió al arrancar, no se calibra (dejarla quieta y reiniciar)");
+      return;
+    }
+  }
+  for (int e = 0; e < 3; e++) offsetGiro[e] = suma[e] / CALIBRAR_GIRO_MUESTRAS;
+  Serial.printf("# Giróscopo calibrado: offset %+.2f / %+.2f / %+.2f °/s\n", offsetGiro[0], offsetGiro[1], offsetGiro[2]);
+}
+
 // Corre el modelo una vez al arrancar, para ver que está cargado y cuánto tarda.
 // La ventana es la paleta quieta (az = 1 g): con el modelo dummy no importa qué etiqueta dé.
 void probarModelo() {
@@ -369,6 +403,11 @@ void mandarGolpe() {
   p.tipo_golpe = clasificarGolpe(p.confianza, msModelo);
   p.vel_kmh = (int16_t)lroundf(w * DEG_TO_RAD * L_GIRO_M * 3.6f);
   p.ang_deg = (int16_t)lroundf(anguloImpacto.grados);
+  // q y −q son la misma orientación: se elige la de q0 ≥ 0 para que la app pueda reconstruir q0
+  float signo = anguloImpacto.q[0] < 0 ? -32767.0f : 32767.0f;
+  p.q1 = (int16_t)lroundf(anguloImpacto.q[1] * signo);
+  p.q2 = (int16_t)lroundf(anguloImpacto.q[2] * signo);
+  p.q3 = (int16_t)lroundf(anguloImpacto.q[3] * signo);
   p.pico_ms = (int16_t)((int32_t)kPico - (int32_t)i);  // 1 muestra = 1 ms
 
   bool enviado = hayAppSuscrita();
@@ -377,9 +416,11 @@ void mandarGolpe() {
     caracteristica->notify();
   }
   const char *nombres[] = {"TD", "TR", "ED", "ER", "ruido"};
-  Serial.printf("# Golpe %u: %s %u %% (modelo en %.1f ms), %d km/h (%.0f °/s), cara %s a %+d° (en %lu µs), pico %+d ms%s\n",
+  Serial.printf("# Golpe %u: %s %u %% (modelo en %.1f ms), %d km/h (%.0f °/s), cara %s a %+d° (en %lu µs), "
+                "q (%.2f, %.2f, %.2f, %.2f), pico %+d ms%s\n",
                 p.numero_golpe, nombres[p.tipo_golpe], p.confianza, msModelo, p.vel_kmh, w,
-                anguloImpacto.cara_roja ? "roja" : "negra", p.ang_deg, (unsigned long)usAngulo, p.pico_ms,
+                anguloImpacto.cara_roja ? "roja" : "negra", p.ang_deg, (unsigned long)usAngulo,
+                anguloImpacto.q[0], anguloImpacto.q[1], anguloImpacto.q[2], anguloImpacto.q[3], p.pico_ms,
                 enviado ? ", enviado por BLE" : ", sin la app conectada");
 }
 
@@ -410,7 +451,8 @@ void setup() {
   }
   probarModelo();
   iniciarBLE();
-  angulo_inicializar();  // la primera muestra fija la vertical: la paleta tiene que arrancar quieta
+  calibrarGiro();        // la paleta tiene que arrancar quieta: para esto y para la vertical del ángulo
+  angulo_inicializar();  // la primera muestra fija la vertical
   Serial.println("# Paleta lista. Columnas: t_us,ax_g,ay_g,az_g,gx_dps,gy_dps,gz_dps,impacto");
   avisosLeidos = avisos;  // los avisos que llegaron mientras se imprimía no cuentan como perdidos
   proximaMuestra = ultimaLectura = micros();
@@ -458,7 +500,9 @@ void loop() {
   float ax = crudo[0] / LSB_POR_G - OFFSET_AX_G;
   float ay = crudo[1] / LSB_POR_G - OFFSET_AY_G;
   float az = crudo[2] / LSB_POR_G - OFFSET_AZ_G;
-  float gx = crudo[4] / LSB_POR_DPS, gy = crudo[5] / LSB_POR_DPS, gz = crudo[6] / LSB_POR_DPS;  // crudo[3] es la temperatura
+  float gx = crudo[4] / LSB_POR_DPS - offsetGiro[0];  // crudo[3] es la temperatura
+  float gy = crudo[5] / LSB_POR_DPS - offsetGiro[1];
+  float gz = crudo[6] / LSB_POR_DPS - offsetGiro[2];
   alinearEjes(ax, ay, az);
   alinearEjes(gx, gy, gz);
   omega[muestras % OMEGA_N] = hypotf(gy, gz);
