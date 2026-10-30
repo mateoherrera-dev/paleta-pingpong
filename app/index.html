@@ -448,8 +448,10 @@ function animarVisor() {
 
   if (paletaGroup) {
     if (usaCuaternion) {
-      // Interpolación esférica (SLERP) matemática para cuaternión
-      paletaGroup.quaternion.slerp(targetQuat, 0.1);
+      // Interpolación esférica (SLERP) para cuaternión con rotación de arrastre Y
+      const qDrag = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), rotYDrag);
+      const quatFinal = targetQuat.clone().premultiply(qDrag);
+      paletaGroup.quaternion.slerp(quatFinal, 0.1);
     } else {
       // Interpolación Euler en 3 ejes
       currentRotX += (targetRotX - currentRotX) * 0.09;
@@ -467,17 +469,18 @@ let targetQuat = new THREE.Quaternion();
 let usaCuaternion = false;
 
 function determinarCara(golpe, q) {
+  // 1. Clasificación directa por golpe (TD/ED = cara roja, TR/ER = cara negra)
+  if (golpe === 'TD' || golpe === 'ED') return 'roja';
+  if (golpe === 'TR' || golpe === 'ER') return 'negra';
+
+  // 2. Si el golpe no fue reconocido pero tenemos cuaternión del sensor:
   if (q && window.THREE) {
-    // Cálculo vectorial por orientación del sensor:
-    // La goma roja está en +Z del sensor. Al rotar (0, 0, 1) por el cuaternión q del sensor:
     const qSensor = new THREE.Quaternion(q.x, q.y, q.z, q.w);
     const normalRoja = new THREE.Vector3(0, 0, 1).applyQuaternion(qSensor);
-    // Si la normal de la roja apunta hacia adelante (+X del mundo, hacia la red/mesa rival):
-    // la que golpeó la pelota frontal es la ROJA. Si apunta hacia atrás (X < 0), la NEGRA.
-    return (normalRoja.x >= 0) ? 'roja' : 'negra';
+    return (normalRoja.z >= 0) ? 'roja' : 'negra';
   }
-  // Fallback heurístico si entran 14 bytes (sin cuaternión):
-  if (golpe === 'TR' || golpe === 'ER') return 'negra';
+
+  // 3. Fallback
   return 'roja';
 }
 
@@ -500,7 +503,9 @@ function actualizarVisor3D(ang, golpe, q = null) {
     // Modo 20 bytes: Cuaternión real completo
     usaCuaternion = true;
     const qSensor = new THREE.Quaternion(q.x, q.y, q.z, q.w);
-    const rotBase = new THREE.Quaternion().setFromEuler(new THREE.Euler(-Math.PI / 2, cara === 'negra' ? Math.PI : 0, rotYDrag));
+    // Para paleta.glb el modelo ya está de pie (mango en -Y, punta en +Y, roja en +Z).
+    // Si la cara de golpe es negra, se rota 180° en Y para presentarla al frente hacia el usuario.
+    const rotBase = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), cara === 'negra' ? Math.PI : 0);
     targetQuat.copy(qSensor).multiply(rotBase);
   } else {
     // Modo 14 bytes: Fallback con postura biomecánica calculada
