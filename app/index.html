@@ -435,7 +435,9 @@ function actualizarVisor3D(ang, golpe, q = null) {
   } else {
     // Modo 14 bytes: Fallback con postura biomecánica calculada
     usaCuaternion = false;
-    targetRotX = THREE.MathUtils.degToRad(-ang);
+    // Si la paleta está girada 180° en Y (goma negra), la inclinación en X se invierte
+    // para que en ambos casos ángulo negativo incline la punta hacia la mesa
+    targetRotX = (cara === 'negra') ? THREE.MathUtils.degToRad(ang) : THREE.MathUtils.degToRad(-ang);
 
     if (golpe === 'TD') {
       targetRotY = 0.32;
