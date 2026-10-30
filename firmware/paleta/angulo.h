@@ -23,6 +23,8 @@
 typedef struct {
     float grados;    // ángulo de la cara que golpeó: − cerrada, + abierta
     bool cara_roja;  // true = golpeó la cara roja (+Z), false = la negra (−Z)
+    float q[4];      // orientación en el impacto (q0 = parte real): lleva los vectores de la
+                     // paleta al mundo (Z del mundo para arriba). Va al struct BLE (CONTRATOS.md)
 } ResultadoAngulo;
 
 /**

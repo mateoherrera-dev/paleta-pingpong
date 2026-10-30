@@ -106,7 +106,7 @@ void angulo_actualizar(float ax, float ay, float az, float gx, float gy, float g
 }
 
 ResultadoAngulo angulo_en_impacto() {
-    ResultadoAngulo r = {0, true};
+    ResultadoAngulo r = {0, true, {1, 0, 0, 0}};
     if (guardadas == 0) return r;
 
     // La más nueva es la muestra del impacto: se parte de la más vieja y se integra
@@ -130,6 +130,7 @@ ResultadoAngulo angulo_en_impacto() {
 
     float roja = angulo_roja(qi);
     r.grados = r.cara_roja ? roja : -roja;
+    for (int k = 0; k < 4; k++) r.q[k] = qi[k];
     return r;
 }
 
