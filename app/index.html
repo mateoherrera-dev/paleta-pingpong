@@ -36,6 +36,52 @@
   .conteo { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; font-size: .9rem; }
   label { font-size: .9rem; display: flex; gap: 6px; align-items: center; }
   .vacio { color: var(--muted); }
+  .card-debug {
+    font-size: 0.85rem;
+    border: 1px dashed var(--line);
+    background: var(--card);
+  }
+  .card-debug summary {
+    cursor: pointer;
+    font-weight: 600;
+    user-select: none;
+    color: var(--accent);
+    outline: none;
+  }
+  .debug-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+    margin-top: 10px;
+    font-size: 0.82rem;
+  }
+  @media (max-width: 400px) {
+    .debug-grid { grid-template-columns: 1fr; }
+  }
+  .debug-grid div {
+    display: flex;
+    justify-content: space-between;
+    padding: 3px 6px;
+    background: var(--bg);
+    border-radius: 4px;
+    border: 1px solid var(--line);
+  }
+  .debug-grid span { color: var(--muted); }
+  .debug-grid b { font-variant-numeric: tabular-nums; }
+  .debug-log-wrap {
+    margin-top: 8px;
+  }
+  .debug-log-wrap pre {
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 6px;
+    font-size: 0.72rem;
+    max-height: 120px;
+    overflow-y: auto;
+    font-family: monospace;
+    margin: 4px 0 0 0;
+  }
   .visor-wrap {
     position: relative;
     width: 100%;
@@ -66,6 +112,60 @@
     display: block;
     width: 100% !important;
     height: 100% !important;
+  }
+  .visor-badge-cara {
+    position: absolute;
+    bottom: 8px;
+    left: 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    padding: 3px 9px;
+    border-radius: 6px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+    cursor: pointer;
+    user-select: none;
+    z-index: 5;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .visor-badge-cara:hover {
+    transform: scale(1.04);
+    box-shadow: 0 3px 8px rgba(0,0,0,0.12);
+  }
+  .agarre-info {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin-top: 10px;
+    padding: 6px 12px;
+    background: rgba(120, 130, 145, 0.08);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    text-align: center;
+  }
+  .agarre-info b {
+    color: var(--text);
+  }
+  .cara-roja {
+    color: #d32f2f;
+    border-color: rgba(211, 47, 47, 0.35);
+  }
+  .cara-negra {
+    color: #121c28;
+    border-color: rgba(50, 50, 50, 0.4);
+  }
+  @media (prefers-color-scheme: dark) {
+    .cara-negra {
+      color: #e6edf5;
+      border-color: rgba(180, 190, 205, 0.4);
+    }
   }
   .visor-indicador {
     position: absolute;
@@ -148,6 +248,7 @@
     <div class="visor-wrap">
       <div id="canvas3d-container"></div>
       <div class="visor-ayuda">Orientación 3D del impacto</div>
+      <div class="visor-badge-cara cara-roja" id="visor-cara">🔴 Goma Roja</div>
       <div class="visor-selector">
         <button id="btn-m1" class="btn-m activo" type="button">8 KB</button>
         <button id="btn-m2" class="btn-m" type="button">156 KB</button>
@@ -157,6 +258,11 @@
         <small id="visor-etiqueta">Cara vertical</small>
       </div>
     </div>
+
+    <div class="agarre-info">
+      <span>Agarre fijado (CONTRATOS.md):</span> <b>⚫ Negra en Derecha / 🔴 Roja en Revés</b>
+    </div>
+
     <div class="stats">
       <div class="stat"><small>Velocidad</small><b id="vel">–</b></div>
       <div class="stat"><small>Ángulo</small><b id="ang">–</b></div>
@@ -175,6 +281,24 @@
     <strong>Últimos golpes</strong>
     <ul id="historial"><li class="vacio">Todavía no hay golpes.</li></ul>
   </section>
+
+  <details class="card card-debug" id="panel-debug">
+    <summary>🛠️ Diagnóstico y Telemetría en vivo (BLE)</summary>
+    <div class="debug-grid">
+      <div><span>Paquete BLE:</span> <b id="dbg-tam">–</b></div>
+      <div><span>Tipo crudo:</span> <b id="dbg-tipo">–</b></div>
+      <div><span>Confianza IA:</span> <b id="dbg-conf">–</b></div>
+      <div><span>Goma (física):</span> <b id="dbg-cara">–</b></div>
+      <div><span>Velocidad:</span> <b id="dbg-vel">–</b></div>
+      <div><span>Ángulo cara:</span> <b id="dbg-ang">–</b></div>
+      <div><span>Pico giro:</span> <b id="dbg-pico">–</b></div>
+      <div><span>Cuaternión q:</span> <b id="dbg-q">–</b></div>
+    </div>
+    <div class="debug-log-wrap">
+      <small style="color:var(--muted)">Historial de impactos crudos (últimos 10):</small>
+      <pre id="dbg-log">Esperando impactos por BLE o simulador…</pre>
+    </div>
+  </details>
 </main>
 
 <script>
@@ -352,8 +476,10 @@ function animarVisor() {
 
   if (paletaGroup) {
     if (usaCuaternion) {
-      // Interpolación esférica (SLERP) matemática para cuaternión
-      paletaGroup.quaternion.slerp(targetQuat, 0.1);
+      // Interpolación esférica (SLERP) para cuaternión con rotación de arrastre Y
+      const qDrag = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), rotYDrag);
+      const quatFinal = targetQuat.clone().premultiply(qDrag);
+      paletaGroup.quaternion.slerp(quatFinal, 0.1);
     } else {
       // Interpolación Euler en 3 ejes
       currentRotX += (targetRotX - currentRotX) * 0.09;
@@ -369,39 +495,78 @@ function animarVisor() {
 
 let targetQuat = new THREE.Quaternion();
 let usaCuaternion = false;
+let caraForzadaManual = null;
+let ultimoEvento = null;
+let caraActual = 'negra';
 
-function actualizarVisor3D(ang, golpe, q = null) {
+function calcularCaraSensor(ang, q) {
+  if (!q || ang === null || ang === undefined) return null;
+  // Ángulo de la cara roja (+Z en sensor) según Madgwick (angulo.cpp / orientacion.py):
+  const vert = q.w * q.w - q.x * q.x - q.y * q.y + q.z * q.z;
+  const angRojaSensor = Math.asin(Math.max(-1, Math.min(1, vert))) * 180 / Math.PI;
+  // En firmware (angulo.cpp): r.grados = r.cara_roja ? roja : -roja;
+  // Si ang y angRojaSensor tienen el mismo signo, el sensor físico golpeó por +Z (roja del sensor / revés):
+  if (Math.abs(angRojaSensor) > 2.0 && Math.abs(ang) > 2.0) {
+    const sensorDetectoRoja = (ang * angRojaSensor > 0);
+    return sensorDetectoRoja ? 'roja' : 'negra';
+  }
+  return null;
+}
+
+function determinarCara(golpe, ang = null, q = null) {
+  if (caraForzadaManual) return caraForzadaManual;
+
+  // 1. Clasificación oficial de TinyML (CONTRATOS.md):
+  // Derecha (TD, ED) = Goma Negra
+  // Revés (TR, ER) = Goma Roja
+  if (golpe === 'TD' || golpe === 'ED') return 'negra';
+  if (golpe === 'TR' || golpe === 'ER') return 'roja';
+
+  // 2. Si el golpe no fue reconocido ('??'), deducir la cara real por orientación y giroscopio
+  const caraSensor = calcularCaraSensor(ang, q);
+  if (caraSensor) return caraSensor;
+
+  // 3. Fallback: negra por defecto
+  return 'negra';
+}
+
+function actualizarVisor3D(ang, golpe, q = null, caraOverride = null) {
   if (ang === null || ang === undefined) return;
+
+  const cara = caraOverride || determinarCara(golpe, ang, q);
+  caraActual = cara;
+  const badgeCara = $('visor-cara');
+  if (badgeCara) {
+    if (cara === 'roja') {
+      badgeCara.textContent = '🔴 Goma Roja ⇄';
+      badgeCara.className = 'visor-badge-cara cara-roja';
+    } else {
+      badgeCara.textContent = '⚫ Goma Negra ⇄';
+      badgeCara.className = 'visor-badge-cara cara-negra';
+    }
+  }
 
   if (q) {
     // Modo 20 bytes: Cuaternión real completo
     usaCuaternion = true;
-    // Mapeo de marco del sensor (X mango, Y canto, Z roja con Z mundo arriba)
-    // a Three.js (Y mango, X canto, Z roja con Y mundo arriba):
-    // Reorientamos para que con q=(1,0,0,0) la cara roja mire al techo
     const qSensor = new THREE.Quaternion(q.x, q.y, q.z, q.w);
-    // Matriz de cambio de base hacia el visor de Three.js
-    const rotBase = new THREE.Quaternion().setFromEuler(new THREE.Euler(-Math.PI / 2, 0, rotYDrag));
+    // Para paleta.glb el modelo ya está de pie (mango en -Y, punta en +Y, roja en +Z).
+    // Si la cara de golpe es negra, se rota 180° en Y para presentarla al frente hacia el usuario.
+    const rotBase = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), cara === 'negra' ? Math.PI : 0);
     targetQuat.copy(qSensor).multiply(rotBase);
   } else {
-    // Modo 14 bytes: Fallback con postura biomecánica calculada
+    // Modo 14 bytes: Fallback con postura biomecánica calculada según cara activa
     usaCuaternion = false;
-    targetRotX = THREE.MathUtils.degToRad(-ang);
-    if (golpe === 'TD') {
-      targetRotY = 0.32;
-      targetRotZ = -0.30;
-    } else if (golpe === 'TR') {
-      targetRotY = -0.28;
-      targetRotZ = 0.38;
-    } else if (golpe === 'ED') {
-      targetRotY = 0.18;
-      targetRotZ = -0.16;
-    } else if (golpe === 'ER') {
-      targetRotY = -0.15;
-      targetRotZ = 0.22;
+    targetRotX = (cara === 'negra') ? THREE.MathUtils.degToRad(ang) : THREE.MathUtils.degToRad(-ang);
+
+    if (cara === 'negra') {
+      // Cara negra al frente: giro 180° en Y
+      targetRotY = Math.PI - 0.25;
+      targetRotZ = 0.20;
     } else {
+      // Cara roja al frente
       targetRotY = 0.25;
-      targetRotZ = 0.0;
+      targetRotZ = -0.20;
     }
   }
 
@@ -432,7 +597,7 @@ function parsearEvento(datos, i = 0, tam = 14) {
   const evento = {
     t: datos.getUint32(i, true),
     n: datos.getUint16(i + 4, true),
-    golpe: TIPOS[datos.getUint8(i + 6)] ?? '??',
+    tipo_raw: datos.getUint8(i + 6), golpe: TIPOS[datos.getUint8(i + 6)] ?? '??',
     conf: datos.getUint8(i + 7),
     vel: datos.getInt16(i + 8, true),
     ang: datos.getInt16(i + 10, true),
@@ -484,9 +649,12 @@ function decir(texto) {
   speechSynthesis.speak(frase);
 }
 
-function mostrar(e) {
-  sesion.golpes.unshift(e);
-  sesion.conteo[e.golpe] = (sesion.conteo[e.golpe] || 0) + 1;
+function mostrar(e, registrarSesion = true) {
+  ultimoEvento = e;
+  if (registrarSesion) {
+    sesion.golpes.unshift(e);
+    sesion.conteo[e.golpe] = (sesion.conteo[e.golpe] || 0) + 1;
+  }
   const c = consejo(e);
 
   $('golpe').textContent = GOLPES[e.golpe];
@@ -497,13 +665,31 @@ function mostrar(e) {
   $('certeza').textContent = e.conf !== null ? `Certeza del modelo: ${e.conf} %` : '';
   $('consejo').textContent = c.texto;
   $('consejo').classList.toggle('ok', c.ok);
-  decir(c.texto);
+  if (registrarSesion) decir(c.texto);
+
+  // Actualizar panel de diagnóstico en vivo (telemetría BLE sin cables)
+  const caraCalculada = determinarCara(e.golpe, e.ang, e.q);
+  $('dbg-tam').textContent = `${e.tam ?? 14} bytes`;
+  $('dbg-tipo').textContent = `${e.tipo_raw ?? '–'} (${GOLPES[e.golpe] ?? e.golpe})`;
+  $('dbg-conf').textContent = e.conf !== null ? `${e.conf} %` : '–';
+  $('dbg-cara').textContent = caraCalculada === 'roja' ? '🔴 Roja' : '⚫ Negra';
+  $('dbg-vel').textContent = e.vel !== null ? `${e.vel} km/h` : '–';
+  $('dbg-ang').textContent = e.ang !== null ? `${e.ang}°` : '–';
+  $('dbg-pico').textContent = formatearPico(e.pico);
+  $('dbg-q').textContent = e.q ? `(${e.q.w.toFixed(2)}, ${e.q.x.toFixed(2)}, ${e.q.y.toFixed(2)}, ${e.q.z.toFixed(2)})` : 'No presente (14B)';
+
+  const dbgLog = $('dbg-log');
+  if (dbgLog) {
+    if (dbgLog.textContent.startsWith('Esperando')) dbgLog.textContent = '';
+    const lineaLog = `#${e.n} [${e.golpe}] conf=${e.conf}% cara=${caraCalculada} ang=${e.ang}° vel=${e.vel}km/h pico=${e.pico}ms\n`;
+    dbgLog.textContent = lineaLog + dbgLog.textContent.split('\n').slice(0, 9).join('\n');
+  }
 
   $('conteo').innerHTML = Object.keys(GOLPES)
     .filter((k) => sesion.conteo[k])
     .map((k) => `<span>${GOLPES[k]}</span><b>${sesion.conteo[k]}</b>`).join('');
   $('historial').innerHTML = sesion.golpes.slice(0, 15)
-    .map((g) => `<li><span>#${g.n} ${GOLPES[g.golpe]}</span><span>${g.vel ?? '–'} km/h · ${g.ang ?? '–'}° · ${formatearPico(g.pico)}</span></li>`).join('');
+    .map((g) => `<li><span>#${g.n} ${GOLPES[g.golpe]}</span><span>${(g.golpe === 'TR' || g.golpe === 'ER') ? '⚫ Negra' : '🔴 Roja'} · ${g.vel ?? '–'} km/h · ${g.ang ?? '–'}° · ${formatearPico(g.pico)}</span></li>`).join('');
 }
 
 // Bluetooth: cada notificación trae un struct de 14 bytes (entra entero en un paquete).
@@ -585,6 +771,21 @@ function alternarSimulador() {
 
 $('conectar').addEventListener('click', conectar);
 $('simular').addEventListener('click', alternarSimulador);
+
+
+
+const badgeEl = $('visor-cara');
+if (badgeEl) {
+  badgeEl.title = 'Hacé clic para alternar goma';
+  badgeEl.addEventListener('click', () => {
+    caraForzadaManual = (caraActual === 'roja') ? 'negra' : 'roja';
+    if (ultimoEvento) {
+      actualizarVisor3D(ultimoEvento.ang, ultimoEvento.golpe, ultimoEvento.q, caraForzadaManual);
+      const dbgCara = $('dbg-cara');
+      if (dbgCara) dbgCara.textContent = caraForzadaManual === 'roja' ? '🔴 Roja (manual)' : '⚫ Negra (manual)';
+    }
+  });
+}
 
 window.addEventListener('DOMContentLoaded', iniciarVisor3D);
 if (document.readyState !== 'loading') iniciarVisor3D();

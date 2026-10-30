@@ -2,6 +2,12 @@
 
 Este documento compila los fundamentos tecnicos de los cuatro golpes base analizados en las lecciones de *PingSkills*, su traduccion a signaturas inerciales (IMU MPU-6500) y las reglas deterministicas para la generacion automatica de feedback en la aplicacion.
 
+> [!IMPORTANT]
+> **Agarre estandar y caras fijas del proyecto (CONTRATOS.md):**
+> * **Derecha (`TD` y `ED`):** se ejecuta siempre con la **goma negra** ($-Z$).
+> * **Reves (`TR` y `ER`):** se ejecuta siempre con la **goma roja** ($+Z$).
+> Todo el dataset de Edge Impulse fue grabado con esta orientacion; la capsula del pomo sirve de tope tactil en la mano para no rotar la paleta.
+
 ---
 
 ## 1. Arquitectura del Sistema de Retroalimentacion

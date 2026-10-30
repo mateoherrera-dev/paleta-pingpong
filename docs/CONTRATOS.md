@@ -27,6 +27,15 @@ Todos los datos usan los mismos ejes, medidos sobre la paleta (no sobre el modul
 
 Si el modulo no se puede montar directamente con esos ejes (por ejemplo, al montarlo en la base del pomo mirando hacia abajo), se reordenan e invierten en el firmware (`alinearEjes()` en `firmware/paleta/paleta.ino`). Las herramientas de Python y la app asumen siempre estos ejes.
 
+### 1.1 Asignacion fija de caras y agarre
+
+Para evitar ambiguedades cinematicas en el modelo TinyML (Edge Impulse) y en el visor 3D, el agarre de la paleta es **fijo y unico para todo el proyecto**:
+
+- **Golpes de Derecha** (`topspin_derecha`, `empuje_derecha`): se ejecutan siempre con la **cara NEGRA** ($-Z$ de la paleta, giro de avance con $\omega_y > 0$).
+- **Golpes de Reves** (`topspin_reves`, `empuje_reves`): se ejecutan siempre con la **cara ROJA** ($+Z$ de la paleta, giro de avance con $\omega_y < 0$).
+
+Todo el dataset de entrenamiento del modelo (clases 3 y 4 de P1, P2 y P3) fue grabado bajo esta convencion. Si se invierte la paleta en la mano al pegar (pegando de derecha con la roja), los signos del giroscopio $\omega_y$ y la aceleracion $a_z$ se invierten respecto a la red neuronal y la clasificacion falla. La orientacion ergonomica de la capsula 3D en el pomo marca la posicion fija en la palma.
+
 ## 2. Muestras crudas (placa → compu, por cable USB)
 
 Una linea de texto por muestra, **1000 muestras por segundo**:
