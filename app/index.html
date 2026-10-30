@@ -89,6 +89,34 @@
     font-size: 0.7rem;
     color: var(--muted);
   }
+    .visor-selector {
+    position: absolute;
+    top: 6px;
+    right: 8px;
+    display: flex;
+    gap: 3px;
+    background: rgba(120, 130, 145, 0.15);
+    backdrop-filter: blur(6px);
+    border-radius: 6px;
+    padding: 2px;
+    z-index: 10;
+  }
+  .btn-m {
+    font-size: 0.72rem;
+    padding: 3px 8px;
+    border-radius: 4px;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    font-weight: 500;
+  }
+  .btn-m.activo {
+    background: var(--card);
+    color: var(--fg);
+    font-weight: 700;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+  }
   .visor-ayuda {
     position: absolute;
     top: 8px;
@@ -120,6 +148,10 @@
     <div class="visor-wrap">
       <div id="canvas3d-container"></div>
       <div class="visor-ayuda">Orientación 3D del impacto</div>
+      <div class="visor-selector">
+        <button id="btn-m1" class="btn-m" type="button">8 KB</button>
+        <button id="btn-m2" class="btn-m activo" type="button">156 KB</button>
+      </div>
       <div class="visor-indicador">
         <span id="visor-angulo">–°</span>
         <small id="visor-etiqueta">Cara vertical</small>
@@ -172,6 +204,70 @@ const $ = (id) => document.getElementById(id);
 let scene3d, camera3d, renderer3d, paletaGroup, animFrameId;
 let targetRotX = 0, currentRotX = 0;
 let isDragging = false, prevMouseX = 0, rotYOffset = 0.35;
+let mixer = null;
+const clock3d = new THREE.Clock();
+let modeloActual = 'paleta2.glb';
+
+function cargarModelo(archivo) {
+  if (!paletaGroup) return;
+  modeloActual = archivo;
+  
+  // Limpiar modelo anterior
+  while (paletaGroup.children.length > 0) {
+    paletaGroup.remove(paletaGroup.children[0]);
+  }
+  if (mixer) {
+    mixer.stopAllAction();
+    mixer = null;
+  }
+
+  const loader = new THREE.GLTFLoader();
+  loader.load(archivo, (gltf) => {
+    const model = gltf.scene;
+
+    if (archivo === 'paleta2.glb') {
+      // Modelo 156 KB (escena Sketchfab con pelota y animación)
+      model.rotation.x = -Math.PI / 2;
+      model.position.set(0, -0.6, 0);
+      model.scale.set(1.35, 1.35, 1.35);
+
+      if (gltf.animations && gltf.animations.length > 0) {
+        mixer = new THREE.AnimationMixer(model);
+        const action = mixer.clipAction(gltf.animations[0]);
+        action.play();
+      }
+    } else {
+      // Modelo 8 KB (paleta pura con materiales de madera y gomas roja/negra)
+      model.position.set(0, -2.1, 0);
+      model.scale.set(1.0, 1.0, 1.0);
+    }
+    paletaGroup.add(model);
+  }, undefined, (err) => {
+    console.warn('Error cargando ' + archivo + ', usando fallback:', err);
+    crearFallbackProcedural();
+  });
+}
+
+function crearFallbackProcedural() {
+  const maderaGeo = new THREE.CylinderGeometry(1.0, 1.0, 0.1, 32);
+  const pala = new THREE.Mesh(maderaGeo, new THREE.MeshStandardMaterial({ color: 0xdd9944, roughness: 0.6 }));
+  pala.rotation.x = Math.PI / 2;
+  pala.scale.set(1.1, 0.08, 1.3);
+
+  const gomaGeo = new THREE.CylinderGeometry(0.98, 0.98, 0.02, 32);
+  const gomaRoja = new THREE.Mesh(gomaGeo, new THREE.MeshStandardMaterial({ color: 0xf44336 }));
+  gomaRoja.rotation.x = Math.PI / 2;
+  gomaRoja.position.z = 0.05;
+  gomaRoja.scale.set(1.1, 1, 1.3);
+  pala.add(gomaRoja);
+
+  const mangoGeo = new THREE.BoxGeometry(0.35, 1.4, 0.22);
+  const mango = new THREE.Mesh(mangoGeo, new THREE.MeshStandardMaterial({ color: 0xc88530 }));
+  mango.position.set(0, -1.8, 0);
+  pala.add(mango);
+
+  paletaGroup.add(pala);
+}
 
 function iniciarVisor3D() {
   const container = $('canvas3d-container');
@@ -191,50 +287,36 @@ function iniciarVisor3D() {
   container.appendChild(renderer3d.domElement);
 
   // Iluminación
-  const ambient = new THREE.AmbientLight(0xffffff, 0.9);
+  const ambient = new THREE.AmbientLight(0xffffff, 0.95);
   scene3d.add(ambient);
   const dirLight1 = new THREE.DirectionalLight(0xffffff, 0.7);
   dirLight1.position.set(3, 5, 4);
   scene3d.add(dirLight1);
-  const dirLight2 = new THREE.DirectionalLight(0xffffff, 0.3);
+  const dirLight2 = new THREE.DirectionalLight(0xffffff, 0.35);
   dirLight2.position.set(-3, -2, -2);
   scene3d.add(dirLight2);
 
   paletaGroup = new THREE.Group();
   scene3d.add(paletaGroup);
 
-  const loader = new THREE.GLTFLoader();
-  loader.load('paleta.glb', (gltf) => {
-    const model = gltf.scene;
-    // Centrar el pivote en el sweet spot de la cabeza (Y ≈ 2.2 del modelo)
-    model.position.set(0, -2.1, 0);
-    paletaGroup.add(model);
-    $('visor-angulo').textContent = '0°';
-    $('visor-etiqueta').textContent = 'Cara vertical';
-  }, undefined, (err) => {
-    console.warn('No se pudo cargar paleta.glb, usando representación geométrica:', err);
-    // Fallback procedural en caso de que falle la carga del archivo
-    const maderaGeo = new THREE.CylinderGeometry(1.0, 1.0, 0.1, 32);
-    const maderaMat = new THREE.MeshStandardMaterial({ color: 0xdd9944, roughness: 0.6 });
-    const pala = new THREE.Mesh(maderaGeo, maderaMat);
-    pala.rotation.x = Math.PI / 2;
-    pala.scale.set(1.1, 0.08, 1.3);
+  // Cargar por defecto el modelo de 156 KB solicitado
+  cargarModelo('paleta2.glb');
 
-    const gomaGeo = new THREE.CylinderGeometry(0.98, 0.98, 0.02, 32);
-    const gomaRoja = new THREE.Mesh(gomaGeo, new THREE.MeshStandardMaterial({ color: 0xf44336 }));
-    gomaRoja.rotation.x = Math.PI / 2;
-    gomaRoja.position.z = 0.05;
-    gomaRoja.scale.set(1.1, 1, 1.3);
-    pala.add(gomaRoja);
-
-    const mangoGeo = new THREE.BoxGeometry(0.35, 1.4, 0.22);
-    const mangoMat = new THREE.MeshStandardMaterial({ color: 0xc88530 });
-    const mango = new THREE.Mesh(mangoGeo, mangoMat);
-    mango.position.set(0, -1.8, 0);
-    pala.add(mango);
-
-    paletaGroup.add(pala);
-  });
+  // Botones de selección de modelo
+  const b1 = $('btn-m1');
+  const b2 = $('btn-m2');
+  if (b1 && b2) {
+    b1.addEventListener('click', () => {
+      b1.classList.add('activo');
+      b2.classList.remove('activo');
+      cargarModelo('paleta.glb');
+    });
+    b2.addEventListener('click', () => {
+      b2.classList.add('activo');
+      b1.classList.remove('activo');
+      cargarModelo('paleta2.glb');
+    });
+  }
 
   // Interacción táctil / mouse para girar levemente en Y
   container.addEventListener('pointerdown', (ev) => {
@@ -263,6 +345,11 @@ function iniciarVisor3D() {
 
 function animarVisor() {
   animFrameId = requestAnimationFrame(animarVisor);
+
+  // Actualizar animación del modelo si existe (rebote de pelota)
+  const delta = clock3d.getDelta();
+  if (mixer) mixer.update(delta);
+
   // Interpolación suave (LERP) hacia el ángulo objetivo
   currentRotX += (targetRotX - currentRotX) * 0.1;
   if (paletaGroup) {
