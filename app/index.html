@@ -36,7 +36,73 @@
   .conteo { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; font-size: .9rem; }
   label { font-size: .9rem; display: flex; gap: 6px; align-items: center; }
   .vacio { color: var(--muted); }
+  .visor-wrap {
+    position: relative;
+    width: 100%;
+    height: 200px;
+    background: radial-gradient(circle at center, rgba(27, 79, 145, 0.08) 0%, rgba(0, 0, 0, 0.03) 70%);
+    border-radius: 10px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--line);
+    margin: 4px 0;
+  }
+  @media (prefers-color-scheme: dark) {
+    .visor-wrap {
+      background: radial-gradient(circle at center, rgba(116, 171, 239, 0.12) 0%, rgba(0, 0, 0, 0.3) 70%);
+    }
+  }
+  #canvas3d-container {
+    width: 100%;
+    height: 100%;
+    cursor: grab;
+  }
+  #canvas3d-container:active {
+    cursor: grabbing;
+  }
+  #canvas3d-container canvas {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+  }
+  .visor-indicador {
+    position: absolute;
+    bottom: 8px;
+    right: 10px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 3px 8px;
+    text-align: right;
+    pointer-events: none;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+  }
+  .visor-indicador span {
+    font-size: 1rem;
+    font-weight: 700;
+    display: block;
+    line-height: 1.1;
+  }
+  .visor-indicador small {
+    font-size: 0.7rem;
+    color: var(--muted);
+  }
+  .visor-ayuda {
+    position: absolute;
+    top: 8px;
+    left: 10px;
+    font-size: 0.72rem;
+    color: var(--muted);
+    pointer-events: none;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+  }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 </head>
 <body>
 <main>
@@ -50,6 +116,15 @@
   <section class="card" id="ultimo">
     <div class="golpe" id="golpe">Esperando un golpe…</div>
     <div class="certeza" id="certeza"></div>
+
+    <div class="visor-wrap">
+      <div id="canvas3d-container"></div>
+      <div class="visor-ayuda">Orientación 3D del impacto</div>
+      <div class="visor-indicador">
+        <span id="visor-angulo">–°</span>
+        <small id="visor-etiqueta">Cara vertical</small>
+      </div>
+    </div>
     <div class="stats">
       <div class="stat"><small>Velocidad</small><b id="vel">–</b></div>
       <div class="stat"><small>Ángulo</small><b id="ang">–</b></div>
@@ -92,6 +167,139 @@ const sesion = { golpes: [], conteo: {} };
 const $ = (id) => document.getElementById(id);
 
 // Struct BlePayload de 14 bytes, little-endian (posición de cada campo en CONTRATOS.md)
+
+// --- Visor 3D de la Paleta (Three.js + GLTFLoader) ---
+let scene3d, camera3d, renderer3d, paletaGroup, animFrameId;
+let targetRotX = 0, currentRotX = 0;
+let isDragging = false, prevMouseX = 0, rotYOffset = 0.35;
+
+function iniciarVisor3D() {
+  const container = $('canvas3d-container');
+  if (!container || !window.THREE) return;
+
+  const w = container.clientWidth || 300;
+  const h = container.clientHeight || 200;
+
+  scene3d = new THREE.Scene();
+  camera3d = new THREE.PerspectiveCamera(40, w / h, 0.1, 50);
+  camera3d.position.set(0.2, 0.1, 6.2);
+
+  renderer3d = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer3d.setSize(w, h);
+  renderer3d.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer3d.outputEncoding = THREE.sRGBEncoding;
+  container.appendChild(renderer3d.domElement);
+
+  // Iluminación
+  const ambient = new THREE.AmbientLight(0xffffff, 0.9);
+  scene3d.add(ambient);
+  const dirLight1 = new THREE.DirectionalLight(0xffffff, 0.7);
+  dirLight1.position.set(3, 5, 4);
+  scene3d.add(dirLight1);
+  const dirLight2 = new THREE.DirectionalLight(0xffffff, 0.3);
+  dirLight2.position.set(-3, -2, -2);
+  scene3d.add(dirLight2);
+
+  paletaGroup = new THREE.Group();
+  scene3d.add(paletaGroup);
+
+  const loader = new THREE.GLTFLoader();
+  loader.load('paleta.glb', (gltf) => {
+    const model = gltf.scene;
+    // Centrar el pivote en el sweet spot de la cabeza (Y ≈ 2.2 del modelo)
+    model.position.set(0, -2.1, 0);
+    paletaGroup.add(model);
+    $('visor-angulo').textContent = '0°';
+    $('visor-etiqueta').textContent = 'Cara vertical';
+  }, undefined, (err) => {
+    console.warn('No se pudo cargar paleta.glb, usando representación geométrica:', err);
+    // Fallback procedural en caso de que falle la carga del archivo
+    const maderaGeo = new THREE.CylinderGeometry(1.0, 1.0, 0.1, 32);
+    const maderaMat = new THREE.MeshStandardMaterial({ color: 0xdd9944, roughness: 0.6 });
+    const pala = new THREE.Mesh(maderaGeo, maderaMat);
+    pala.rotation.x = Math.PI / 2;
+    pala.scale.set(1.1, 0.08, 1.3);
+
+    const gomaGeo = new THREE.CylinderGeometry(0.98, 0.98, 0.02, 32);
+    const gomaRoja = new THREE.Mesh(gomaGeo, new THREE.MeshStandardMaterial({ color: 0xf44336 }));
+    gomaRoja.rotation.x = Math.PI / 2;
+    gomaRoja.position.z = 0.05;
+    gomaRoja.scale.set(1.1, 1, 1.3);
+    pala.add(gomaRoja);
+
+    const mangoGeo = new THREE.BoxGeometry(0.35, 1.4, 0.22);
+    const mangoMat = new THREE.MeshStandardMaterial({ color: 0xc88530 });
+    const mango = new THREE.Mesh(mangoGeo, mangoMat);
+    mango.position.set(0, -1.8, 0);
+    pala.add(mango);
+
+    paletaGroup.add(pala);
+  });
+
+  // Interacción táctil / mouse para girar levemente en Y
+  container.addEventListener('pointerdown', (ev) => {
+    isDragging = true;
+    prevMouseX = ev.clientX;
+  });
+  window.addEventListener('pointermove', (ev) => {
+    if (!isDragging) return;
+    const dx = ev.clientX - prevMouseX;
+    prevMouseX = ev.clientX;
+    rotYOffset += dx * 0.01;
+  });
+  window.addEventListener('pointerup', () => { isDragging = false; });
+
+  window.addEventListener('resize', () => {
+    if (!container || !renderer3d || !camera3d) return;
+    const nw = container.clientWidth;
+    const nh = container.clientHeight;
+    camera3d.aspect = nw / nh;
+    camera3d.updateProjectionMatrix();
+    renderer3d.setSize(nw, nh);
+  });
+
+  animarVisor();
+}
+
+function animarVisor() {
+  animFrameId = requestAnimationFrame(animarVisor);
+  // Interpolación suave (LERP) hacia el ángulo objetivo
+  currentRotX += (targetRotX - currentRotX) * 0.1;
+  if (paletaGroup) {
+    paletaGroup.rotation.x = currentRotX;
+    paletaGroup.rotation.y = rotYOffset;
+  }
+  if (renderer3d && scene3d && camera3d) {
+    renderer3d.render(scene3d, camera3d);
+  }
+}
+
+function actualizarVisor3D(ang, golpe) {
+  if (ang === null || ang === undefined) return;
+  // Negativo = cerrada (inclina la pala hacia adelante / abajo, hacia la mesa)
+  // Positivo = abierta (inclina la pala hacia atrás / arriba, hacia el techo)
+  targetRotX = THREE.MathUtils.degToRad(-ang);
+
+  $('visor-angulo').textContent = `${ang}°`;
+  const elVisorEtiqueta = $('visor-etiqueta');
+  const c = CRITERIOS[golpe];
+  if (c && c.angulo) {
+    if (ang < c.angulo[0]) {
+      elVisorEtiqueta.textContent = 'Demasiado cerrada';
+      elVisorEtiqueta.style.color = 'var(--bad)';
+    } else if (ang > c.angulo[1]) {
+      elVisorEtiqueta.textContent = 'Demasiado abierta';
+      elVisorEtiqueta.style.color = 'var(--bad)';
+    } else {
+      elVisorEtiqueta.textContent = 'Ángulo ideal';
+      elVisorEtiqueta.style.color = 'var(--ok)';
+    }
+  } else {
+    elVisorEtiqueta.textContent = ang < 0 ? 'Cara cerrada' : (ang > 0 ? 'Cara abierta' : 'Cara vertical');
+    elVisorEtiqueta.style.color = 'var(--muted)';
+  }
+}
+
 function parsearEvento(datos, i = 0) {
   return {
     t: datos.getUint32(i, true), n: datos.getUint16(i + 4, true),
@@ -138,6 +346,7 @@ function mostrar(e) {
   $('vel').textContent = e.vel === null ? '–' : `${e.vel} km/h`;
   $('ang').textContent = e.ang === null ? '–' : `${e.ang}°`;
   $('pico').textContent = formatearPico(e.pico);
+  actualizarVisor3D(e.ang, e.golpe);
   $('certeza').textContent = e.conf !== null ? `Certeza del modelo: ${e.conf} %` : '';
   $('consejo').textContent = c.texto;
   $('consejo').classList.toggle('ok', c.ok);
@@ -212,6 +421,9 @@ function alternarSimulador() {
 
 $('conectar').addEventListener('click', conectar);
 $('simular').addEventListener('click', alternarSimulador);
+
+window.addEventListener('DOMContentLoaded', iniciarVisor3D);
+if (document.readyState !== 'loading') iniciarVisor3D();
 </script>
 </body>
 </html>
