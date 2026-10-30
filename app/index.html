@@ -36,6 +36,52 @@
   .conteo { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; font-size: .9rem; }
   label { font-size: .9rem; display: flex; gap: 6px; align-items: center; }
   .vacio { color: var(--muted); }
+  .card-debug {
+    font-size: 0.85rem;
+    border: 1px dashed var(--line);
+    background: var(--card);
+  }
+  .card-debug summary {
+    cursor: pointer;
+    font-weight: 600;
+    user-select: none;
+    color: var(--accent);
+    outline: none;
+  }
+  .debug-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+    margin-top: 10px;
+    font-size: 0.82rem;
+  }
+  @media (max-width: 400px) {
+    .debug-grid { grid-template-columns: 1fr; }
+  }
+  .debug-grid div {
+    display: flex;
+    justify-content: space-between;
+    padding: 3px 6px;
+    background: var(--bg);
+    border-radius: 4px;
+    border: 1px solid var(--line);
+  }
+  .debug-grid span { color: var(--muted); }
+  .debug-grid b { font-variant-numeric: tabular-nums; }
+  .debug-log-wrap {
+    margin-top: 8px;
+  }
+  .debug-log-wrap pre {
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 6px;
+    font-size: 0.72rem;
+    max-height: 120px;
+    overflow-y: auto;
+    font-family: monospace;
+    margin: 4px 0 0 0;
+  }
   .visor-wrap {
     position: relative;
     width: 100%;
@@ -207,6 +253,24 @@
     <strong>Últimos golpes</strong>
     <ul id="historial"><li class="vacio">Todavía no hay golpes.</li></ul>
   </section>
+
+  <details class="card card-debug" id="panel-debug">
+    <summary>🛠️ Diagnóstico y Telemetría en vivo (BLE)</summary>
+    <div class="debug-grid">
+      <div><span>Paquete BLE:</span> <b id="dbg-tam">–</b></div>
+      <div><span>Tipo crudo:</span> <b id="dbg-tipo">–</b></div>
+      <div><span>Confianza IA:</span> <b id="dbg-conf">–</b></div>
+      <div><span>Goma (física):</span> <b id="dbg-cara">–</b></div>
+      <div><span>Velocidad:</span> <b id="dbg-vel">–</b></div>
+      <div><span>Ángulo cara:</span> <b id="dbg-ang">–</b></div>
+      <div><span>Pico giro:</span> <b id="dbg-pico">–</b></div>
+      <div><span>Cuaternión q:</span> <b id="dbg-q">–</b></div>
+    </div>
+    <div class="debug-log-wrap">
+      <small style="color:var(--muted)">Historial de impactos crudos (últimos 10):</small>
+      <pre id="dbg-log">Esperando impactos por BLE o simulador…</pre>
+    </div>
+  </details>
 </main>
 
 <script>
@@ -403,11 +467,17 @@ let targetQuat = new THREE.Quaternion();
 let usaCuaternion = false;
 
 function determinarCara(golpe, q) {
-  // En tenis de mesa clásico:
-  // - Golpes de derecha (TD / ED) se juegan con la goma ROJA
-  // - Golpes de revés (TR / ER) se juegan con la goma NEGRA
+  if (q && window.THREE) {
+    // Cálculo vectorial por orientación del sensor:
+    // La goma roja está en +Z del sensor. Al rotar (0, 0, 1) por el cuaternión q del sensor:
+    const qSensor = new THREE.Quaternion(q.x, q.y, q.z, q.w);
+    const normalRoja = new THREE.Vector3(0, 0, 1).applyQuaternion(qSensor);
+    // Si la normal de la roja apunta hacia adelante (+X del mundo, hacia la red/mesa rival):
+    // la que golpeó la pelota frontal es la ROJA. Si apunta hacia atrás (X < 0), la NEGRA.
+    return (normalRoja.x >= 0) ? 'roja' : 'negra';
+  }
+  // Fallback heurístico si entran 14 bytes (sin cuaternión):
   if (golpe === 'TR' || golpe === 'ER') return 'negra';
-  if (golpe === 'TD' || golpe === 'ED') return 'roja';
   return 'roja';
 }
 
@@ -486,7 +556,7 @@ function parsearEvento(datos, i = 0, tam = 14) {
   const evento = {
     t: datos.getUint32(i, true),
     n: datos.getUint16(i + 4, true),
-    golpe: TIPOS[datos.getUint8(i + 6)] ?? '??',
+    tipo_raw: datos.getUint8(i + 6), golpe: TIPOS[datos.getUint8(i + 6)] ?? '??',
     conf: datos.getUint8(i + 7),
     vel: datos.getInt16(i + 8, true),
     ang: datos.getInt16(i + 10, true),
@@ -552,6 +622,24 @@ function mostrar(e) {
   $('consejo').textContent = c.texto;
   $('consejo').classList.toggle('ok', c.ok);
   decir(c.texto);
+
+  // Actualizar panel de diagnóstico en vivo (telemetría BLE sin cables)
+  const caraCalculada = determinarCara(e.golpe, e.q);
+  $('dbg-tam').textContent = `${e.tam ?? 14} bytes`;
+  $('dbg-tipo').textContent = `${e.tipo_raw ?? '–'} (${GOLPES[e.golpe] ?? e.golpe})`;
+  $('dbg-conf').textContent = e.conf !== null ? `${e.conf} %` : '–';
+  $('dbg-cara').textContent = caraCalculada === 'roja' ? '🔴 Roja' : '⚫ Negra';
+  $('dbg-vel').textContent = e.vel !== null ? `${e.vel} km/h` : '–';
+  $('dbg-ang').textContent = e.ang !== null ? `${e.ang}°` : '–';
+  $('dbg-pico').textContent = formatearPico(e.pico);
+  $('dbg-q').textContent = e.q ? `(${e.q.w.toFixed(2)}, ${e.q.x.toFixed(2)}, ${e.q.y.toFixed(2)}, ${e.q.z.toFixed(2)})` : 'No presente (14B)';
+
+  const dbgLog = $('dbg-log');
+  if (dbgLog) {
+    if (dbgLog.textContent.startsWith('Esperando')) dbgLog.textContent = '';
+    const lineaLog = `#${e.n} [${e.golpe}] conf=${e.conf}% cara=${caraCalculada} ang=${e.ang}° vel=${e.vel}km/h pico=${e.pico}ms\n`;
+    dbgLog.textContent = lineaLog + dbgLog.textContent.split('\n').slice(0, 9).join('\n');
+  }
 
   $('conteo').innerHTML = Object.keys(GOLPES)
     .filter((k) => sesion.conteo[k])
