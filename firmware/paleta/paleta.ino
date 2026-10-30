@@ -270,6 +270,12 @@ void mandarGolpe() {
 }
 
 void setup() {
+  // Si nadie lee el USB (la app por BLE sin grabar.py, o con el powerbank) cada Serial.printf
+  // esperaba hasta 2 s a que la compu leyera: el loop iba a 1 muestra cada 2 s y los golpes no
+  // salían nunca por BLE (30/10). Con timeout 0 lo que no entra se tira, y el buffer de 16 kB
+  // (~350 ms de muestras) aguanta los tirones de Windows cuando grabar.py sí está leyendo.
+  Serial.setTxBufferSize(16384);
+  Serial.setTxTimeoutMs(0);
   Serial.begin(921600);
   delay(1500);  // tiempo para abrir el monitor serie
   pinMode(PIN_CS, OUTPUT);
