@@ -15,6 +15,7 @@
 #include <BLEServer.h>
 #include <BLE2902.h>
 #include "ml_inference.h"
+#include "angulo.h"
 
 // Pines SPI del MPU-6500 (pin del módulo → función). Revisar en el pinout de la placa que estén libres.
 // SCL y SDA quedan en los GPIO que usaba el I2C: si hay que volver a I2C, esos dos cables no se mueven.
@@ -94,6 +95,8 @@ const uint8_t TIPO_DESCONOCIDO = 4;
 uint32_t muestras = 0;         // muestras leídas desde que arrancó: la k va en omega[k % OMEGA_N]
 uint32_t muestraImpacto = 0;   // número de muestra del último impacto
 bool golpePendiente = false;   // hubo un impacto y todavía no se mandó por BLE
+ResultadoAngulo anguloImpacto; // se calcula en la muestra del impacto (angulo.h) y se manda después
+uint32_t usAngulo = 0;         // cuánto tardó angulo_en_impacto()
 
 // BLE: mismo servicio y característica que espera la app (app/index.html, filtro por nombre "Paleta")
 const char *NOMBRE_BLE = "Paleta";
@@ -365,7 +368,7 @@ void mandarGolpe() {
   p.numero_golpe = ++golpes;
   p.tipo_golpe = clasificarGolpe(p.confianza, msModelo);
   p.vel_kmh = (int16_t)lroundf(w * DEG_TO_RAD * L_GIRO_M * 3.6f);
-  p.ang_deg = 0;     // falta angulo.cpp (rama firmware-angulo de Mateo)
+  p.ang_deg = (int16_t)lroundf(anguloImpacto.grados);
   p.pico_ms = (int16_t)((int32_t)kPico - (int32_t)i);  // 1 muestra = 1 ms
 
   bool enviado = hayAppSuscrita();
@@ -374,8 +377,9 @@ void mandarGolpe() {
     caracteristica->notify();
   }
   const char *nombres[] = {"TD", "TR", "ED", "ER", "ruido"};
-  Serial.printf("# Golpe %u: %s %u %% (modelo en %.1f ms), %d km/h (%.0f °/s), pico %+d ms%s\n", p.numero_golpe,
-                nombres[p.tipo_golpe], p.confianza, msModelo, p.vel_kmh, w, p.pico_ms,
+  Serial.printf("# Golpe %u: %s %u %% (modelo en %.1f ms), %d km/h (%.0f °/s), cara %s a %+d° (en %lu µs), pico %+d ms%s\n",
+                p.numero_golpe, nombres[p.tipo_golpe], p.confianza, msModelo, p.vel_kmh, w,
+                anguloImpacto.cara_roja ? "roja" : "negra", p.ang_deg, (unsigned long)usAngulo, p.pico_ms,
                 enviado ? ", enviado por BLE" : ", sin la app conectada");
 }
 
@@ -406,6 +410,7 @@ void setup() {
   }
   probarModelo();
   iniciarBLE();
+  angulo_inicializar();  // la primera muestra fija la vertical: la paleta tiene que arrancar quieta
   Serial.println("# Paleta lista. Columnas: t_us,ax_g,ay_g,az_g,gx_dps,gy_dps,gz_dps,impacto");
   avisosLeidos = avisos;  // los avisos que llegaron mientras se imprimía no cuentan como perdidos
   proximaMuestra = ultimaLectura = micros();
@@ -459,6 +464,7 @@ void loop() {
   omega[muestras % OMEGA_N] = hypotf(gy, gz);
   float *h = historia[muestras % VENTANA_MUESTRAS];
   h[0] = ax; h[1] = ay; h[2] = az; h[3] = gx; h[4] = gy; h[5] = gz;
+  angulo_actualizar(ax, ay, az, gx, gy, gz);  // Madgwick en cada muestra (angulo.cpp de Mateo)
 
   int impacto = 0;
   if (hayAnterior) {
@@ -470,6 +476,9 @@ void loop() {
       ultimoImpacto = ahora;
       muestraImpacto = muestras;
       golpePendiente = true;
+      uint32_t t0 = micros();
+      anguloImpacto = angulo_en_impacto();  // justo después de procesar la muestra del impacto
+      usAngulo = micros() - t0;  // tiene que ser bastante menos que 1000 µs: si no, se pierden muestras de la ventana
     }
   }
   axAnterior = ax;
