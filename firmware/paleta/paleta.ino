@@ -81,6 +81,16 @@ const int MUESTRAS_DESPUES = 76;  // se espera hasta completar la ventana del mo
 // Últimas muestras de ω del swing, en °/s. 512 alcanzan para 200 antes + 76 después del impacto.
 const int OMEGA_N = 512;
 float omega[OMEGA_N];
+
+// Últimas 196 muestras de los 6 ejes (ax, ay, az, gx, gy, gz), para el modelo: la ventana de
+// CONTRATOS.md son 120 antes del impacto + 76 después, igual que segmentar.py.
+const int VENTANA_ANTES = 120;
+const int VENTANA_MUESTRAS = ML_BUFFER_LONGITUD_ESPERADA / 6;  // 196
+float historia[VENTANA_MUESTRAS][6];
+
+// Clases del modelo → tipo_golpe del struct (CONTRATOS.md): lo que no esté acá (ruido) va como 4
+const char *CLASES[] = {"topspin_derecha", "topspin_reves", "empuje_derecha", "empuje_reves"};
+const uint8_t TIPO_DESCONOCIDO = 4;
 uint32_t muestras = 0;         // muestras leídas desde que arrancó: la k va en omega[k % OMEGA_N]
 uint32_t muestraImpacto = 0;   // número de muestra del último impacto
 bool golpePendiente = false;   // hubo un impacto y todavía no se mandó por BLE
@@ -240,7 +250,25 @@ float omegaSuave(uint32_t k) {
   return suma / 5;
 }
 
-// Arma el evento del último impacto y lo manda. Se llama MUESTRAS_DESPUES muestras después del impacto.
+// Corre el modelo sobre la ventana del último impacto (muestras i-120 a i+75, como segmentar.py)
+// y devuelve el tipo_golpe del struct. La confianza va de 0 a 100.
+uint8_t clasificarGolpe(uint8_t &confianza, float &ms) {
+  static float ventana[ML_BUFFER_LONGITUD_ESPERADA];  // static: 4,7 kB, mejor fuera de la pila
+  uint32_t desde = muestraImpacto - VENTANA_ANTES;
+  for (int j = 0; j < VENTANA_MUESTRAS; j++) {
+    for (int e = 0; e < 6; e++) ventana[j * 6 + e] = historia[(desde + j) % VENTANA_MUESTRAS][e];
+  }
+  uint32_t inicio = micros();
+  PrediccionGolpe p = predecir_golpe(ventana, ML_BUFFER_LONGITUD_ESPERADA);
+  ms = (micros() - inicio) / 1000.0f;
+  confianza = (uint8_t)lroundf(p.probabilidad * 100);
+  for (uint8_t t = 0; t < 4; t++) {
+    if (strcmp(p.etiqueta, CLASES[t]) == 0) return t;
+  }
+  return TIPO_DESCONOCIDO;
+}
+
+// Arma el evento del último impacto y lo manda. Se llama con la ventana del modelo completa.
 void mandarGolpe() {
   uint32_t i = muestraImpacto;
   float w = 0;
@@ -252,10 +280,10 @@ void mandarGolpe() {
   }
 
   BlePayload p;
+  float msModelo;
   p.timestamp = ultimoImpacto / 1000;
   p.numero_golpe = ++golpes;
-  p.tipo_golpe = 4;  // todavía sin el modelo real: "desconocido"
-  p.confianza = 0;
+  p.tipo_golpe = clasificarGolpe(p.confianza, msModelo);
   p.vel_kmh = (int16_t)lroundf(w * DEG_TO_RAD * L_GIRO_M * 3.6f);
   p.ang_deg = 0;     // falta angulo.cpp (rama firmware-angulo de Mateo)
   p.pico_ms = (int16_t)((int32_t)kPico - (int32_t)i);  // 1 muestra = 1 ms
@@ -265,7 +293,9 @@ void mandarGolpe() {
     caracteristica->setValue((uint8_t *)&p, sizeof(p));
     caracteristica->notify();
   }
-  Serial.printf("# Golpe %u: %d km/h (%.0f °/s), pico %+d ms%s\n", p.numero_golpe, p.vel_kmh, w, p.pico_ms,
+  const char *nombres[] = {"TD", "TR", "ED", "ER", "ruido"};
+  Serial.printf("# Golpe %u: %s %u %% (modelo en %.1f ms), %d km/h (%.0f °/s), pico %+d ms%s\n", p.numero_golpe,
+                nombres[p.tipo_golpe], p.confianza, msModelo, p.vel_kmh, w, p.pico_ms,
                 enviado ? ", enviado por BLE" : ", sin celular conectado");
 }
 
@@ -346,6 +376,8 @@ void loop() {
   alinearEjes(ax, ay, az);
   alinearEjes(gx, gy, gz);
   omega[muestras % OMEGA_N] = hypotf(gy, gz);
+  float *h = historia[muestras % VENTANA_MUESTRAS];
+  h[0] = ax; h[1] = ay; h[2] = az; h[3] = gx; h[4] = gy; h[5] = gz;
 
   int impacto = 0;
   if (hayAnterior) {
@@ -367,7 +399,8 @@ void loop() {
   Serial.printf("%lu,%.3f,%.3f,%.3f,%.1f,%.1f,%.1f,%d\n",
                 (unsigned long)ahora, ax, ay, az, gx, gy, gz, impacto);
 
-  if (golpePendiente && muestras == muestraImpacto + MUESTRAS_DESPUES) {
+  // la ventana termina en la muestra i+75: el impacto más 75 después (196 en total, como segmentar.py)
+  if (golpePendiente && muestras == muestraImpacto + MUESTRAS_DESPUES - 1) {
     golpePendiente = false;
     mandarGolpe();
   }
