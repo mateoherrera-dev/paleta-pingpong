@@ -672,78 +672,32 @@
     display: block;
   }
 
-  /* Tramo 1: Pantalla 2D inicial plana (0% a 25%) */
+  /* Controles flotantes en reposo sobre la Pelota 3D (La pelota ES la landing) */
   #stage-landing {
     position: absolute;
     inset: 0;
     width: 100%;
     height: 100%;
-    background: #ff7700;
+    background: transparent;
     z-index: 10;
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-end;
     text-align: center;
     color: #0f172a;
-    pointer-events: auto;
-    padding: 24px;
+    pointer-events: none;
+    padding: 32px 24px;
     box-sizing: border-box;
+    transition: opacity 0.25s ease;
   }
 
-  #intro-stamp {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    user-select: none;
-  }
-  .stamp-brand {
-    font-size: 5.4rem;
-    font-weight: 900;
-    letter-spacing: 0.14em;
-    line-height: 0.95;
-    color: #0f172a;
-    margin: 0 0 8px 0;
-  }
-  .stamp-stars {
-    font-size: 1.45rem;
-    letter-spacing: 0.35em;
-    color: #0f172a;
-    margin: 0 0 6px 0;
-  }
-  .stamp-spec {
-    font-size: 0.88rem;
-    font-weight: 800;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: rgba(15, 23, 42, 0.85);
-    margin: 0 0 20px 0;
-  }
-
-  #intro-sub {
-    margin: 0 0 16px 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 6px;
-    transition: opacity 0.2s ease, transform 0.2s ease;
-  }
-  .intro-claim {
-    font-size: 1.65rem;
-    font-weight: 900;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    color: #0f172a;
-    line-height: 1;
-    border-bottom: 2px solid rgba(15, 23, 42, 0.25);
-    padding-bottom: 6px;
-    user-select: none;
-  }
   #intro-actions-wrap {
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 12px;
+    pointer-events: auto;
     transition: opacity 0.2s ease, transform 0.2s ease;
   }
 
@@ -886,21 +840,11 @@
   <div id="intro-sticky-stage">
     <canvas id="canvas-intro"></canvas>
 
-    <!-- Tramo 1: 0% a 25% — Macro / El Sello -->
+    <!-- Controles flotantes en reposo sobre la Pelota 3D (La pelota ES la landing) -->
     <div id="stage-landing">
-      <div id="intro-stamp">
-        <div class="stamp-brand">DOC</div>
-        <div class="stamp-stars">★ ★ ★</div>
-        <div class="stamp-spec">40+</div>
-      </div>
-
-      <div id="intro-sub">
-        <div class="intro-claim">FIND YOUR EDGE</div>
-      </div>
-
       <div id="intro-actions-wrap">
         <div class="scrolly-hint">
-          <span>Deslizá para descubrir</span>
+          <span>Deslizá o tocá para iniciar</span>
           <span class="scrolly-arrow">↓</span>
         </div>
 
@@ -2258,8 +2202,8 @@ function initIntroBall() {
   introScene = new THREE.Scene();
   introScene.background = new THREE.Color(0xff7700); // Naranja celuloide torneo
 
-  introCamera = new THREE.PerspectiveCamera(35, w / h, 0.001, 10);
-  introCamera.position.set(0, 0, 0.075);
+  introCamera = new THREE.PerspectiveCamera(32, w / h, 0.001, 10);
+  introCamera.position.set(0, 0, 0.088);
 
   introRenderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
   introRenderer.setSize(w, h);
@@ -2267,13 +2211,32 @@ function initIntroBall() {
   introRenderer.outputColorSpace = THREE.SRGBColorSpace;
 
   // Geometría oficial: radio 20 mm (diámetro 40 mm)
-  const geometry = new THREE.SphereGeometry(0.02, 64, 32);
+  const R = 0.02;
+  const geometry = new THREE.SphereGeometry(R, 64, 32);
+  const pos = geometry.attributes.position;
+  const uvs = geometry.attributes.uv;
 
-  // Cuño compacto real de competición: DOC ★★★ 40+
+  // Proyección UV planar ortogonal en el frente:
+  // Hace que el cuño en el frente sea matemáticamente plano y rectilíneo, sin deformación esférica
+  const stampSpan = 0.028;
+  for (let i = 0; i < pos.count; i++) {
+    const x = pos.getX(i);
+    const y = pos.getY(i);
+    const z = pos.getZ(i);
+
+    if (z > 0.001) {
+      uvs.setXY(i, (x / stampSpan) + 0.5, (y / stampSpan) + 0.5);
+    } else {
+      uvs.setXY(i, 0.02, 0.02);
+    }
+  }
+  uvs.needsUpdate = true;
+
+  // Cuño oficial de competición en Canvas 2D
   const c = document.createElement('canvas');
   c.width = 2048; c.height = 2048;
   const ctx = c.getContext('2d');
-  ctx.fillStyle = '#ff7700'; // Naranja idéntico al CSS
+  ctx.fillStyle = '#ff7700'; // Naranja idéntico al fondo
   ctx.fillRect(0, 0, 2048, 2048);
 
   const inkColor = '#0f172a';
@@ -2281,24 +2244,31 @@ function initIntroBall() {
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
 
-  // 1. Marca principal DOC
-  ctx.font = '900 230px system-ui, -apple-system, sans-serif';
-  ctx.letterSpacing = '18px';
-  ctx.fillText('DOC', 1024, 860);
+  // 1. Marca principal DOC en bloque grueso
+  ctx.font = '900 290px system-ui, -apple-system, sans-serif';
+  ctx.letterSpacing = '22px';
+  ctx.fillText('DOC', 1024, 730);
 
   // 2. Tres estrellas de competición (★ ★ ★)
-  ctx.font = '140px system-ui, sans-serif';
-  ctx.letterSpacing = '26px';
-  ctx.fillText('★ ★ ★', 1024, 1020);
+  ctx.font = '150px system-ui, sans-serif';
+  ctx.letterSpacing = '30px';
+  ctx.fillText('★ ★ ★', 1024, 940);
 
   // 3. Especificación oficial 40+
-  ctx.font = '800 110px system-ui, sans-serif';
-  ctx.letterSpacing = '16px';
-  ctx.fillText('40+', 1024, 1170);
+  ctx.font = '800 115px system-ui, sans-serif';
+  ctx.letterSpacing = '18px';
+  ctx.fillText('40+', 1024, 1100);
+
+  // 4. Lema FIND YOUR EDGE
+  ctx.font = '900 84px system-ui, -apple-system, sans-serif';
+  ctx.letterSpacing = '14px';
+  ctx.fillText('FIND YOUR EDGE', 1024, 1310);
 
   const stampTex = new THREE.CanvasTexture(c);
   stampTex.generateMipmaps = true;
   stampTex.colorSpace = THREE.SRGBColorSpace;
+  stampTex.wrapS = THREE.ClampToEdgeWrapping;
+  stampTex.wrapT = THREE.ClampToEdgeWrapping;
   if (introRenderer.capabilities) {
     stampTex.anisotropy = introRenderer.capabilities.getMaxAnisotropy();
   }
@@ -2311,8 +2281,9 @@ function initIntroBall() {
   });
 
   introBall = new THREE.Mesh(geometry, material);
-  introBall.rotation.y = -Math.PI / 2; // Cuño frontal hacia la cámara
-  introBall.visible = false; // Invisible en reposo hasta iniciar scroll
+  introBall.rotation.set(0, 0, 0); // Cara frontal hacia la cámara
+  introBall.position.set(0, 0, 0);
+  introBall.visible = true; // La pelota ES la landing desde el frame 0
   introScene.add(introBall);
 
   // Iluminación
@@ -2355,66 +2326,32 @@ function onScrollyScroll() {
   if (!introScene || !introCamera || !introRenderer || !introBall) return;
 
   // -------------------------------------------------------------
-  // Tramo 1: 0% a 25% — Macro / El Sello
+  // Tramo 1: 0% a 20% — Reposo Macro / El Sello
   // -------------------------------------------------------------
-  const stageLanding = $('stage-landing');
-  const introSub = $('intro-sub');
   const introActions = $('intro-actions-wrap');
-
-  if (p < 0.15) {
-    // 100% Pantalla 2D inicial plana
-    if (stageLanding) {
-      stageLanding.style.display = 'flex';
-      stageLanding.style.opacity = '1';
-      stageLanding.style.pointerEvents = 'auto';
-    }
-    // Fade out suave de acciones secundarias con el primer toque de scroll (0.00 -> 0.12)
-    const fadeSub = Math.max(0, Math.min(1, (0.12 - p) / 0.12));
-    if (introSub) {
-      introSub.style.opacity = String(fadeSub);
-      introSub.style.transform = `translateY(${-16 * (1 - fadeSub)}px)`;
-    }
-    if (introActions) {
-      introActions.style.opacity = String(fadeSub);
-      introActions.style.transform = `translateY(${16 * (1 - fadeSub)}px)`;
-      introActions.style.pointerEvents = p > 0.05 ? 'none' : 'auto';
-    }
-    // Pelota 3D ESTRICTAMENTE INVISIBLE en todo el Tramo 1 (imposible superponerse)
-    introBall.visible = false;
-  } else if (p < 0.24) {
-    // Hand-off limpio: se retira la landing 2D y la pelota 3D toma el control
-    introBall.visible = true;
-    if (stageLanding) {
-      const fadeLanding = Math.max(0, (0.24 - p) / 0.09);
-      stageLanding.style.display = 'flex';
-      stageLanding.style.opacity = String(fadeLanding);
-      stageLanding.style.pointerEvents = 'none';
-    }
-  } else {
-    // Más allá del 24%: landing 2D completamente oculta
-    introBall.visible = true;
-    if (stageLanding) {
-      stageLanding.style.display = 'none';
-      stageLanding.style.opacity = '0';
-      stageLanding.style.pointerEvents = 'none';
-    }
+  if (introActions) {
+    const fadeActions = Math.max(0, Math.min(1, (0.12 - p) / 0.10));
+    introActions.style.opacity = String(fadeActions);
+    introActions.style.transform = `translateY(${16 * (1 - fadeActions)}px)`;
+    introActions.style.pointerEvents = p > 0.04 ? 'none' : 'auto';
   }
 
   // -------------------------------------------------------------
-  // Tramo 2: 25% a 60% — El Zoom Out & La Física
+  // Tramo 2: 0% a 60% — El Zoom Out & La Física Tridimensional
   // -------------------------------------------------------------
-  // Zoom out de cámara en Z: arranca tras el hand-off
-  const pZoom = Math.max(0, Math.min(1, (p - 0.18) / 0.42));
-  introCamera.position.z = 0.075 + (0.185 - 0.075) * pZoom;
+  // Zoom out de cámara en Z: de 0.088 a 0.22
+  const pZoom = Math.max(0, Math.min(1, p / 0.55));
+  introCamera.position.z = 0.088 + (0.22 - 0.088) * pZoom;
 
   // Rotación angular sutil para revelar el brillo de la esfera
-  introBall.rotation.y = -Math.PI / 2 + 0.35 * pZoom;
-  introBall.rotation.x = 0.08 * pZoom;
+  introBall.rotation.y = 0.42 * pZoom;
+  introBall.rotation.x = 0.12 * pZoom;
 
   // Transición de fondo de naranja celuloide (#ff7700) a grafito mesa (#0c1322)
-  const r = (0xff - (0xff - 0x0c) * pZoom) / 255;
-  const g = (0x77 - (0x77 - 0x13) * pZoom) / 255;
-  const b = (0x00 + (0x22 - 0x00) * pZoom) / 255;
+  const pBg = Math.max(0, Math.min(1, (p - 0.15) / 0.45));
+  const r = (0xff - (0xff - 0x0c) * pBg) / 255;
+  const g = (0x77 - (0x77 - 0x13) * pBg) / 255;
+  const b = (0x00 + (0x22 - 0x00) * pBg) / 255;
   introScene.background.setRGB(r, g, b);
 
   // Luz direccional sube sutilmente
@@ -2461,7 +2398,7 @@ function onScrollyScroll() {
     const pDrop = Math.max(0, Math.min(1, (p - 0.60) / 0.25));
 
     // Cámara panea hacia abajo acompañando a la pelota
-    introCamera.position.y = 0.005 + (-0.020 - 0.005) * pDrop;
+    introCamera.position.y = (-0.020) * pDrop;
     introCamera.lookAt(0, -0.024 * pDrop, 0);
 
     // Caída y rebote en mesa
@@ -2489,12 +2426,12 @@ function onScrollyScroll() {
     }
 
     // Rotación continua
-    introBall.rotation.x = 0.08 + pDrop * 0.85;
-    introBall.rotation.y = -Math.PI / 2 + 0.35 + pDrop * 0.4;
+    introBall.rotation.x = 0.12 + pDrop * 0.85;
+    introBall.rotation.y = 0.42 + pDrop * 0.4;
   } else {
     introBall.position.y = 0;
     introBall.position.x = 0;
-    introCamera.position.y = 0.005;
+    introCamera.position.y = 0;
     introCamera.lookAt(0, 0, 0);
     piqueFired = false;
   }
@@ -2532,6 +2469,35 @@ function onScrollyScroll() {
   introRenderer.render(introScene, introCamera);
 }
 
+let animandoCinematica = false;
+function animarCinematica() {
+  if (animandoCinematica) return;
+  animandoCinematica = true;
+
+  const container = $('intro-scrolly-container');
+  if (!container) return;
+  const maxScroll = container.offsetHeight - window.innerHeight;
+  const startScroll = window.scrollY;
+  const targetScroll = maxScroll;
+  const startTime = performance.now();
+  const dur = 1350; // ms
+
+  function frame(now) {
+    const elapsed = now - startTime;
+    const t = Math.min(1, elapsed / dur);
+    // Apple ease-out cuártica suave
+    const ease = 1 - Math.pow(1 - t, 4);
+    window.scrollTo(0, startScroll + (targetScroll - startScroll) * ease);
+    if (t < 1) {
+      requestAnimationFrame(frame);
+    } else {
+      animandoCinematica = false;
+      irAlDashboard(false);
+    }
+  }
+  requestAnimationFrame(frame);
+}
+
 function irAlDashboard(suave = true) {
   const container = $('intro-scrolly-container');
   if (!container) return;
@@ -2541,9 +2507,16 @@ function irAlDashboard(suave = true) {
   });
 }
 
-$('btn-comenzar').addEventListener('click', () => irAlDashboard(true));
+$('btn-comenzar').addEventListener('click', animarCinematica);
 const btnDashboard = $('btn-ir-dashboard');
 if (btnDashboard) btnDashboard.addEventListener('click', () => irAlDashboard(true));
+
+const canvasIntro = $('canvas-intro');
+if (canvasIntro) {
+  canvasIntro.addEventListener('click', () => {
+    if (window.scrollY < 120) animarCinematica();
+  });
+}
 
 window.addEventListener('keydown', (ev) => {
   if (ev.key === 'Escape' || ev.key === 'Enter') irAlDashboard(false);
