@@ -2,106 +2,258 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Paleta</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Paleta Smart IMU · Tenis de Mesa</title>
 <style>
   :root {
-    --bg: #f4f7fa; --card: #ffffff; --fg: #121c28; --muted: #5a6778; --line: #d7dfe8;
-    --accent: #1b4f91; --ok: #1f7a4d; --bad: #c62f3a; --soft: #e5eef9;
+    --bg: #090d16;
+    --card: #111827;
+    --card-hover: #162032;
+    --card-soft: rgba(255, 255, 255, 0.03);
+    --fg: #f8fafc;
+    --muted: #94a3b8;
+    --line: rgba(255, 255, 255, 0.08);
+    --line-active: rgba(56, 189, 248, 0.4);
+    --accent: #0284c7;
+    --accent-glow: rgba(14, 165, 233, 0.25);
+    --ok: #10b981;
+    --ok-soft: rgba(16, 185, 129, 0.12);
+    --warn: #f59e0b;
+    --warn-soft: rgba(245, 158, 11, 0.12);
+    --bad: #f43f5e;
+    --bad-soft: rgba(244, 63, 94, 0.12);
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-pill: 9999px;
+    --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
   }
-  @media (prefers-color-scheme: dark) {
-    :root { --bg: #0c131b; --card: #141e2a; --fg: #e6edf5; --muted: #9babbd; --line: #26364a;
-            --accent: #74abef; --ok: #55c792; --bad: #ff6f76; --soft: #15283f; color-scheme: dark; }
+
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --card-hover: #f1f5f9;
+      --card-soft: rgba(0, 0, 0, 0.02);
+      --fg: #0f172a;
+      --muted: #64748b;
+      --line: #e2e8f0;
+      --line-active: rgba(2, 132, 199, 0.4);
+      --accent: #0284c7;
+      --accent-glow: rgba(2, 132, 199, 0.15);
+      --ok: #059669;
+      --ok-soft: rgba(5, 150, 105, 0.1);
+      --warn: #d97706;
+      --warn-soft: rgba(217, 119, 6, 0.1);
+      --bad: #e11d48;
+      --bad-soft: rgba(225, 29, 72, 0.1);
+    }
   }
-  * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.5 system-ui, sans-serif; }
-  main { max-width: 480px; margin: 0 auto; padding: 16px; display: grid; gap: 14px; }
-  header { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-  h1 { font-size: 1.3rem; margin: 0 auto 0 0; }
-  button { font: inherit; font-size: .9rem; padding: 8px 14px; border-radius: 8px; border: 1px solid var(--accent);
-           background: var(--accent); color: #fff; cursor: pointer; }
-  button.sec { background: transparent; color: var(--accent); }
-  .estado { font-size: .85rem; color: var(--muted); }
-  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: grid; gap: 10px; }
-  .golpe { font-size: 1.5rem; font-weight: 600; }
-  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
-  @media (max-width: 440px) {
-    .stats { grid-template-columns: repeat(2, 1fr); }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font: 15px/1.5 var(--font);
+    letter-spacing: -0.01em;
+    min-height: 100vh;
   }
-  .stat { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px; text-align: center; }
-  .stat small { display: block; color: var(--muted); font-size: .75rem; }
-  .stat b { font-size: 1.2rem; font-variant-numeric: tabular-nums; }
-  .certeza { font-size: .8rem; color: var(--muted); margin-top: -6px; }
-  .consejo { background: var(--soft); border-radius: 8px; padding: 10px; }
-  .consejo.ok { color: var(--ok); }
-  ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; font-size: .9rem; }
-  li { display: flex; justify-content: space-between; gap: 8px; border-bottom: 1px solid var(--line); padding: 4px 0; }
-  .conteo { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; font-size: .9rem; }
-  label { font-size: .9rem; display: flex; gap: 6px; align-items: center; }
-  .vacio { color: var(--muted); }
-  .card-debug {
-    font-size: 0.85rem;
-    border: 1px dashed var(--line);
-    background: var(--card);
+
+  main {
+    max-width: 500px;
+    margin: 0 auto;
+    padding: 14px 16px 36px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
   }
-  .card-debug summary {
-    cursor: pointer;
-    font-weight: 600;
-    user-select: none;
-    color: var(--accent);
-    outline: none;
-  }
-  .debug-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 6px;
-    margin-top: 10px;
-    font-size: 0.82rem;
-  }
-  @media (max-width: 400px) {
-    .debug-grid { grid-template-columns: 1fr; }
-  }
-  .debug-grid div {
+
+  /* --- Barra Superior (App Bar) --- */
+  header.app-bar {
     display: flex;
     justify-content: space-between;
-    padding: 3px 6px;
-    background: var(--bg);
-    border-radius: 4px;
-    border: 1px solid var(--line);
+    align-items: center;
+    gap: 10px;
+    padding-bottom: 2px;
   }
-  .debug-grid span { color: var(--muted); }
-  .debug-grid b { font-variant-numeric: tabular-nums; }
-  .debug-log-wrap {
-    margin-top: 8px;
+
+  .brand {
+    display: flex;
+    flex-direction: column;
   }
-  .debug-log-wrap pre {
-    background: var(--bg);
+  .brand-title {
+    font-size: 1.1rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .brand-title .tag-chip {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    background: var(--accent-glow);
+    color: var(--accent);
+    padding: 2px 6px;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--line-active);
+  }
+  .connection-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.76rem;
+    color: var(--muted);
+    font-weight: 500;
+    margin-top: 1px;
+  }
+  .dot-status {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--muted);
+    transition: all 0.3s ease;
+  }
+  .dot-status.conectado {
+    background: var(--ok);
+    box-shadow: 0 0 8px var(--ok);
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 6px;
+  }
+
+  /* --- Botones --- */
+  button {
+    font: inherit;
+    font-size: 0.82rem;
+    font-weight: 600;
+    padding: 7px 12px;
+    border-radius: var(--radius-sm);
+    border: 1px solid transparent;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    user-select: none;
+  }
+  button:active {
+    transform: scale(0.97);
+  }
+  button.btn-primary {
+    background: var(--accent);
+    color: #ffffff;
+    box-shadow: 0 2px 8px var(--accent-glow);
+  }
+  button.btn-primary:hover {
+    filter: brightness(1.08);
+  }
+  button.btn-sec {
+    background: var(--card-soft);
+    color: var(--fg);
+    border-color: var(--line);
+  }
+  button.btn-sec:hover {
+    background: var(--card-hover);
+    border-color: var(--muted);
+  }
+
+  /* --- Barra Segmentada (Tabs) --- */
+  .segmented-tabs {
+    display: flex;
+    background: var(--card);
     border: 1px solid var(--line);
-    border-radius: 6px;
-    padding: 6px;
+    border-radius: var(--radius-pill);
+    padding: 3px;
+    gap: 3px;
+    position: sticky;
+    top: 10px;
+    z-index: 50;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+  }
+  .tab-pill {
+    flex: 1;
+    background: transparent;
+    color: var(--muted);
+    border: none;
+    border-radius: var(--radius-pill);
+    padding: 7px 8px;
+    font-weight: 600;
+    font-size: 0.82rem;
+    text-align: center;
+    transition: all 0.18s ease;
+  }
+  .tab-pill.activo {
+    background: var(--accent);
+    color: #ffffff;
+    box-shadow: 0 2px 6px var(--accent-glow);
+  }
+  .vista-tab {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .vista-tab.oculta {
+    display: none !important;
+  }
+
+  /* --- Tarjetas de Contenedor --- */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    position: relative;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  }
+
+  /* --- Sección Golpe Principal --- */
+  .hero-strike-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .strike-title {
+    font-size: 1.45rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.2;
+  }
+  .strike-conf-badge {
     font-size: 0.72rem;
-    max-height: 120px;
-    overflow-y: auto;
-    font-family: monospace;
-    margin: 4px 0 0 0;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: var(--radius-pill);
+    background: var(--card-soft);
+    border: 1px solid var(--line);
+    color: var(--muted);
+    white-space: nowrap;
+    align-self: flex-start;
   }
+
+  /* --- Visor 3D Técnico --- */
   .visor-wrap {
     position: relative;
     width: 100%;
     height: 200px;
-    background: radial-gradient(circle at center, rgba(27, 79, 145, 0.08) 0%, rgba(0, 0, 0, 0.03) 70%);
-    border-radius: 10px;
+    background: radial-gradient(circle at center, rgba(14, 165, 233, 0.08) 0%, rgba(0, 0, 0, 0.25) 75%);
+    border-radius: var(--radius-md);
     overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
     border: 1px solid var(--line);
-    margin: 4px 0;
-  }
-  @media (prefers-color-scheme: dark) {
-    .visor-wrap {
-      background: radial-gradient(circle at center, rgba(116, 171, 239, 0.12) 0%, rgba(0, 0, 0, 0.3) 70%);
-    }
   }
   #canvas3d-container {
     width: 100%;
@@ -116,6 +268,23 @@
     width: 100% !important;
     height: 100% !important;
   }
+
+  .visor-ayuda {
+    position: absolute;
+    top: 8px;
+    left: 10px;
+    font-size: 0.65rem;
+    color: var(--muted);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    pointer-events: none;
+    background: rgba(0, 0, 0, 0.4);
+    padding: 2px 6px;
+    border-radius: 4px;
+    backdrop-filter: blur(4px);
+  }
+
   .visor-badge-cara {
     position: absolute;
     bottom: 8px;
@@ -123,162 +292,191 @@
     display: inline-flex;
     align-items: center;
     gap: 5px;
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     font-weight: 700;
-    padding: 3px 9px;
-    border-radius: 6px;
+    padding: 4px 10px;
+    border-radius: var(--radius-pill);
     background: var(--card);
     border: 1px solid var(--line);
-    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.25);
     cursor: pointer;
     user-select: none;
     z-index: 5;
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    transition: all 0.15s ease;
   }
   .visor-badge-cara:hover {
-    transform: scale(1.04);
-    box-shadow: 0 3px 8px rgba(0,0,0,0.12);
+    transform: scale(1.03);
+    border-color: var(--accent);
   }
-  .agarre-info {
+  .cara-roja { color: #f43f5e; }
+  .cara-negra { color: var(--fg); }
+
+  .visor-selector {
+    position: absolute;
+    top: 8px;
+    right: 8px;
     display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    font-size: 0.78rem;
+    gap: 2px;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(8px);
+    border-radius: var(--radius-pill);
+    padding: 2px;
+    border: 1px solid rgba(255,255,255,0.08);
+    z-index: 10;
+  }
+  .btn-m {
+    font-size: 0.68rem;
+    padding: 3px 7px;
+    border-radius: var(--radius-pill);
+    border: none;
+    background: transparent;
     color: var(--muted);
-    margin-top: 10px;
-    padding: 6px 12px;
-    background: rgba(120, 130, 145, 0.08);
-    border: 1px solid var(--line);
-    border-radius: 6px;
-    text-align: center;
+    cursor: pointer;
+    font-weight: 600;
   }
-  .agarre-info b {
-    color: var(--text);
+  .btn-m.activo {
+    background: var(--accent);
+    color: #fff;
   }
-  .cara-roja {
-    color: #d32f2f;
-    border-color: rgba(211, 47, 47, 0.35);
-  }
-  .cara-negra {
-    color: #121c28;
-    border-color: rgba(50, 50, 50, 0.4);
-  }
-  @media (prefers-color-scheme: dark) {
-    .cara-negra {
-      color: #e6edf5;
-      border-color: rgba(180, 190, 205, 0.4);
-    }
-  }
+
   .visor-indicador {
     position: absolute;
     bottom: 8px;
     right: 10px;
     background: var(--card);
     border: 1px solid var(--line);
-    border-radius: 6px;
-    padding: 3px 8px;
+    border-radius: var(--radius-sm);
+    padding: 4px 9px;
     text-align: right;
     pointer-events: none;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
   }
   .visor-indicador span {
-    font-size: 1rem;
-    font-weight: 700;
+    font-size: 0.95rem;
+    font-weight: 800;
     display: block;
     line-height: 1.1;
+    font-variant-numeric: tabular-nums;
   }
   .visor-indicador small {
-    font-size: 0.7rem;
+    font-size: 0.68rem;
     color: var(--muted);
-  }
-    .visor-selector {
-    position: absolute;
-    top: 6px;
-    right: 8px;
-    display: flex;
-    gap: 3px;
-    background: rgba(120, 130, 145, 0.15);
-    backdrop-filter: blur(6px);
-    border-radius: 6px;
-    padding: 2px;
-    z-index: 10;
-  }
-  .btn-m {
-    font-size: 0.72rem;
-    padding: 3px 8px;
-    border-radius: 4px;
-    border: none;
-    background: transparent;
-    color: var(--muted);
-    cursor: pointer;
-    font-weight: 500;
-  }
-  .btn-m.activo {
-    background: var(--card);
-    color: var(--fg);
-    font-weight: 700;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.12);
-  }
-  .visor-ayuda {
-    position: absolute;
-    top: 8px;
-    left: 10px;
-    font-size: 0.72rem;
-    color: var(--muted);
-    pointer-events: none;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
     font-weight: 600;
   }
-  .visor-sin-3d {
-    padding: 48px 16px;
-    margin: 0;
-    text-align: center;
-    color: var(--muted);
-    font-size: 0.9rem;
-  }
 
-  /* --- Navegación por Pestañas (Modos) --- */
-  .tabs-nav {
+  .agarre-banner {
     display: flex;
-    background: var(--card);
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-size: 0.74rem;
+    color: var(--muted);
+    padding: 5px 10px;
+    background: var(--card-soft);
     border: 1px solid var(--line);
-    border-radius: 10px;
-    padding: 3px;
-    gap: 4px;
-    margin-top: 2px;
-  }
-  .tab-btn {
-    flex: 1;
-    background: transparent;
-    color: var(--muted);
-    border: none;
-    border-radius: 7px;
-    padding: 8px 6px;
-    font-weight: 600;
-    font-size: 0.85rem;
-    cursor: pointer;
-    transition: all 0.15s ease;
+    border-radius: var(--radius-sm);
     text-align: center;
   }
-  .tab-btn:hover {
-    color: var(--fg);
-  }
-  .tab-btn.activo {
-    background: var(--accent);
-    color: #fff;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-  }
-  .vista-tab {
+  .agarre-banner b { color: var(--fg); }
+
+  /* --- Grilla de Métricas Telemetricas --- */
+  .telemetry-grid {
     display: grid;
-    gap: 14px;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
   }
-  .vista-tab.oculta {
-    display: none !important;
+  @media (max-width: 440px) {
+    .telemetry-grid { grid-template-columns: repeat(2, 1fr); }
   }
 
-  /* --- Componentes UI para Tutorial y Test --- */
+  .telemetry-cell {
+    background: var(--card-soft);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    padding: 8px 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    text-align: left;
+    transition: border-color 0.15s ease;
+  }
+  .telemetry-cell:hover {
+    border-color: rgba(255,255,255,0.15);
+  }
+  .telemetry-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .telemetry-val {
+    font-size: 1.35rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums;
+    margin-top: 4px;
+    display: flex;
+    align-items: baseline;
+    gap: 3px;
+  }
+  .telemetry-unit {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--muted);
+  }
+
+  /* --- Caja de Consejo Biomecánico --- */
+  .critique-card {
+    background: var(--card-soft);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--accent);
+    border-radius: var(--radius-md);
+    padding: 10px 12px;
+    font-size: 0.88rem;
+    line-height: 1.4;
+    transition: all 0.2s ease;
+  }
+  .critique-card.ok {
+    border-left-color: var(--ok);
+    background: var(--ok-soft);
+    color: var(--fg);
+  }
+
+  .voice-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.8rem;
+    color: var(--muted);
+    padding-top: 2px;
+  }
+  .voice-row label {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    cursor: pointer;
+  }
+
+  /* --- Badges y Chips Semánticos --- */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: var(--radius-pill);
+    letter-spacing: 0.02em;
+  }
+  .badge-ok { background: var(--ok-soft); color: var(--ok); border: 1px solid rgba(16, 185, 129, 0.3); }
+  .badge-bad { background: var(--bad-soft); color: var(--bad); border: 1px solid rgba(244, 63, 94, 0.3); }
+  .badge-warn { background: var(--warn-soft); color: var(--warn); border: 1px solid rgba(245, 158, 11, 0.3); }
+  .badge-neutral { background: var(--card-soft); border: 1px solid var(--line); color: var(--muted); }
+
   .chip-group {
     display: flex;
     flex-wrap: wrap;
@@ -286,73 +484,156 @@
   }
   .chip-btn {
     flex: 1;
-    min-width: 70px;
-    background: var(--bg);
+    min-width: 65px;
+    background: var(--card-soft);
     color: var(--muted);
     border: 1px solid var(--line);
-    border-radius: 20px;
-    padding: 6px 12px;
-    font-size: 0.8rem;
+    border-radius: var(--radius-pill);
+    padding: 6px 10px;
+    font-size: 0.78rem;
     font-weight: 600;
     cursor: pointer;
     text-align: center;
     transition: all 0.15s ease;
   }
   .chip-btn:hover {
-    border-color: var(--accent);
+    border-color: var(--muted);
     color: var(--fg);
   }
   .chip-btn.activo {
     background: var(--accent);
     color: #fff;
     border-color: var(--accent);
+    box-shadow: 0 2px 6px var(--accent-glow);
   }
+
+  /* --- Barra de Progreso --- */
   .barra-progreso-wrap {
-    background: var(--bg);
+    background: var(--card-soft);
     border: 1px solid var(--line);
-    border-radius: 20px;
-    height: 12px;
+    border-radius: var(--radius-pill);
+    height: 10px;
     overflow: hidden;
     position: relative;
-    margin: 6px 0;
+    margin: 4px 0;
   }
   .barra-progreso-fill {
     height: 100%;
     background: var(--accent);
     width: 0%;
-    transition: width 0.3s ease, background-color 0.3s ease;
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s ease;
   }
   .barra-progreso-fill.completo {
     background: var(--ok);
   }
-  .badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 0.75rem;
-    font-weight: 700;
-    padding: 3px 8px;
-    border-radius: 12px;
-  }
-  .badge-ok { background: rgba(31, 122, 77, 0.15); color: var(--ok); border: 1px solid rgba(31, 122, 77, 0.3); }
-  .badge-bad { background: rgba(198, 47, 58, 0.15); color: var(--bad); border: 1px solid rgba(198, 47, 58, 0.3); }
-  .badge-warn { background: rgba(220, 150, 20, 0.15); color: #b87800; border: 1px solid rgba(220, 150, 20, 0.3); }
-  .badge-neutral { background: var(--bg); border: 1px solid var(--line); color: var(--muted); }
 
-  .resumen-grande {
+  /* --- HUD de Benchmark (Test Mode) --- */
+  .benchmark-hud {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 10px 14px;
-    background: var(--bg);
+    padding: 12px 14px;
+    background: var(--card-soft);
     border: 1px solid var(--line);
-    border-radius: 10px;
+    border-radius: var(--radius-md);
   }
-  .resumen-grande .valor {
-    font-size: 2rem;
-    font-weight: 800;
-    font-variant-numeric: tabular-nums;
+  .benchmark-hud .hud-title {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+  }
+  .benchmark-hud .hud-val {
+    font-size: 2.2rem;
+    font-weight: 900;
+    letter-spacing: -0.04em;
     line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* --- Listas Compactas --- */
+  .lista-compacta {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 0.82rem;
+    max-height: 200px;
+    overflow-y: auto;
+  }
+  .lista-compacta li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--card-soft);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    padding: 5px 8px;
+  }
+
+  .conteo-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+    font-size: 0.84rem;
+  }
+  .conteo-grid div {
+    display: flex;
+    justify-content: space-between;
+    background: var(--card-soft);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    padding: 5px 8px;
+  }
+
+  /* --- Panel de Diagnóstico BLE --- */
+  .card-debug {
+    font-size: 0.8rem;
+    background: var(--card);
+    border: 1px solid var(--line);
+  }
+  .card-debug summary {
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--muted);
+    user-select: none;
+    outline: none;
+    transition: color 0.15s ease;
+  }
+  .card-debug summary:hover { color: var(--fg); }
+  .debug-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 5px;
+    margin-top: 8px;
+    font-size: 0.78rem;
+  }
+  @media (max-width: 400px) {
+    .debug-grid { grid-template-columns: 1fr; }
+  }
+  .debug-grid div {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 6px;
+    background: var(--card-soft);
+    border-radius: 4px;
+    border: 1px solid var(--line);
+  }
+  .debug-grid span { color: var(--muted); }
+  .debug-grid b { font-variant-numeric: tabular-nums; }
+  .debug-log-wrap pre {
+    background: var(--card-soft);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    padding: 6px;
+    font-size: 0.7rem;
+    max-height: 100px;
+    overflow-y: auto;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    margin: 4px 0 0 0;
   }
   .card-acciones {
     display: flex;
@@ -361,55 +642,47 @@
   .card-acciones button {
     flex: 1;
   }
-  .btn-sm {
-    padding: 6px 12px;
-    font-size: 0.82rem;
-  }
-  .lista-compacta {
-    margin: 0;
-    padding: 0;
-    list-style: none;
-    display: grid;
-    gap: 6px;
-    font-size: 0.85rem;
-    max-height: 220px;
-    overflow-y: auto;
-  }
-  .lista-compacta li {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: var(--bg);
-    border: 1px solid var(--line);
-    border-radius: 6px;
-    padding: 5px 8px;
-  }
 </style>
 </head>
 <body>
 <main>
-  <header>
-    <h1>Paleta</h1>
-    <button id="conectar">Conectar paleta</button>
-    <button id="simular" class="sec">Simulador</button>
+  <!-- Barra de Identidad y Conexión -->
+  <header class="app-bar">
+    <div class="brand">
+      <div class="brand-title">
+        <span>PALETA</span>
+        <span class="tag-chip">IMU // S3</span>
+      </div>
+      <div class="connection-status">
+        <span class="dot-status" id="dot-ble"></span>
+        <span id="estado">Sin conectar</span>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button id="conectar" class="btn-primary" type="button">⚡ Conectar</button>
+      <button id="simular" class="btn-sec" type="button">Simulador</button>
+    </div>
   </header>
-  <div class="estado" id="estado">Sin conectar.</div>
 
-  <nav class="tabs-nav">
-    <button class="tab-btn activo" data-tab="libre" type="button">🎯 Libre</button>
-    <button class="tab-btn" data-tab="tutorial" type="button">🎓 Tutorial</button>
-    <button class="tab-btn" data-tab="test" type="button">📊 Test Modelo</button>
+  <!-- Navegación por Modos (Segmented Control) -->
+  <nav class="segmented-tabs">
+    <button class="tab-pill activo" data-tab="libre" type="button">🎯 Modo Libre</button>
+    <button class="tab-pill" data-tab="tutorial" type="button">🎓 Tutorial</button>
+    <button class="tab-pill" data-tab="test" type="button">📊 Benchmark</button>
   </nav>
 
-  <!-- VISTA 1: MODO LIBRE (VISOR 3D Y MÉTRICAS) -->
+  <!-- ==================== VISTA 1: MODO LIBRE ==================== -->
   <div id="vista-libre" class="vista-tab">
     <section class="card" id="ultimo">
-      <div class="golpe" id="golpe">Esperando un golpe…</div>
-      <div class="certeza" id="certeza"></div>
+      <div class="hero-strike-header">
+        <div class="strike-title" id="golpe">Esperando golpe…</div>
+        <div class="strike-conf-badge" id="certeza">Certeza: –</div>
+      </div>
 
+      <!-- Visor 3D Interactivo -->
       <div class="visor-wrap">
         <div id="canvas3d-container"></div>
-        <div class="visor-ayuda">Orientación 3D del impacto</div>
+        <div class="visor-ayuda">ORIENTACIÓN 3D</div>
         <div class="visor-badge-cara cara-roja" id="visor-cara">🔴 Goma Roja</div>
         <div class="visor-selector">
           <button id="btn-m1" class="btn-m activo" type="button">8 KB</button>
@@ -421,59 +694,84 @@
         </div>
       </div>
 
-      <div class="agarre-info">
-        <span>Agarre fijado (CONTRATOS.md):</span> <b>⚫ Negra en Derecha / 🔴 Roja en Revés</b>
+      <div class="agarre-banner">
+        <span>Agarre de referencia:</span> <b>⚫ Negra en Derecha · 🔴 Roja en Revés</b>
       </div>
 
-      <div class="stats">
-        <div class="stat"><small>Velocidad</small><b id="vel">–</b></div>
-        <div class="stat"><small>Ángulo</small><b id="ang">–</b></div>
-        <div class="stat"><small>Timing</small><b id="pico">–</b></div>
-        <div class="stat"><small>Score</small><b id="score-pts">–</b></div>
+      <!-- Grilla de Telemetría Biomecánica -->
+      <div class="telemetry-grid">
+        <div class="telemetry-cell">
+          <div class="telemetry-label">Velocidad</div>
+          <div class="telemetry-val"><span id="vel">–</span> <small class="telemetry-unit">km/h</small></div>
+        </div>
+        <div class="telemetry-cell">
+          <div class="telemetry-label">Ángulo</div>
+          <div class="telemetry-val"><span id="ang">–</span> <small class="telemetry-unit">°</small></div>
+        </div>
+        <div class="telemetry-cell">
+          <div class="telemetry-label">Timing</div>
+          <div class="telemetry-val"><span id="pico">–</span></div>
+        </div>
+        <div class="telemetry-cell">
+          <div class="telemetry-label">Score Técnico</div>
+          <div class="telemetry-val"><span id="score-pts" style="color:var(--accent)">–</span> <small class="telemetry-unit">/100</small></div>
+        </div>
       </div>
-      <div class="consejo" id="consejo">Pegá un golpe para ver el análisis.</div>
-      <label><input type="checkbox" id="voz"> Leer los consejos en voz alta</label>
+
+      <!-- Feedback y Voz -->
+      <div class="critique-card" id="consejo">
+        Pegá un golpe con la paleta para ver el análisis biomécanico.
+      </div>
+      <div class="voice-row">
+        <label><input type="checkbox" id="voz"> 🔊 Dictar correcciones en voz alta</label>
+      </div>
     </section>
 
+    <!-- Resumen de Sesión -->
     <section class="card">
-      <strong>Esta sesión</strong>
-      <div class="conteo" id="conteo"></div>
+      <div style="font-size:0.85rem; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:0.06em;">
+        Distribución de la sesión
+      </div>
+      <div class="conteo-grid" id="conteo"></div>
     </section>
 
+    <!-- Historial de Impactos -->
     <section class="card">
-      <strong>Últimos golpes</strong>
-      <ul id="historial"><li class="vacio">Todavía no hay golpes.</li></ul>
+      <div style="font-size:0.85rem; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:0.06em;">
+        Últimos impactos
+      </div>
+      <ul id="historial" class="lista-compacta"><li class="vacio">Todavía no hay golpes registrados.</li></ul>
     </section>
 
+    <!-- Telemetría Cruda (Developer drawer) -->
     <details class="card card-debug" id="panel-debug">
-      <summary>🛠️ Diagnóstico y Telemetría en vivo (BLE)</summary>
+      <summary>🛠️ Diagnóstico y Telemetría BLE (Capa Física)</summary>
       <div class="debug-grid">
         <div><span>Paquete BLE:</span> <b id="dbg-tam">–</b></div>
         <div><span>Tipo crudo:</span> <b id="dbg-tipo">–</b></div>
         <div><span>Confianza IA:</span> <b id="dbg-conf">–</b></div>
-        <div><span>Goma (física):</span> <b id="dbg-cara">–</b></div>
+        <div><span>Goma impacto:</span> <b id="dbg-cara">–</b></div>
         <div><span>Velocidad:</span> <b id="dbg-vel">–</b></div>
         <div><span>Ángulo cara:</span> <b id="dbg-ang">–</b></div>
         <div><span>Pico giro:</span> <b id="dbg-pico">–</b></div>
         <div><span>Score técnico:</span> <b id="dbg-score">–</b></div>
         <div><span>Cuaternión q:</span> <b id="dbg-q">–</b></div>
       </div>
-      <div class="debug-log-wrap">
-        <small style="color:var(--muted)">Historial de impactos crudos (últimos 10):</small>
+      <div class="debug-log-wrap" style="margin-top:6px;">
         <pre id="dbg-log">Esperando impactos por BLE o simulador…</pre>
       </div>
     </details>
   </div>
 
-  <!-- VISTA 2: MODO TUTORIAL (ENTRENADOR INTERACTIVO) -->
+  <!-- ==================== VISTA 2: MODO TUTORIAL ==================== -->
   <div id="vista-tutorial" class="vista-tab oculta">
     <section class="card">
       <div style="display:flex; justify-content:space-between; align-items:center;">
-        <strong>🎓 Entrenador Biomecánico</strong>
+        <span style="font-size:0.85rem; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:0.06em;">Entrenador Biomecánico</span>
         <span class="badge badge-neutral" id="tut-nivel-badge">Paso 1 / 3</span>
       </div>
 
-      <small style="color:var(--muted)">Elegí el golpe a entrenar:</small>
+      <div style="font-size:0.75rem; color:var(--muted); margin-top:2px;">Golpe a entrenar:</div>
       <div class="chip-group" id="tut-selector-golpe">
         <button class="chip-btn activo" data-golpe="TD" type="button">Topspin Der.</button>
         <button class="chip-btn" data-golpe="TR" type="button">Topspin Rev.</button>
@@ -481,7 +779,7 @@
         <button class="chip-btn" data-golpe="ER" type="button">Empuje Rev.</button>
       </div>
 
-      <small style="color:var(--muted); margin-top:4px;">Paso guiado:</small>
+      <div style="font-size:0.75rem; color:var(--muted); margin-top:4px;">Nivel guiado:</div>
       <div class="chip-group" id="tut-selector-paso">
         <button class="chip-btn activo" data-paso="1" type="button">1. Ángulo</button>
         <button class="chip-btn" data-paso="2" type="button">2. Brushing</button>
@@ -491,49 +789,61 @@
 
     <section class="card">
       <div style="display:flex; justify-content:space-between; align-items:baseline;">
-        <h3 style="margin:0; font-size:1.1rem;" id="tut-titulo-paso">Paso 1: Ángulo de ataque</h3>
-        <span id="tut-progreso-txt" style="font-weight:700; font-size:0.95rem;">0 / 5</span>
+        <h3 style="margin:0; font-size:1.15rem; font-weight:800; letter-spacing:-0.02em;" id="tut-titulo-paso">Paso 1: Ángulo de ataque</h3>
+        <span id="tut-progreso-txt" style="font-weight:800; font-size:1rem; font-variant-numeric:tabular-nums;">0 / 5</span>
       </div>
-      <p id="tut-consigna" style="margin:2px 0 6px 0; font-size:0.88rem; color:var(--muted);">
-        Lográ 5 golpes con la cara cerrada en rango óptimo (-25° a -5°).
+      <p id="tut-consigna" style="margin:2px 0 6px 0; font-size:0.85rem; color:var(--muted);">
+        Lográ 5 golpes seguidos con la cara cerrada en rango óptimo (-25° a -5°).
       </p>
 
       <div class="barra-progreso-wrap">
         <div class="barra-progreso-fill" id="tut-barra"></div>
       </div>
 
-      <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.85rem; margin-top:2px;">
-        <span>Racha de aciertos: <b id="tut-racha">0</b> 🔥</span>
+      <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.82rem; margin-top:4px;">
+        <span>Racha de aciertos: <b id="tut-racha" style="color:var(--warn)">0</b> 🔥</span>
         <span id="tut-estado-paso" class="badge badge-neutral">En curso</span>
       </div>
 
-      <div class="consejo" id="tut-feedback" style="margin-top:6px;">
+      <div class="critique-card" id="tut-feedback" style="margin-top:6px;">
         Pegá un golpe para iniciar el desafío del tutorial.
       </div>
 
-      <div class="stats" style="margin-top:4px;">
-        <div class="stat"><small>Último ángulo</small><b id="tut-stat-ang">–</b></div>
-        <div class="stat"><small>Velocidad</small><b id="tut-stat-vel">–</b></div>
-        <div class="stat"><small>Timing</small><b id="tut-stat-pico">–</b></div>
-        <div class="stat"><small>Score</small><b id="tut-stat-score">–</b></div>
+      <div class="telemetry-grid" style="margin-top:6px;">
+        <div class="telemetry-cell">
+          <div class="telemetry-label">Ángulo</div>
+          <div class="telemetry-val"><span id="tut-stat-ang">–</span></div>
+        </div>
+        <div class="telemetry-cell">
+          <div class="telemetry-label">Velocidad</div>
+          <div class="telemetry-val"><span id="tut-stat-vel">–</span></div>
+        </div>
+        <div class="telemetry-cell">
+          <div class="telemetry-label">Timing</div>
+          <div class="telemetry-val"><span id="tut-stat-pico">–</span></div>
+        </div>
+        <div class="telemetry-cell">
+          <div class="telemetry-label">Score</div>
+          <div class="telemetry-val"><span id="tut-stat-score">–</span></div>
+        </div>
       </div>
 
       <div class="card-acciones" style="margin-top:8px;">
-        <button id="tut-btn-reiniciar" class="sec btn-sm" type="button">Reiniciar paso</button>
-        <button id="tut-btn-siguiente" class="btn-sm" type="button" disabled>Siguiente paso ➔</button>
+        <button id="tut-btn-reiniciar" class="btn-sec" type="button">Reiniciar paso</button>
+        <button id="tut-btn-siguiente" class="btn-primary" type="button" disabled>Siguiente paso ➔</button>
       </div>
     </section>
   </div>
 
-  <!-- VISTA 3: MODO TEST DE MODELO (BENCHMARK EN VIVO) -->
+  <!-- ==================== VISTA 3: MODO BENCHMARK (TEST) ==================== -->
   <div id="vista-test" class="vista-tab oculta">
     <section class="card">
       <div style="display:flex; justify-content:space-between; align-items:center;">
-        <strong>📊 Validación del Modelo TinyML</strong>
+        <span style="font-size:0.85rem; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:0.06em;">Validación TinyML</span>
         <span class="badge badge-neutral" id="test-meta-badge">Meta: 10 pelotas</span>
       </div>
 
-      <small style="color:var(--muted)">Golpe pedido al jugador:</small>
+      <div style="font-size:0.75rem; color:var(--muted); margin-top:2px;">Golpe asignado al jugador:</div>
       <div class="chip-group" id="test-selector-golpe">
         <button class="chip-btn activo" data-golpe="TD" type="button">Topspin Der. (TD)</button>
         <button class="chip-btn" data-golpe="TR" type="button">Topspin Rev. (TR)</button>
@@ -542,8 +852,8 @@
       </div>
 
       <div style="display:flex; gap:8px; align-items:center; margin-top:4px;">
-        <small style="color:var(--muted); flex:1;">Cantidad por tanda:</small>
-        <select id="test-cant-tiros" style="padding:4px 8px; border-radius:6px; border:1px solid var(--line); background:var(--bg); color:var(--fg); font:inherit; font-size:0.85rem;">
+        <span style="color:var(--muted); font-size:0.8rem; flex:1;">Cantidad por tanda:</span>
+        <select id="test-cant-tiros" style="padding:5px 8px; border-radius:var(--radius-sm); border:1px solid var(--line); background:var(--card-soft); color:var(--fg); font:inherit; font-size:0.82rem;">
           <option value="10" selected>10 pelotas (rápido)</option>
           <option value="12">12 pelotas (protocolo)</option>
           <option value="20">20 pelotas</option>
@@ -553,32 +863,46 @@
     </section>
 
     <section class="card">
-      <div class="resumen-grande">
+      <div class="benchmark-hud">
         <div>
-          <small style="display:block; color:var(--muted); font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px;">Tasa de Acierto en vivo</small>
-          <div class="valor" id="test-porcentaje">– %</div>
+          <div class="hud-title">Tasa de Acierto en vivo</div>
+          <div class="hud-val" id="test-porcentaje">– %</div>
         </div>
         <div style="text-align:right;">
           <div id="test-estado-badge" class="badge badge-neutral">Esperando tiros…</div>
-          <small id="test-conteo-tiros" style="display:block; color:var(--muted); margin-top:4px;">0 / 10 tiros</small>
+          <small id="test-conteo-tiros" style="display:block; color:var(--muted); margin-top:4px; font-variant-numeric:tabular-nums;">0 / 10 tiros</small>
         </div>
       </div>
 
-      <div class="stats" style="grid-template-columns: repeat(4, 1fr); margin-top:4px;">
-        <div class="stat"><small>✅ Aciertos</small><b id="test-cant-ok" style="color:var(--ok)">0</b></div>
-        <div class="stat"><small>❌ Error</small><b id="test-cant-conf" style="color:var(--bad)">0</b></div>
-        <div class="stat"><small>⚠️ Ruido</small><b id="test-cant-ruido" style="color:#b87800">0</b></div>
-        <div class="stat"><small>🎯 Certeza</small><b id="test-conf-prom">–</b></div>
+      <div class="telemetry-grid" style="margin-top:6px;">
+        <div class="telemetry-cell">
+          <div class="telemetry-label">Aciertos</div>
+          <div class="telemetry-val" style="color:var(--ok)"><span id="test-cant-ok">0</span></div>
+        </div>
+        <div class="telemetry-cell">
+          <div class="telemetry-label">Confusión</div>
+          <div class="telemetry-val" style="color:var(--bad)"><span id="test-cant-conf">0</span></div>
+        </div>
+        <div class="telemetry-cell">
+          <div class="telemetry-label">Ruido/Desc.</div>
+          <div class="telemetry-val" style="color:var(--warn)"><span id="test-cant-ruido">0</span></div>
+        </div>
+        <div class="telemetry-cell">
+          <div class="telemetry-label">Certeza IA</div>
+          <div class="telemetry-val"><span id="test-conf-prom">–</span></div>
+        </div>
       </div>
 
       <div class="card-acciones" style="margin-top:8px;">
-        <button id="test-btn-reiniciar" class="sec btn-sm" type="button">Reiniciar tanda</button>
-        <button id="test-btn-copiar" class="btn-sm" type="button">📋 Copiar reporte</button>
+        <button id="test-btn-reiniciar" class="btn-sec" type="button">Reiniciar tanda</button>
+        <button id="test-btn-copiar" class="btn-primary" type="button">📋 Copiar reporte</button>
       </div>
     </section>
 
     <section class="card">
-      <strong>Desglose de tiros en esta tanda</strong>
+      <div style="font-size:0.85rem; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:0.06em;">
+        Desglose de tiros de la tanda
+      </div>
       <ul id="test-historial" class="lista-compacta"><li class="vacio">Todavía no hay tiros registrados.</li></ul>
     </section>
   </div>
@@ -1123,9 +1447,9 @@ function mostrar(e, registrarSesion = true) {
 
 // --- Control de Pestañas (Modos de la App) ---
 let tabActiva = 'libre';
-document.querySelectorAll('.tab-btn').forEach((btn) => {
+document.querySelectorAll('.tab-pill, .tab-btn').forEach((btn) => {
   btn.addEventListener('click', () => {
-    document.querySelectorAll('.tab-btn').forEach((b) => b.classList.remove('activo'));
+    document.querySelectorAll('.tab-pill, .tab-btn').forEach((b) => b.classList.remove('activo'));
     btn.classList.add('activo');
     tabActiva = btn.getAttribute('data-tab');
     document.querySelectorAll('.vista-tab').forEach((v) => v.classList.add('oculta'));
@@ -1438,6 +1762,13 @@ $('test-btn-copiar').addEventListener('click', async () => {
 actualizarUITutorial();
 actualizarUITest();
 
+function setEstadoBLE(conectado, texto) {
+  const dot = $('dot-ble');
+  if (dot) dot.classList.toggle('conectado', conectado);
+  const el = $('estado');
+  if (el) el.textContent = texto;
+}
+
 // Bluetooth: cada notificación trae un struct de 14 bytes (entra entero en un paquete).
 // Si llega de otro tamaño, se lee lo que alcance y se avisa: firmware y app no coinciden.
 function recibir(evento) {
@@ -1448,31 +1779,36 @@ function recibir(evento) {
     mostrar(parsearEvento(datos, i, tam));
   }
   if (datos.byteLength % tam !== 0) {
-    $('estado').textContent = `Llegó un mensaje de ${datos.byteLength} bytes: revisar el struct del firmware.`;
+    setEstadoBLE(true, `Paquete ${datos.byteLength} B: revisar struct firmware`);
   } else {
-    $('estado').textContent = `Conectada (${tam} B${tam === 20 ? ' · Cuaternión 3D' : ''}).`;
+    setEstadoBLE(true, `Conectada (${tam} B${tam === 20 ? ' · Cuaternión 3D' : ''})`);
   }
 }
 
 async function conectar() {
   if (!navigator.bluetooth) {
-    $('estado').textContent = 'Este navegador no tiene Bluetooth web. Usá Chrome en Android o en la compu (con https o localhost).';
+    setEstadoBLE(false, 'Navegador sin Bluetooth Web (usar Chrome en Android o Bluefy en iOS).');
     return;
   }
   try {
-    $('estado').textContent = 'Buscando la paleta…';
+    setEstadoBLE(false, 'Buscando paleta BLE…');
     const dispositivo = await navigator.bluetooth.requestDevice({
       filters: [{ namePrefix: 'Paleta' }], optionalServices: [SERVICIO_UART],
     });
-    dispositivo.addEventListener('gattserverdisconnected', () => { $('estado').textContent = 'Se desconectó la paleta.'; });
+    dispositivo.addEventListener('gattserverdisconnected', () => {
+      setEstadoBLE(false, 'Se desconectó la paleta.');
+      $('conectar').textContent = '⚡ Conectar';
+    });
     const servidor = await dispositivo.gatt.connect();
     const servicio = await servidor.getPrimaryService(SERVICIO_UART);
     const tx = await servicio.getCharacteristic(CARACT_TX);
     tx.addEventListener('characteristicvaluechanged', recibir);
     await tx.startNotifications();
-    $('estado').textContent = `Conectada a ${dispositivo.name}.`;
+    setEstadoBLE(true, `Conectada a ${dispositivo.name}`);
+    $('conectar').textContent = 'Conectada';
   } catch (err) {
-    $('estado').textContent = `No se pudo conectar: ${err.message}`;
+    setEstadoBLE(false, `Error BLE: ${err.message}`);
+    $('conectar').textContent = '⚡ Conectar';
   }
 }
 
@@ -1482,11 +1818,13 @@ function alternarSimulador() {
   if (simulador) {
     clearInterval(simulador); simulador = null;
     $('simular').textContent = 'Simulador';
-    $('estado').textContent = 'Simulador detenido.';
+    setEstadoBLE(false, 'Simulador detenido.');
     return;
   }
   const azar = (a, b) => Math.round(a + Math.random() * (b - a));
   const inicio = Date.now();
+  setEstadoBLE(true, 'Simulador activo (golpe c/ 2,5 s)');
+  $('simular').textContent = '⏹ Detener';
   simulador = setInterval(() => {
     let tipo;
     if (tabActiva === 'test') {
