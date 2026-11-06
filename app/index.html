@@ -2213,24 +2213,22 @@ function initIntroBall() {
 
   // =======================================================================
   // Sello Circular Oficial de Competición ITTF:
-  // Origen común (cx, cy) centrado en el medio de la 'O' de DOC.
-  // 1. Corona de 3 estrellas: arco superior convexo (cúpula simétrica)
-  // 2. Núcleo central: DOC horizontal en el origen
-  // 3. Especificación técnica: 40+ bajo DOC
-  // 4. Bajada institucional: arco inferior cóncavo (⌣) que envuelve la base del 40+
+  // Círculo único unificado de radio R = 360px con centro común en (cx, cy).
+  // La corona superior de estrellas y la bajada inferior comparten el mismo radio y ancho,
+  // definiendo los dos hemisferios del medallón deportivo.
   // =======================================================================
   const cx = 1024;
-  const cy = 980; // Centro exacto de la 'O' de DOC y origen concéntrico de ambos arcos
+  const cy = 1000;
+  const rBadge = 360;
 
-  // 1. Arco superior simétrico en las estrellas (Cúpula superior del círculo)
-  // Estrella central más elevada; dos laterales descendiendo en ángulo
-  const rTop = 235;
-  const thetaTop = 0.28; // ~16° de separación angular
-  ctx.font = '85px sans-serif';
+  // 1. Cúpula superior de 3 estrellas en arco (rBadge = 360px, apertura ~60°)
+  // Abarca todo el ancho de DOC con la estrella central en la cúspide
+  const thetaStar = 0.52; // ~30° de apertura lateral
+  ctx.font = '78px sans-serif';
   [-1, 0, 1].forEach((i) => {
-    const angle = i * thetaTop;
-    const x = cx + rTop * Math.sin(angle);
-    const y = cy - rTop * Math.cos(angle);
+    const angle = i * thetaStar;
+    const x = cx + rBadge * Math.sin(angle);
+    const y = cy - rBadge * Math.cos(angle);
     ctx.save();
     ctx.translate(x, y);
     ctx.rotate(angle);
@@ -2238,36 +2236,33 @@ function initIntroBall() {
     ctx.restore();
   });
 
-  // 2. Núcleo de marca: DOC centrado en el origen (cx, cy)
-  ctx.font = '900 215px -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif';
+  // 2. Núcleo de marca: DOC centrado armónicamente
+  ctx.font = '900 210px -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif';
   ctx.letterSpacing = '14px';
-  ctx.fillText('DOC', cx, cy);
+  ctx.fillText('DOC', cx, cy - 65);
 
-  // 3. Especificación técnica: 40+ bajo DOC
-  ctx.font = '800 84px -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif';
+  // 3. Especificación técnica: 40+ en bloque
+  ctx.font = '800 85px -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif';
   ctx.letterSpacing = '6px';
-  ctx.fillText('40+', cx, cy + 115);
+  ctx.fillText('40+', cx, cy + 65);
 
-  // 4. Curvatura inferior más cerrada: FIND YOUR EDGE envolviendo la base del 40+
-  // Comparte exactamente el mismo origen (cx, cy) con radio cerrado (rBottom = 245)
-  // y letter-spacing ampliado (charGap = 13) para abarcar un arco amplio (~114°) sin empastarse
+  // 4. Bajada institucional en arco inferior (rBadge = 360px, apertura ~74°): FIND YOUR EDGE
+  // Concavidad complementaria a las estrellas que cierra la circunferencia del sello
   const textBottom = 'FIND YOUR EDGE';
   const chars = textBottom.split('');
-  ctx.font = '800 38px -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif';
+  ctx.font = '800 42px -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif';
 
-  const charGap = 13;
-  const widths = chars.map((ch) => ch === ' ' ? 18 : ctx.measureText(ch).width);
+  const charGap = 12;
+  const widths = chars.map((ch) => ch === ' ' ? 20 : ctx.measureText(ch).width);
   const totalArc = widths.reduce((sum, w) => sum + w + charGap, -charGap);
-
-  const rBottom = 245;
-  const totalSpan = totalArc / rBottom;
+  const totalSpan = totalArc / rBadge;
 
   let currentAngle = -totalSpan / 2;
   chars.forEach((ch, i) => {
     const w = widths[i];
-    const charAngle = currentAngle + (w / 2) / rBottom;
-    const x = cx + rBottom * Math.sin(charAngle);
-    const y = cy + rBottom * Math.cos(charAngle);
+    const charAngle = currentAngle + (w / 2) / rBadge;
+    const x = cx + rBadge * Math.sin(charAngle);
+    const y = cy + rBadge * Math.cos(charAngle);
     const rot = -charAngle;
 
     ctx.save();
@@ -2276,7 +2271,7 @@ function initIntroBall() {
     ctx.fillText(ch, 0, 0);
     ctx.restore();
 
-    currentAngle += (w + charGap) / rBottom;
+    currentAngle += (w + charGap) / rBadge;
   });
 
   const stampTex = new THREE.CanvasTexture(c);
@@ -2288,11 +2283,9 @@ function initIntroBall() {
     stampTex.anisotropy = introRenderer.capabilities.getMaxAnisotropy();
   }
 
-  // Material plástico 100% mate (reglamentación ITTF oficial: acabado tizado sin brillo especular)
-  const material = new THREE.MeshStandardMaterial({
+  // Material plástico 100% mate sin brillo especular (Lambert puro: cero reflejo GGX/Cook-Torrance)
+  const material = new THREE.MeshLambertMaterial({
     map: stampTex,
-    roughness: 1.0,
-    metalness: 0.0,
   });
 
   introBall = new THREE.Mesh(geometry, material);
@@ -2420,12 +2413,12 @@ function dispararIntroCinematica() {
       introCamera.lookAt(0, 0, 0);
     }
 
-    // Encendido suave de luz direccional (revela el volumen plástico)
+    // Encendido suave de luz difusa ambiental (volumen mate sin crear hotspots ni brillos)
     const pLight = Math.min(1, easeZ / 0.40);
     const dirLight = introScene.userData && introScene.userData.dirLight;
     const ambLight = introScene.userData && introScene.userData.ambLight;
-    if (dirLight) dirLight.intensity = 0.85 * pLight;
-    if (ambLight) ambLight.intensity = 1.0 - 0.20 * pLight;
+    if (dirLight) dirLight.intensity = 0.15 * pLight;
+    if (ambLight) ambLight.intensity = 1.0;
 
     // Cuando la pelota cruza el borde inferior (t >= 0.75), fundido del telón
     const stage = $('intro-stage');
