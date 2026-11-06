@@ -71,6 +71,15 @@ const float CALIBRAR_GIRO_QUIETA_DPS = 5;  // si alguna muestra se aleja más qu
 const float UMBRAL_JERK_G = 1.0f;
 const uint32_t REFRACTARIO_US = 300000;  // después de un impacto, ignorar 300 ms
 
+// Falsos positivos (tirones del cable, roces con la mesa o la mano): su Jerk se superpone con el de
+// los golpes suaves (tirones 1,01-11 g, golpes reales desde 1,02 g), así que subir el umbral pierde
+// golpes antes de sacarlos (1,5 g pierde el 13 %). En vez de eso, después del modelo no se mandan:
+// - si el modelo dice ruido, o
+// - si el giro máximo |ω| de la ventana del modelo no llega a GIRO_MIN_GOLPE_DPS.
+// Medido el 6/11 (datos/pruebas/2026-11-06_*): de 8 falsos se descartan 7; en los 315 golpes del
+// dataset quedan abajo de 300 °/s solo 4 (1,3 %) y en los 15 golpes reales del 6/11 ninguno (mín. 337).
+const float GIRO_MIN_GOLPE_DPS = 300;
+
 // Distancia del plano inferior del pomo (donde apoya el sensor) al centro de la cabeza de la paleta,
 // medida con regla el 16/10 (docs/CONTRATOS.md). Para la velocidad tangencial v = ω · L (vel_kmh).
 const float L_PALETA_M = 0.18f;
@@ -385,8 +394,31 @@ uint8_t clasificarGolpe(uint8_t &confianza, float &ms) {
   return TIPO_DESCONOCIDO;
 }
 
+// Giro máximo |ω| (los 3 ejes) en la misma ventana que ve el modelo, en °/s
+float giroMaxVentana() {
+  uint32_t desde = muestraImpacto - VENTANA_ANTES;
+  float maximo = 0;
+  for (int j = 0; j < VENTANA_MUESTRAS; j++) {
+    const float *h = historia[(desde + j) % VENTANA_MUESTRAS];
+    maximo = fmaxf(maximo, sqrtf(h[3] * h[3] + h[4] * h[4] + h[5] * h[5]));
+  }
+  return maximo;
+}
+
 // Arma el evento del último impacto y lo manda. Se llama con la ventana del modelo completa.
 void mandarGolpe() {
+  const char *nombres[] = {"TD", "TR", "ED", "ER", "ruido"};
+  uint8_t confianza;
+  float msModelo;
+  uint8_t tipo = clasificarGolpe(confianza, msModelo);
+  float giroMax = giroMaxVentana();
+  if (tipo == TIPO_DESCONOCIDO || giroMax < GIRO_MIN_GOLPE_DPS) {
+    // No cuenta como golpe: la app no lo recibe y numero_golpe sigue correlativo
+    Serial.printf("# Descartado: %s %u %% (modelo en %.1f ms), giro máx %.0f °/s%s\n", nombres[tipo],
+                  confianza, msModelo, giroMax, giroMax < GIRO_MIN_GOLPE_DPS ? " (swing muy lento)" : "");
+    return;
+  }
+
   uint32_t i = muestraImpacto;
   float w = 0;
   for (uint32_t k = i - VEL_ANTES; k < i; k++) w += omegaSuave(k);
@@ -397,10 +429,10 @@ void mandarGolpe() {
   }
 
   BlePayload p;
-  float msModelo;
   p.timestamp = ultimoImpacto / 1000;
   p.numero_golpe = ++golpes;
-  p.tipo_golpe = clasificarGolpe(p.confianza, msModelo);
+  p.tipo_golpe = tipo;
+  p.confianza = confianza;
   p.vel_kmh = (int16_t)lroundf(w * DEG_TO_RAD * L_GIRO_M * 3.6f);
   p.ang_deg = (int16_t)lroundf(anguloImpacto.grados);
   // q y −q son la misma orientación: se elige la de q0 ≥ 0 para que la app pueda reconstruir q0
@@ -415,10 +447,9 @@ void mandarGolpe() {
     caracteristica->setValue((uint8_t *)&p, sizeof(p));
     caracteristica->notify();
   }
-  const char *nombres[] = {"TD", "TR", "ED", "ER", "ruido"};
-  Serial.printf("# Golpe %u: %s %u %% (modelo en %.1f ms), %d km/h (%.0f °/s), cara %s a %+d° (en %lu µs), "
+  Serial.printf("# Golpe %u: %s %u %% (modelo en %.1f ms), %d km/h (%.0f °/s, máx %.0f), cara %s a %+d° (en %lu µs), "
                 "q (%.2f, %.2f, %.2f, %.2f), pico %+d ms%s\n",
-                p.numero_golpe, nombres[p.tipo_golpe], p.confianza, msModelo, p.vel_kmh, w,
+                p.numero_golpe, nombres[p.tipo_golpe], p.confianza, msModelo, p.vel_kmh, w, giroMax,
                 anguloImpacto.cara_roja ? "roja" : "negra", p.ang_deg, (unsigned long)usAngulo,
                 anguloImpacto.q[0], anguloImpacto.q[1], anguloImpacto.q[2], anguloImpacto.q[3], p.pico_ms,
                 enviado ? ", enviado por BLE" : ", sin la app conectada");
