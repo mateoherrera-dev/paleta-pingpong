@@ -2122,6 +2122,7 @@ function initIntroBall() {
   introRenderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
   introRenderer.setSize(w, h);
   introRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  introRenderer.outputColorSpace = THREE.SRGBColorSpace;
 
   // Geometría oficial: radio 20 mm (diámetro 40 mm)
   const geometry = new THREE.SphereGeometry(0.02, 64, 32);
@@ -2130,7 +2131,7 @@ function initIntroBall() {
   const c = document.createElement('canvas');
   c.width = 2048; c.height = 2048;
   const ctx = c.getContext('2d');
-  ctx.fillStyle = '#ff7700';
+  ctx.fillStyle = '#ff7700'; // Mismo naranja celuloide exacto de la página
   ctx.fillRect(0, 0, 2048, 2048);
 
   const inkColor = '#0f172a';
@@ -2155,15 +2156,16 @@ function initIntroBall() {
 
   const stampTex = new THREE.CanvasTexture(c);
   stampTex.generateMipmaps = true;
+  stampTex.colorSpace = THREE.SRGBColorSpace; // Garantiza fidelidad cromática sRGB idéntica al CSS
   if (introRenderer.capabilities) {
     stampTex.anisotropy = introRenderer.capabilities.getMaxAnisotropy();
   }
 
-  // Material plástico mate celuloide / ABS
+  // Material plástico mate celuloide con respuesta cromática equilibrada
   const material = new THREE.MeshStandardMaterial({
     map: stampTex,
-    roughness: 0.55,
-    metalness: 0.05,
+    roughness: 0.65,
+    metalness: 0.02,
   });
 
   introBall = new THREE.Mesh(geometry, material);
@@ -2171,10 +2173,10 @@ function initIntroBall() {
   introBall.visible = false; // Pelota invisible en reposo (frame 0)
   introScene.add(introBall);
 
-  // Iluminación
-  const amb = new THREE.AmbientLight(0xffffff, 1.0);
+  // Iluminación calibrada para mantener el naranja vivo sin sobreexponer ni decolorar
+  const amb = new THREE.AmbientLight(0xffffff, 0.78);
   introScene.add(amb);
-  const dir = new THREE.DirectionalLight(0xffffff, 0.45);
+  const dir = new THREE.DirectionalLight(0xffffff, 0.32);
   dir.position.set(0.18, 0.3, 0.45);
   introScene.add(dir);
   introScene.userData.dirLight = dir;
@@ -2247,8 +2249,8 @@ function arrancarSecuenciaPelota() {
     const b = (0x00 + (0x22 - 0x00) * ease) / 255;
     introScene.background.setRGB(r, g, b);
 
-    // Luz direccional sube revelando el volumen esférico 3D
-    if (dirLight) dirLight.intensity = 0.45 + (0.85 - 0.45) * ease;
+    // Luz direccional sube sutilmente para el volumen esférico sin decolorar el naranja
+    if (dirLight) dirLight.intensity = 0.32 + (0.65 - 0.32) * ease;
 
     // 2. La pelota cae y pica en la mesa (elapsed > 200 ms)
     if (elapsed > 200) {
