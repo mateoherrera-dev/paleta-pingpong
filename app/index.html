@@ -219,17 +219,23 @@
     display: none !important;
   }
 
-  /* --- Tarjetas de Contenedor --- */
+  /* --- Secciones y Contenedores (Sin cajas pesadas) --- */
   .card {
-    background: linear-gradient(180deg, rgba(18, 26, 41, 0.96) 0%, rgba(13, 20, 33, 0.98) 100%);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: var(--radius-lg);
-    padding: 18px 20px;
     display: flex;
     flex-direction: column;
     gap: 14px;
-    position: relative;
-    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.30);
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+  }
+  .section-header {
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: var(--fg-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding-top: 4px;
   }
 
   /* --- Sección Golpe Principal --- */
@@ -408,40 +414,51 @@
     align-items: center;
     justify-content: center;
     gap: 8px;
-    font-size: 0.76rem;
+    font-size: 0.74rem;
     color: var(--fg-muted);
-    padding: 6px 12px;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    border-radius: var(--radius-sm);
+    padding: 2px 4px;
+    background: transparent;
+    border: none;
     text-align: center;
   }
-  .agarre-banner b { color: var(--fg); }
+  .agarre-banner b { color: var(--fg); font-weight: 600; }
 
-  /* --- Grilla de Métricas Telemetricas --- */
+  /* --- Instrumental de Métricas Unificado (Sin cajas individuales) --- */
   .telemetry-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 8px;
+    background: rgba(255, 255, 255, 0.025);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: var(--radius-md);
+    overflow: hidden;
   }
   @media (max-width: 480px) {
     .telemetry-grid { grid-template-columns: repeat(2, 1fr); }
   }
 
   .telemetry-cell {
-    background: rgba(10, 16, 26, 0.7);
-    border: 1px solid rgba(255, 255, 255, 0.07);
-    border-radius: var(--radius-md);
-    padding: 12px 14px;
+    padding: 14px 16px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     text-align: left;
-    transition: border-color var(--dur-fast) var(--ease-out), background-color var(--dur-fast) var(--ease-out);
+    border: none;
+    border-right: 1px solid rgba(255, 255, 255, 0.06);
+    background: transparent;
+    border-radius: 0;
+    transition: background-color var(--dur-fast) var(--ease-out);
+  }
+  .telemetry-cell:last-child {
+    border-right: none;
+  }
+  @media (max-width: 480px) {
+    .telemetry-cell:nth-child(2) { border-right: none; }
+    .telemetry-cell:nth-child(1), .telemetry-cell:nth-child(2) {
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
   }
   .telemetry-cell:hover {
-    border-color: rgba(255, 119, 0, 0.35);
-    background: rgba(14, 22, 36, 0.85);
+    background: rgba(255, 255, 255, 0.035);
   }
   .telemetry-label {
     font-size: 0.66rem;
@@ -472,22 +489,22 @@
     font-family: var(--font);
   }
 
-  /* --- Caja de Consejo Biomecánico --- */
+  /* --- Consejo Biomecánico --- */
   .critique-card {
-    background: rgba(14, 21, 35, 0.95);
-    border: 1px solid rgba(255, 119, 0, 0.35);
+    background: rgba(255, 119, 0, 0.06);
+    border: 1px solid rgba(255, 119, 0, 0.22);
     border-radius: var(--radius-md);
-    padding: 14px 16px;
-    font-size: 0.92rem;
+    padding: 14px 18px;
+    font-size: 0.94rem;
     font-weight: 500;
     line-height: 1.5;
-    color: #f1f5f9;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
-    transition: background-color var(--dur-base) var(--ease-out), border-color var(--dur-base) var(--ease-out), color var(--dur-base) var(--ease-out);
+    color: #f8fafc;
+    box-shadow: none;
+    transition: background-color var(--dur-base) var(--ease-out), border-color var(--dur-base) var(--ease-out);
   }
   .critique-card.ok {
-    border-color: rgba(16, 185, 129, 0.40);
-    background: rgba(12, 24, 30, 0.95);
+    border-color: rgba(16, 185, 129, 0.3);
+    background: rgba(16, 185, 129, 0.06);
   }
 
   .voice-row {
@@ -586,9 +603,9 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 14px 18px;
-    background: rgba(10, 16, 26, 0.7);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 16px 20px;
+    background: rgba(255, 255, 255, 0.025);
+    border: 1px solid rgba(255, 255, 255, 0.07);
     border-radius: var(--radius-md);
   }
   .benchmark-hud .hud-title {
@@ -608,47 +625,59 @@
     color: #fff;
   }
 
-  /* --- Listas Compactas --- */
+  /* --- Listas Compactas (Filas limpias sin cajas) --- */
   .lista-compacta {
     margin: 0;
     padding: 0;
     list-style: none;
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    font-size: 0.82rem;
-    max-height: 200px;
+    gap: 2px;
+    font-size: 0.84rem;
+    max-height: 220px;
     overflow-y: auto;
   }
   .lista-compacta li {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid var(--line);
-    border-radius: var(--radius-sm);
-    padding: 6px 10px;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 0;
+    padding: 9px 4px;
+  }
+  .lista-compacta li:last-child {
+    border-bottom: none;
   }
 
   .conteo-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 8px;
-    font-size: 0.84rem;
+  }
+  @media (max-width: 480px) {
+    .conteo-grid { grid-template-columns: repeat(2, 1fr); }
   }
   .conteo-grid div {
     display: flex;
     justify-content: space-between;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid var(--line);
+    align-items: center;
+    background: rgba(255, 255, 255, 0.025);
+    border: 1px solid rgba(255, 255, 255, 0.06);
     border-radius: var(--radius-sm);
-    padding: 7px 10px;
+    padding: 9px 12px;
+    font-variant-numeric: tabular-nums;
   }
 
   /* --- Panel de Diagnóstico BLE --- */
   .card-debug {
     font-size: 0.8rem;
-    background: rgba(10, 16, 26, 0.7);
+    background: rgba(255, 255, 255, 0.015);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: var(--radius-md);
+    padding: 12px 16px;
+  }
     border: 1px solid var(--line);
   }
   .card-debug summary {
@@ -707,7 +736,7 @@
     height: 100vh;
     z-index: 1000;
     overflow: hidden;
-    background: #ff7700;
+    background: #080c14;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -894,17 +923,13 @@
 
     <!-- Resumen de Sesión -->
     <section class="card">
-      <div style="font-size:0.85rem; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:0.06em;">
-        Distribución de la sesión
-      </div>
+      <div class="section-header">Distribución de la sesión</div>
       <div class="conteo-grid" id="conteo"></div>
     </section>
 
     <!-- Historial de Impactos -->
     <section class="card">
-      <div style="font-size:0.85rem; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:0.06em;">
-        Últimos impactos
-      </div>
+      <div class="section-header">Últimos impactos</div>
       <ul id="historial" class="lista-compacta"><li class="vacio">Todavía no hay golpes registrados.</li></ul>
     </section>
 
@@ -2122,9 +2147,9 @@ function getMacroZ() {
   const aspect = window.innerWidth / window.innerHeight;
   // A mayor ancho de pantalla, cámara más cercana para que la superficie
   // de la esfera cubra el 100% del viewport sin mostrar bordes ni silueta
-  if (aspect >= 1.6) return 0.034;
-  if (aspect >= 1.0) return 0.037;
-  return 0.040; // Móvil vertical
+  if (aspect >= 1.6) return 0.029;
+  if (aspect >= 1.0) return 0.032;
+  return 0.035; // Móvil vertical
 }
 
 function initIntroBall() {
@@ -2138,7 +2163,7 @@ function initIntroBall() {
   const h = window.innerHeight;
 
   introScene = new THREE.Scene();
-  introScene.background = new THREE.Color(0xff7700); // Naranja celuloide torneo
+  introScene.background = new THREE.Color(0x080c14); // Fondo oscuro de cancha constante
 
   introCamera = new THREE.PerspectiveCamera(30, w / h, 0.001, 10);
   introCamera.position.set(0, 0, getMacroZ());
@@ -2352,14 +2377,6 @@ function dispararIntroCinematica() {
     const ambLight = introScene.userData && introScene.userData.ambLight;
     if (dirLight) dirLight.intensity = 0.85 * pLight;
     if (ambLight) ambLight.intensity = 1.0 - 0.20 * pLight;
-
-    // Transición armónica de fondo naranja torneo al fondo grafito de mesa (#080c14)
-    const pBg = Math.min(1, (t > 0.35 ? (t - 0.35) / 0.45 : 0));
-    const easeBg = pBg * pBg * (3 - 2 * pBg);
-    const r = (0xff - (0xff - 0x08) * easeBg) / 255;
-    const g = (0x77 - (0x77 - 0x0c) * easeBg) / 255;
-    const b = (0x00 + (0x14 - 0x00) * easeBg) / 255;
-    introScene.background.setRGB(r, g, b);
 
     // Cuando la pelota cruza el borde inferior (t >= 0.75), fundido del telón
     const stage = $('intro-stage');
