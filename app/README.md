@@ -31,18 +31,42 @@ En cada golpe llega por Bluetooth un mensaje de 20 bytes (`docs/CONTRATOS.md`, s
 | **Esta sesion / Ultimos golpes** | Cuantos de cada tipo y los ultimos 15. |
 | **Diagnostico** (desplegable) | Todos los campos crudos del mensaje y los ultimos 10 golpes. Sirve para comparar con lo que imprime la placa por serie. |
 
-## Criterios de los consejos
+## Modos de la App
 
-Estan en `CRITERIOS` y `PICO_*` al principio del `<script>` de `index.html`, y tienen que coincidir con `docs/GOLPES.md`.
+La app cuenta con tres vistas navegables mediante la barra superior:
 
-| Golpe | Angulo ideal | Pico |
-| --- | --- | --- |
-| Topspin de derecha (TD) | −25° a +5° | entre −25 y +30 ms |
-| Topspin de reves (TR) | −30° a 0° | entre −25 y +30 ms |
-| Empuje de derecha (ED) | +30° a +50° | no se mira |
-| Empuje de reves (ER) | +25° a +45° | no se mira |
+1. **🎯 Modo Libre:**
+   - Visualizacion golpe a golpe con visor 3D interactivo en Three.js.
+   - Metricas inmediatas: clasificacion IA, angulo de cara, velocidad estimada ($v = \omega \cdot r$) y timing del pico ($\Delta t_{\text{pico}}$).
+   - Generador de consejos heuristicos y sintetizador de voz en tiempo real.
+   - Panel desplegable de diagnostico y telemetria BLE cruda (paquetes de 14 o 20 bytes con cuaternion).
 
-Si la confianza del modelo es menor a 55 %, dice "Gesto poco claro" en vez de dar un consejo. Los rangos de topspin se ajustaron el 6/11 con lo medido en la mesa (ver la nota en `docs/GOLPES.md`).
+2. **🎓 Modo Tutorial (Entrenador Biomecanico Interactivo):**
+   - Sistema de progresion por niveles enfocado en fundamentos de *PingSkills* (PLAN.md §5.1):
+     - **Paso 1 (Angulo de ataque):** Meta de 5 impactos con cara cerrada en rango optimo para imprimir comba.
+     - **Paso 2 (Brushing y Potencia):** Asegurar arco ascendente con velocidad $\ge 15\text{ km/h}$ y clasificacion correcta.
+     - **Paso 3 (Timing del latigo):** Acelerar la muñeca justo antes del impacto ($\Delta t_{\text{pico}}$ entre $-25$ y $+30\text{ ms}$).
+   - Barra de progreso, contador de racha y correcciones guiadas por voz en cada tiro.
+
+3. **📊 Modo Test de Modelo (Benchmark en Vivo):**
+   - Permite validar el porcentaje de aciertos del modelo TinyML directo desde el celular.
+   - Selector del golpe pedido al jugador (`TD`, `TR`, `ED`, `ER`) y meta de pelotas por tanda (10, 12, 20 o libre).
+   - Calculo automatico en vivo: **Tasa de Acierto (%)**, Aciertos, Confusiones, Descartes/Ruido y Certeza promedio de la red.
+   - Distintivo visual del hito del proyecto: **Verde ($\ge 80\,\%$)**, **Amarillo ($60-79\,\%$)** o **Rojo ($< 60\,\%$)**.
+   - Boton "Copiar reporte" para exportar en texto el resumen completo de la tanda al portapapeles.
+
+## Criterios de los consejos y rangos de angulo
+
+Estan fijados en `CRITERIOS` y `PICO_*` en `index.html`, en total coincidencia con `docs/GOLPES.md` (calibrados en mesa el 6/11):
+
+| Golpe | Cod. | Angulo optimo | Falla critica si... | Pico |
+| --- | :---: | :---: | :--- | :--- |
+| **Topspin de derecha** | `TD` | **−25° a −5°** | $> 0^\circ$ (abierta) / $< -35^\circ$ (muy tapada) | entre −25 y +30 ms |
+| **Topspin de reves** | `TR` | **−25° a −5°** | $> 0^\circ$ (abierta) / $< -35^\circ$ (muy tapada) | entre −25 y +30 ms |
+| **Empuje de derecha** | `ED` | **+25° a +45°** | $< +15^\circ$ (plana) / $> +55^\circ$ (excesiva) | no se evalua |
+| **Empuje de reves** | `ER` | **+25° a +45°** | $< +15^\circ$ (plana) / $> +55^\circ$ (excesiva) | no se evalua |
+
+Si la confianza del modelo es menor a 55 %, dice "Gesto poco claro" en vez de dar un consejo. Si el tiro se clasifica como ruido o desconocido (`??`), la app avisa "Golpe no reconocido".
 
 ## Correcciones que hace la app
 
