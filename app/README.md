@@ -27,6 +27,7 @@ En cada golpe llega por Bluetooth un mensaje de 20 bytes (`docs/CONTRATOS.md`, s
 | **Angulo** | Inclinacion de la cara que golpeo: 0° = vertical, **negativo = cerrada** (mira a la mesa), **positivo = abierta** (mira al techo). La goma es la del agarre fijo: derecha con la negra, reves con la roja. |
 | **Velocidad** | Velocidad de la paleta estimada con el giro (v = ω · r), en km/h. |
 | **Timing (pico)** | Cuantos ms antes (−) o despues (+) del impacto giro mas rapido la paleta. |
+| **Score Tecnico** | Puntaje continuo de 1 a 100 puntos compuesto por la curva gaussiana de angulo (55 %), dinamica de aceleracion (30 %) y timing del pico (15 %). Penaliza fuertemente ($< 35\text{ pts}$) las fallas criticas. |
 | **Consejo** | Sale de comparar el angulo con el rango de cada golpe y el pico con los limites (abajo). Con la casilla, lo lee en voz alta. |
 | **Esta sesion / Ultimos golpes** | Cuantos de cada tipo y los ultimos 15. |
 | **Diagnostico** (desplegable) | Todos los campos crudos del mensaje y los ultimos 10 golpes. Sirve para comparar con lo que imprime la placa por serie. |

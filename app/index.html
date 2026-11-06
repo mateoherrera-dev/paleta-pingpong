@@ -24,7 +24,10 @@
   .estado { font-size: .85rem; color: var(--muted); }
   .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: grid; gap: 10px; }
   .golpe { font-size: 1.5rem; font-weight: 600; }
-  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  @media (max-width: 440px) {
+    .stats { grid-template-columns: repeat(2, 1fr); }
+  }
   .stat { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px; text-align: center; }
   .stat small { display: block; color: var(--muted); font-size: .75rem; }
   .stat b { font-size: 1.2rem; font-variant-numeric: tabular-nums; }
@@ -425,7 +428,8 @@
       <div class="stats">
         <div class="stat"><small>Velocidad</small><b id="vel">–</b></div>
         <div class="stat"><small>Ángulo</small><b id="ang">–</b></div>
-        <div class="stat"><small>Timing (pico)</small><b id="pico">–</b></div>
+        <div class="stat"><small>Timing</small><b id="pico">–</b></div>
+        <div class="stat"><small>Score</small><b id="score-pts">–</b></div>
       </div>
       <div class="consejo" id="consejo">Pegá un golpe para ver el análisis.</div>
       <label><input type="checkbox" id="voz"> Leer los consejos en voz alta</label>
@@ -451,6 +455,7 @@
         <div><span>Velocidad:</span> <b id="dbg-vel">–</b></div>
         <div><span>Ángulo cara:</span> <b id="dbg-ang">–</b></div>
         <div><span>Pico giro:</span> <b id="dbg-pico">–</b></div>
+        <div><span>Score técnico:</span> <b id="dbg-score">–</b></div>
         <div><span>Cuaternión q:</span> <b id="dbg-q">–</b></div>
       </div>
       <div class="debug-log-wrap">
@@ -509,7 +514,8 @@
       <div class="stats" style="margin-top:4px;">
         <div class="stat"><small>Último ángulo</small><b id="tut-stat-ang">–</b></div>
         <div class="stat"><small>Velocidad</small><b id="tut-stat-vel">–</b></div>
-        <div class="stat"><small>Timing pico</small><b id="tut-stat-pico">–</b></div>
+        <div class="stat"><small>Timing</small><b id="tut-stat-pico">–</b></div>
+        <div class="stat"><small>Score</small><b id="tut-stat-score">–</b></div>
       </div>
 
       <div class="card-acciones" style="margin-top:8px;">
@@ -597,6 +603,77 @@ const CRITERIOS = {
 const PICO_ANTES_MS = -25;  // si el pico de giro llega antes que esto, el jugador frena antes de pegar
 // El 6/11 muchos golpes buenos tuvieron el pico de +20 a +50 ms: con +5 casi todos decían "tarde".
 const PICO_TARDE_MS = 30;
+
+// Configuración de Score Técnico Continuo (1 a 100 pts):
+// Penalización gaussiana en ángulo (mu centro ideal, sigma tolerancia a 75 pts) + dinámica + timing
+const SCORE_CONFIG = {
+  TD: { mu: -15, sigma: 9.2, velMin: 18, velMax: 55, fallaMin: -35, fallaMax: 0, requierePico: true },
+  TR: { mu: -15, sigma: 9.2, velMin: 15, velMax: 50, fallaMin: -35, fallaMax: 0, requierePico: true },
+  ED: { mu: 35,  sigma: 9.2, velMin: 10, velMax: 30, fallaMin: 15,  fallaMax: 55, requierePico: false },
+  ER: { mu: 35,  sigma: 9.2, velMin: 10, velMax: 30, fallaMin: 15,  fallaMax: 55, requierePico: false },
+};
+
+function calcularScore(e) {
+  const cfg = SCORE_CONFIG[e.golpe];
+  if (!cfg || e.ang === null) return null;
+
+  // 1. Score de Ángulo (Curva Gaussiana normalizada a 100)
+  const dTheta = e.ang - cfg.mu;
+  const sAng = 100 * Math.exp(-(dTheta * dTheta) / (2 * cfg.sigma * cfg.sigma));
+
+  // 2. Score de Dinámica (Velocidad tangencial)
+  let sDin = 80;
+  if (e.vel !== null) {
+    if (e.golpe.startsWith('T')) {
+      if (e.vel < cfg.velMin) {
+        sDin = Math.max(10, (e.vel / cfg.velMin) * 65);
+      } else if (e.vel <= cfg.velMax) {
+        sDin = 85 + Math.min(15, ((e.vel - cfg.velMin) / (cfg.velMax - cfg.velMin)) * 15);
+      } else {
+        sDin = 90;
+      }
+    } else {
+      if (e.vel < cfg.velMin) sDin = 70;
+      else if (e.vel <= cfg.velMax) sDin = 100;
+      else if (e.vel > 35) sDin = Math.max(20, 100 - (e.vel - 35) * 5);
+      else sDin = 85;
+    }
+  }
+
+  // 3. Score de Timing (Pico de aceleración angular respecto al choque)
+  let sTim = 85;
+  if (cfg.requierePico && e.pico !== null) {
+    if (e.pico >= -15 && e.pico <= 20) {
+      sTim = 100;
+    } else if (e.pico < -15) {
+      const diff = -15 - e.pico;
+      sTim = Math.max(10, 100 - diff * 3.5);
+    } else {
+      const diff = e.pico - 20;
+      sTim = Math.max(10, 100 - diff * 2.5);
+    }
+  }
+
+  // 4. Ponderación
+  let scoreTotal = cfg.requierePico
+    ? (0.55 * sAng + 0.30 * sDin + 0.15 * sTim)
+    : (0.70 * sAng + 0.30 * sDin);
+
+  // 5. Penalización dura si entra en zona de falla crítica
+  const esCritica = (cfg.fallaMin !== undefined && e.ang < cfg.fallaMin) ||
+                    (cfg.fallaMax !== undefined && e.ang > cfg.fallaMax);
+  if (esCritica) {
+    scoreTotal = Math.min(scoreTotal, 35);
+  }
+
+  return {
+    total: Math.max(1, Math.min(100, Math.round(scoreTotal))),
+    sAng: Math.round(sAng),
+    sDin: Math.round(sDin),
+    sTim: Math.round(sTim),
+    esCritica
+  };
+}
 
 const sesion = { golpes: [], conteo: {} };
 const $ = (id) => document.getElementById(id);
@@ -974,6 +1051,7 @@ function decir(texto) {
 
 function mostrar(e, registrarSesion = true) {
   ultimoEvento = e;
+  e.score = calcularScore(e);
   if (registrarSesion) {
     sesion.golpes.unshift(e);
     sesion.conteo[e.golpe] = (sesion.conteo[e.golpe] || 0) + 1;
@@ -984,6 +1062,20 @@ function mostrar(e, registrarSesion = true) {
   $('vel').textContent = e.vel === null ? '–' : `${e.vel} km/h`;
   $('ang').textContent = e.ang === null ? '–' : `${e.ang}°`;
   $('pico').textContent = formatearPico(e.pico);
+
+  const elScore = $('score-pts');
+  if (elScore) {
+    if (e.score) {
+      elScore.textContent = `${e.score.total}`;
+      if (e.score.total >= 75) elScore.style.color = 'var(--ok)';
+      else if (e.score.total >= 40) elScore.style.color = '#b87800';
+      else elScore.style.color = 'var(--bad)';
+    } else {
+      elScore.textContent = '–';
+      elScore.style.color = '';
+    }
+  }
+
   actualizarVisor3D(e.ang, e.golpe, e.q);
   $('certeza').textContent = e.conf !== null ? `Certeza del modelo: ${e.conf} %` : '';
   $('consejo').textContent = c.texto;
@@ -999,12 +1091,17 @@ function mostrar(e, registrarSesion = true) {
   $('dbg-vel').textContent = e.vel !== null ? `${e.vel} km/h` : '–';
   $('dbg-ang').textContent = e.ang !== null ? `${e.ang}°` : '–';
   $('dbg-pico').textContent = formatearPico(e.pico);
+  const dbgScoreEl = $('dbg-score');
+  if (dbgScoreEl) {
+    dbgScoreEl.textContent = e.score ? `${e.score.total} pts (ang=${e.score.sAng}, din=${e.score.sDin}, tim=${e.score.sTim})` : '–';
+  }
   $('dbg-q').textContent = e.q ? `(${e.q.w.toFixed(2)}, ${e.q.x.toFixed(2)}, ${e.q.y.toFixed(2)}, ${e.q.z.toFixed(2)})` : 'No presente (14B)';
 
   const dbgLog = $('dbg-log');
   if (dbgLog) {
     if (dbgLog.textContent.startsWith('Esperando')) dbgLog.textContent = '';
-    const lineaLog = `#${e.n} [${e.golpe}] conf=${e.conf}% cara=${caraCalculada} ang=${e.ang}° vel=${e.vel}km/h pico=${e.pico}ms\n`;
+    const scoreTxt = e.score ? ` score=${e.score.total}pts` : '';
+    const lineaLog = `#${e.n} [${e.golpe}]${scoreTxt} conf=${e.conf}% cara=${caraCalculada} ang=${e.ang}° vel=${e.vel}km/h pico=${e.pico}ms\n`;
     dbgLog.textContent = lineaLog + dbgLog.textContent.split('\n').slice(0, 9).join('\n');
   }
 
@@ -1012,7 +1109,10 @@ function mostrar(e, registrarSesion = true) {
     .filter((k) => sesion.conteo[k])
     .map((k) => `<span>${GOLPES[k]}</span><b>${sesion.conteo[k]}</b>`).join('');
   $('historial').innerHTML = sesion.golpes.slice(0, 15)
-    .map((g) => `<li><span>#${g.n} ${GOLPES[g.golpe]}</span><span>${determinarCara(g.golpe, g.ang, g.q) === 'roja' ? '🔴 Roja' : '⚫ Negra'} · ${g.vel ?? '–'} km/h · ${g.ang ?? '–'}° · ${formatearPico(g.pico)}</span></li>`).join('');
+    .map((g) => {
+      const scoreBadge = g.score ? `<b>${g.score.total} pts</b> · ` : '';
+      return `<li><span>#${g.n} ${GOLPES[g.golpe]}</span><span>${determinarCara(g.golpe, g.ang, g.q) === 'roja' ? '🔴 Roja' : '⚫ Negra'} · ${scoreBadge}${g.vel ?? '–'} km/h · ${g.ang ?? '–'}° · ${formatearPico(g.pico)}</span></li>`;
+    }).join('');
 
   // Actualizar modos interactivos (Tutorial y Benchmark de Modelo)
   if (registrarSesion) {
@@ -1125,6 +1225,19 @@ function procesarTutorial(e) {
   $('tut-stat-ang').textContent = e.ang !== null ? `${e.ang}°` : '–';
   $('tut-stat-vel').textContent = e.vel !== null ? `${e.vel} km/h` : '–';
   $('tut-stat-pico').textContent = formatearPico(e.pico);
+
+  const elTutScore = $('tut-stat-score');
+  if (elTutScore) {
+    if (e.score) {
+      elTutScore.textContent = `${e.score.total}`;
+      if (e.score.total >= 75) elTutScore.style.color = 'var(--ok)';
+      else if (e.score.total >= 40) elTutScore.style.color = '#b87800';
+      else elTutScore.style.color = 'var(--bad)';
+    } else {
+      elTutScore.textContent = '–';
+      elTutScore.style.color = '';
+    }
+  }
 
   const fbEl = $('tut-feedback');
   fbEl.textContent = res.msg;
