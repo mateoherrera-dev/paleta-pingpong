@@ -668,109 +668,66 @@
     display: block;
   }
   #intro-ui {
-    position: relative;
+    position: absolute;
+    bottom: 9%;
+    left: 0;
+    right: 0;
     z-index: 10;
-    max-width: 520px;
-    margin: 0 auto;
-    padding: 32px 24px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    text-align: center;
-    color: #111827;
-    transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    gap: 10px;
+    transition: opacity 0.09s ease-out, transform 0.09s ease-out;
+    pointer-events: auto;
   }
   #intro-ui.animando {
     opacity: 0;
-    transform: scale(0.65);
+    transform: scale(0.96) translateY(6px);
     pointer-events: none;
   }
 
-  .stamp-brand {
-    font-size: 5.5rem;
-    font-weight: 900;
-    letter-spacing: 0.12em;
-    line-height: 0.95;
-    color: #111827;
-    margin: 0 0 8px 0;
-    user-select: none;
-  }
-  .stamp-stars {
-    font-size: 1.45rem;
-    letter-spacing: 0.35em;
-    color: #111827;
-    margin: 0 0 6px 0;
-    user-select: none;
-  }
-  .stamp-spec {
-    font-size: 0.85rem;
-    font-weight: 800;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    color: rgba(17, 24, 39, 0.8);
-    margin: 0 0 22px 0;
-    user-select: none;
-  }
-
-  .intro-title {
-    font-size: 1.15rem;
-    font-weight: 700;
-    letter-spacing: -0.01em;
-    line-height: 1.35;
-    margin: 0 0 32px 0;
-    color: rgba(17, 24, 39, 0.9);
-    max-width: 400px;
-  }
-
   #btn-comenzar {
-    background: #111827;
+    background: #0f172a;
     color: #ffffff;
     font-size: 0.95rem;
     font-weight: 800;
     letter-spacing: 0.08em;
-    padding: 14px 40px;
+    padding: 14px 42px;
     border-radius: var(--radius-pill);
     border: 2px solid rgba(255, 255, 255, 0.25);
-    box-shadow: 0 10px 28px rgba(17, 24, 39, 0.3);
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.35);
     cursor: pointer;
     transition: transform 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
   }
   #btn-comenzar:hover {
-    background: #1f2937;
+    background: #1e293b;
     transform: scale(1.04);
-    box-shadow: 0 12px 32px rgba(17, 24, 39, 0.4);
+    box-shadow: 0 12px 32px rgba(15, 23, 42, 0.45);
   }
   #btn-comenzar:active {
     transform: scale(0.97);
   }
   #intro-skip {
     font-size: 0.72rem;
-    color: rgba(17, 24, 39, 0.65);
+    color: rgba(15, 23, 42, 0.65);
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    margin-top: 14px;
     cursor: pointer;
     user-select: none;
     transition: color 0.15s ease;
   }
   #intro-skip:hover {
-    color: #111827;
+    color: #0f172a;
   }
 </style>
 </head>
 <body>
 
-<!-- Intro interactiva de la pelota de Ping Pong (DOC) -->
+<!-- Intro interactiva 100% WebGL de la pelota de Ping Pong (DOC) -->
 <div id="intro-overlay">
   <canvas id="canvas-intro"></canvas>
   <div id="intro-ui">
-    <div class="stamp-brand">DOC</div>
-    <div class="stamp-stars">★ ★ ★</div>
-    <div class="stamp-spec">40+</div>
-
-    <h1 class="intro-title">Diagnóstico y Optimización de Cinemática</h1>
-
     <button id="btn-comenzar" type="button">COMENZAR ➔</button>
     <div id="intro-skip">Tocar para saltear</div>
   </div>
@@ -2094,44 +2051,75 @@ function initIntroBall() {
   const h = window.innerHeight;
 
   introScene = new THREE.Scene();
-  introScene.background = new THREE.Color(0xff7700); // Naranja pleno celuloide
+  introScene.background = new THREE.Color(0xff7700); // Naranja pleno celuloide torneo
 
-  introCamera = new THREE.PerspectiveCamera(40, w / h, 0.005, 10);
-  // Cámara pegada al centro mirando a la superficie plana
-  introCamera.position.set(0, 0, 0.0215);
+  // FOV de 36 grados para encuadre cinematográfico
+  introCamera = new THREE.PerspectiveCamera(36, w / h, 0.001, 10);
+  // Cámara macro pegada a la superficie: la esfera llena por completo el campo visual
+  introCamera.position.set(0, 0, 0.048);
 
   introRenderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
   introRenderer.setSize(w, h);
   introRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-  // Geometría: radio 2 cm (0.02)
+  // Geometría oficial: radio 20 mm (diámetro 40 mm)
   const geometry = new THREE.SphereGeometry(0.02, 64, 32);
 
-  // Sello estampado generado en alta resolución (2048x2048) para máxima nitidez
+  // Sello industrial de pelota de competición (2048x2048 con tinta unificada #0f172a)
   const c = document.createElement('canvas');
   c.width = 2048; c.height = 2048;
   const ctx = c.getContext('2d');
   ctx.fillStyle = '#ff7700';
   ctx.fillRect(0, 0, 2048, 2048);
 
-  // Marca DOC y especificación
-  ctx.fillStyle = '#111827';
+  // Tinta industrial mate (azul marino profundo / grafito de torneo)
+  const inkColor = '#0f172a';
+  ctx.fillStyle = inkColor;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
 
-  // Marca DOC
+  // 1. Marca principal DOC en bloque grueso
   ctx.font = '900 240px system-ui, -apple-system, sans-serif';
-  ctx.letterSpacing = '14px';
-  ctx.fillText('DOC', 1024, 850);
+  ctx.letterSpacing = '18px';
+  ctx.fillText('DOC', 1024, 760);
 
-  // 3 Estrellas de torneo
-  ctx.font = '150px system-ui, sans-serif';
-  ctx.fillText('★ ★ ★', 1024, 1050);
+  // 2. Tres estrellas de competición (★ ★ ★)
+  ctx.font = '140px system-ui, sans-serif';
+  ctx.letterSpacing = '26px';
+  ctx.fillText('★ ★ ★', 1024, 940);
 
-  // Especificación 40+
+  // 3. Especificación oficial 40+ con espaciado amplio
   ctx.font = '800 110px system-ui, sans-serif';
-  ctx.letterSpacing = '8px';
-  ctx.fillText('40+', 1024, 1220);
+  ctx.letterSpacing = '16px';
+  ctx.fillText('40+', 1024, 1100);
+
+  // 4. Subtítulo: Diagnóstico y Optimización de Cinemática (D-O-C destacadas)
+  const tokens = [
+    { text: 'D', isKey: true },
+    { text: 'iagnóstico y ', isKey: false },
+    { text: 'O', isKey: true },
+    { text: 'ptimización de ', isKey: false },
+    { text: 'C', isKey: true },
+    { text: 'inemática', isKey: false }
+  ];
+  let subTotalW = 0;
+  const measured = [];
+  tokens.forEach(tok => {
+    ctx.font = tok.isKey ? '900 48px system-ui, -apple-system, sans-serif' : '600 42px system-ui, -apple-system, sans-serif';
+    ctx.letterSpacing = tok.isKey ? '2px' : '0px';
+    const mw = ctx.measureText(tok.text).width;
+    measured.push(mw);
+    subTotalW += mw;
+  });
+  let subX = 1024 - subTotalW / 2;
+  tokens.forEach((tok, i) => {
+    ctx.font = tok.isKey ? '900 48px system-ui, -apple-system, sans-serif' : '600 42px system-ui, -apple-system, sans-serif';
+    ctx.letterSpacing = tok.isKey ? '2px' : '0px';
+    ctx.fillStyle = tok.isKey ? inkColor : 'rgba(15, 23, 42, 0.82)';
+    ctx.textAlign = 'left';
+    ctx.fillText(tok.text, subX, 1260);
+    subX += measured[i];
+  });
 
   const stampTex = new THREE.CanvasTexture(c);
   stampTex.generateMipmaps = true;
@@ -2147,15 +2135,16 @@ function initIntroBall() {
   });
 
   introBall = new THREE.Mesh(geometry, material);
-  introBall.rotation.y = -Math.PI / 2; // Cara estampada mirando a la cámara
+  introBall.rotation.y = -Math.PI / 2; // Cara estampada orientada a la cámara
   introScene.add(introBall);
 
-  // Luces
+  // Iluminación
   const amb = new THREE.AmbientLight(0xffffff, 1.0);
   introScene.add(amb);
-  const dir = new THREE.DirectionalLight(0xffffff, 0.7);
-  dir.position.set(0.15, 0.25, 0.3);
+  const dir = new THREE.DirectionalLight(0xffffff, 0.35);
+  dir.position.set(0.18, 0.28, 0.45);
   introScene.add(dir);
+  introScene.userData.dirLight = dir;
 
   introRenderer.render(introScene, introCamera);
 
@@ -2175,6 +2164,7 @@ function arrancarSecuenciaPelota() {
   if (animandoIntro) return;
   animandoIntro = true;
 
+  // 1. Ocultar el botón rápidamente (≤ 100 ms) sin tocar el texto 3D
   const ui = $('intro-ui');
   if (ui) ui.classList.add('animando');
 
@@ -2183,43 +2173,62 @@ function arrancarSecuenciaPelota() {
     return;
   }
 
+  const dirLight = introScene.userData && introScene.userData.dirLight;
   const startTime = performance.now();
-  const duracionTotal = 2400; // ms (más pausada y cinematográfica)
+  const duracionTotal = 1900; // ms
   let ultimoPique = 0;
+
+  // Curva de desaceleración suave easeOutExpo
+  function easeOutExpo(x) {
+    return x === 1 ? 1 : 1 - Math.pow(2, -10 * x);
+  }
 
   function loop(now) {
     const elapsed = now - startTime;
     const progress = Math.min(1, elapsed / duracionTotal);
 
-    // 1. Fase Zoom out (0 a 850 ms): retroceso suave de cámara alejándose de la superficie
-    const zoomT = Math.min(1, elapsed / 850);
-    const easeZoom = 1 - Math.pow(1 - zoomT, 3);
-    introCamera.position.z = 0.0215 + (0.20 - 0.0215) * easeZoom;
+    // 1. Retroceso cinemático de cámara estilo Marty Supreme (0 a 1100 ms)
+    const tZoom = Math.min(1, elapsed / 1100);
+    const ease = easeOutExpo(tZoom);
 
-    // Transición de fondo de naranja a grafito mesa (#0c1322)
-    const r = (0xff - (0xff - 0x0c) * easeZoom) / 255;
-    const g = (0x77 - (0x77 - 0x13) * easeZoom) / 255;
-    const b = (0x00 + (0x22 - 0x00) * easeZoom) / 255;
+    // Desplazamiento en eje Z: de plano macro a encuadre completo de la pelota
+    introCamera.position.z = 0.048 + (0.182 - 0.048) * ease;
+
+    // Rotación angular simultánea en Y (~16°) y leve en X (~5°) para que la luz especular viaje
+    introBall.rotation.y = -Math.PI / 2 + 0.28 * ease;
+    introBall.rotation.x = 0.08 * ease;
+
+    // Transición de fondo de naranja (#ff7700) a grafito mesa (#0c1322)
+    const r = (0xff - (0xff - 0x0c) * ease) / 255;
+    const g = (0x77 - (0x77 - 0x13) * ease) / 255;
+    const b = (0x00 + (0x22 - 0x00) * ease) / 255;
     introScene.background.setRGB(r, g, b);
 
-    // 2. Fase de física y rebote (600 ms a 2200 ms)
-    if (elapsed > 600) {
-      const tFisica = (elapsed - 600) / 1000;
-      const frecuencia = 11;
-      const amortiguacion = Math.exp(-tFisica * 2.5);
-      const yPiso = -0.045;
-      const rebote = Math.abs(Math.sin(tFisica * frecuencia)) * amortiguacion * 0.065;
+    // Luz direccional emerge gradualmente revelando el volumen esférico
+    if (dirLight) dirLight.intensity = 0.35 + (0.85 - 0.35) * ease;
+
+    // 2. Física sutil de pique en mesa (950 ms a 1800 ms)
+    if (elapsed > 950) {
+      const tFisica = (elapsed - 950) / 1000;
+      const frecuencia = 12;
+      const amortiguacion = Math.exp(-tFisica * 3.5);
+      const yPiso = -0.038;
+      const rebote = Math.abs(Math.sin(tFisica * frecuencia)) * amortiguacion * 0.045;
       introBall.position.y = yPiso + rebote;
 
-      if (rebote < 0.005 && amortiguacion > 0.06) {
-        if (now - ultimoPique > 180) {
+      if (rebote < 0.004 && amortiguacion > 0.08) {
+        if (now - ultimoPique > 160) {
           sonarPique(Math.min(0.35, amortiguacion * 0.45));
           ultimoPique = now;
         }
       }
+    }
 
-      introBall.rotation.x += 0.025;
-      introBall.rotation.y += 0.012;
+    // 3. Disolución suave del overlay hacia el dashboard (1600 ms a 1900 ms)
+    if (elapsed > 1600) {
+      const fadeProgress = (elapsed - 1600) / 300;
+      const overlay = $('intro-overlay');
+      if (overlay) overlay.style.opacity = String(Math.max(0, 1 - fadeProgress));
     }
 
     introRenderer.render(introScene, introCamera);
@@ -2238,11 +2247,12 @@ function cerrarIntro() {
   const overlay = $('intro-overlay');
   if (overlay) {
     overlay.classList.add('oculto');
+    overlay.style.opacity = '0';
     setTimeout(() => {
       overlay.style.display = 'none';
       if (introAnimId) cancelAnimationFrame(introAnimId);
       window.dispatchEvent(new Event('resize'));
-    }, 550);
+    }, 450);
   }
 }
 
