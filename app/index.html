@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Paleta Smart IMU · Tenis de Mesa</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <style>
   :root {
     --bg: #090d16;
@@ -642,9 +643,87 @@
   .card-acciones button {
     flex: 1;
   }
+
+  /* --- Overlay de Intro (Pelota de Ping Pong) --- */
+  #intro-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: #ff8000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  #intro-overlay.oculto {
+    opacity: 0;
+    pointer-events: none;
+  }
+  #canvas-intro {
+    position: absolute;
+    inset: 0;
+    width: 100% !important;
+    height: 100% !important;
+    display: block;
+  }
+  #intro-ui {
+    position: absolute;
+    bottom: 18%;
+    left: 0;
+    right: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    z-index: 10;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+  }
+  #btn-comenzar {
+    background: #0f172a;
+    color: #ffffff;
+    font-size: 0.95rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    padding: 13px 32px;
+    border-radius: var(--radius-pill);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+    cursor: pointer;
+    transition: transform 0.15s ease, background-color 0.15s ease;
+  }
+  #btn-comenzar:hover {
+    background: #1e293b;
+    transform: scale(1.04);
+  }
+  #btn-comenzar:active {
+    transform: scale(0.97);
+  }
+  #intro-skip {
+    font-size: 0.72rem;
+    color: rgba(15, 23, 42, 0.75);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    user-select: none;
+  }
+  #intro-skip:hover {
+    color: #0f172a;
+  }
 </style>
 </head>
 <body>
+
+<!-- Intro interactiva de la pelota de Ping Pong -->
+<div id="intro-overlay">
+  <canvas id="canvas-intro"></canvas>
+  <div id="intro-ui">
+    <button id="btn-comenzar" type="button">COMENZAR ➔</button>
+    <div id="intro-skip">Tocar para saltear</div>
+  </div>
+</div>
+
 <main>
   <!-- Barra de Identidad y Conexión -->
   <header class="app-bar">
@@ -1885,10 +1964,8 @@ if (badgeEl) {
   });
 }
 
-// Three.js se baja recién cuando la página terminó de cargar y sin frenarla: si la red no deja
-// llegar a cdnjs o jsdelivr, la app anda igual (Bluetooth, golpe, ángulo, consejo) sin el visor.
+// Three.js principal está en <head>. El GLTFLoader para el visor 3D de la paleta se baja dinámicamente.
 const LIBRERIAS_3D = [
-  'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js',
   'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js',
 ];
 
@@ -1928,8 +2005,213 @@ async function cargarVisor3D() {
   }
 }
 
+// =========================================================================
+// INTRO CINEMATOGRÁFICA: LA PELOTA DE PING PONG (THREE.JS PROCEDURAL)
+// =========================================================================
+function sonarPique(vol = 0.25) {
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return;
+    const ctx = new AudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(820, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(320, ctx.currentTime + 0.035);
+    gain.gain.setValueAtTime(vol, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.045);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.05);
+  } catch(e) {}
+}
+
+let introAnimId = null;
+let introScene, introCamera, introRenderer, introBall;
+let introIniciada = false;
+
+function initIntroBall() {
+  if (introIniciada || !window.THREE) return;
+  introIniciada = true;
+
+  const canvas = $('canvas-intro');
+  if (!canvas) return;
+
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+
+  introScene = new THREE.Scene();
+  introScene.background = new THREE.Color(0xff8000); // Naranja pleno celuloide
+
+  introCamera = new THREE.PerspectiveCamera(40, w / h, 0.005, 10);
+  // Cámara pegada al centro: la textura cubre el 100% de la pantalla
+  introCamera.position.set(0, 0, 0.0238);
+
+  introRenderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
+  introRenderer.setSize(w, h);
+  introRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+  // Geometría: radio 2 cm (0.02)
+  const geometry = new THREE.SphereGeometry(0.02, 64, 32);
+
+  // Sello estampado generado en canvas 2D
+  const c = document.createElement('canvas');
+  c.width = 1024; c.height = 1024;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#ff8000';
+  ctx.fillRect(0, 0, 1024, 1024);
+
+  // Marca negra mate típica de competición
+  ctx.fillStyle = '#111827';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  // Marca
+  ctx.font = '900 84px system-ui, sans-serif';
+  ctx.fillText('PALETA', 512, 410);
+
+  // 3 Estrellas de torneo
+  ctx.font = '64px system-ui, sans-serif';
+  ctx.fillText('★ ★ ★', 512, 505);
+
+  // Especificación ITTF / Torneo
+  ctx.font = '700 46px system-ui, sans-serif';
+  ctx.fillText('40+ · ESP32-S3', 512, 595);
+
+  // Círculo del sello
+  ctx.strokeStyle = 'rgba(17, 24, 39, 0.3)';
+  ctx.lineWidth = 6;
+  ctx.beginPath();
+  ctx.arc(512, 512, 275, 0, Math.PI * 2);
+  ctx.stroke();
+
+  const stampTex = new THREE.CanvasTexture(c);
+
+  // Material plástico mate celuloide / ABS
+  const material = new THREE.MeshStandardMaterial({
+    map: stampTex,
+    roughness: 0.55,
+    metalness: 0.05,
+  });
+
+  introBall = new THREE.Mesh(geometry, material);
+  introBall.rotation.y = -Math.PI / 2; // Cara estampada mirando a la cámara
+  introScene.add(introBall);
+
+  // Luces
+  const amb = new THREE.AmbientLight(0xffffff, 0.9);
+  introScene.add(amb);
+  const dir = new THREE.DirectionalLight(0xffffff, 0.7);
+  dir.position.set(0.15, 0.25, 0.3);
+  introScene.add(dir);
+
+  introRenderer.render(introScene, introCamera);
+
+  window.addEventListener('resize', () => {
+    if (!introRenderer || !introCamera) return;
+    const nw = window.innerWidth;
+    const nh = window.innerHeight;
+    introCamera.aspect = nw / nh;
+    introCamera.updateProjectionMatrix();
+    introRenderer.setSize(nw, nh);
+    if (!animandoIntro && introScene) introRenderer.render(introScene, introCamera);
+  });
+}
+
+let animandoIntro = false;
+function arrancarSecuenciaPelota() {
+  if (animandoIntro) return;
+  animandoIntro = true;
+
+  const ui = $('intro-ui');
+  if (ui) {
+    ui.style.opacity = '0';
+    ui.style.transform = 'translateY(20px)';
+    ui.style.pointerEvents = 'none';
+  }
+
+  if (!introBall || !introCamera || !introRenderer) {
+    cerrarIntro();
+    return;
+  }
+
+  const startTime = performance.now();
+  const duracionTotal = 1500; // ms
+  let ultimoPique = 0;
+
+  function loop(now) {
+    const elapsed = now - startTime;
+    const progress = Math.min(1, elapsed / duracionTotal);
+
+    // 1. Fase Zoom out (0 a 480 ms): retroceso de cámara
+    const zoomT = Math.min(1, elapsed / 480);
+    const easeZoom = 1 - Math.pow(1 - zoomT, 3);
+    introCamera.position.z = 0.0238 + (0.19 - 0.0238) * easeZoom;
+
+    // Transición de fondo de naranja a grafito mesa
+    const r = (0xff - (0xff - 0x0c) * easeZoom) / 255;
+    const g = (0x80 - (0x80 - 0x14) * easeZoom) / 255;
+    const b = (0x00 + (0x24 - 0x00) * easeZoom) / 255;
+    introScene.background.setRGB(r, g, b);
+
+    // 2. Fase de física y rebote (380 ms a 1400 ms)
+    if (elapsed > 380) {
+      const tFisica = (elapsed - 380) / 1000;
+      const frecuencia = 14;
+      const amortiguacion = Math.exp(-tFisica * 3.4);
+      const yPiso = -0.045;
+      const rebote = Math.abs(Math.sin(tFisica * frecuencia)) * amortiguacion * 0.065;
+      introBall.position.y = yPiso + rebote;
+
+      if (rebote < 0.006 && amortiguacion > 0.08) {
+        if (now - ultimoPique > 150) {
+          sonarPique(Math.min(0.35, amortiguacion * 0.45));
+          ultimoPique = now;
+        }
+      }
+
+      introBall.rotation.x += 0.035;
+      introBall.rotation.y += 0.015;
+    }
+
+    introRenderer.render(introScene, introCamera);
+
+    if (progress < 1) {
+      introAnimId = requestAnimationFrame(loop);
+    } else {
+      cerrarIntro();
+    }
+  }
+
+  introAnimId = requestAnimationFrame(loop);
+}
+
+function cerrarIntro() {
+  const overlay = $('intro-overlay');
+  if (overlay) {
+    overlay.classList.add('oculto');
+    setTimeout(() => {
+      overlay.style.display = 'none';
+      if (introAnimId) cancelAnimationFrame(introAnimId);
+      window.dispatchEvent(new Event('resize'));
+    }, 550);
+  }
+}
+
+$('btn-comenzar').addEventListener('click', arrancarSecuenciaPelota);
+$('intro-skip').addEventListener('click', cerrarIntro);
+window.addEventListener('keydown', (ev) => {
+  if (ev.key === 'Escape' || ev.key === 'Enter') cerrarIntro();
+});
+
+// Inicializar la pelota apenas Three.js esté listo
+if (window.THREE) initIntroBall();
+else window.addEventListener('load', () => { if (window.THREE) initIntroBall(); });
+
 if (document.readyState === 'complete') cargarVisor3D();
 else window.addEventListener('load', cargarVisor3D);
+
 </script>
 </body>
 </html>
