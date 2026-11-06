@@ -644,17 +644,17 @@
     flex: 1;
   }
 
-  /* --- Overlay de Intro (Pelota de Ping Pong) --- */
+  /* --- Overlay de Intro (Pelota de Ping Pong & Landing) --- */
   #intro-overlay {
     position: fixed;
     inset: 0;
     z-index: 9999;
-    background: #ff8000;
+    background: #ff7700;
     display: flex;
     align-items: center;
     justify-content: center;
     overflow: hidden;
-    transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1);
   }
   #intro-overlay.oculto {
     opacity: 0;
@@ -668,32 +668,104 @@
     display: block;
   }
   #intro-ui {
-    position: absolute;
-    bottom: 18%;
-    left: 0;
-    right: 0;
+    position: relative;
+    z-index: 10;
+    max-width: 440px;
+    margin: 0 auto;
+    padding: 24px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 12px;
-    z-index: 10;
-    transition: opacity 0.3s ease, transform 0.3s ease;
+    text-align: center;
+    color: #111827;
+    transition: opacity 0.35s ease, transform 0.35s ease;
   }
+  #intro-ui.animando {
+    opacity: 0;
+    transform: scale(0.92) translateY(30px);
+    pointer-events: none;
+  }
+
+  .intro-eyebrow {
+    font-size: 0.7rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: rgba(17, 24, 39, 0.7);
+    margin-bottom: 12px;
+    background: rgba(17, 24, 39, 0.08);
+    padding: 3px 10px;
+    border-radius: var(--radius-pill);
+    border: 1px solid rgba(17, 24, 39, 0.15);
+  }
+
+  /* Sello central de la pelota */
+  .ball-stamp {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 220px;
+    height: 220px;
+    border: 3px solid rgba(17, 24, 39, 0.4);
+    border-radius: 50%;
+    margin: 4px 0 16px 0;
+    background: radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.18) 0%, transparent 65%);
+    box-shadow: inset 0 0 16px rgba(17, 24, 39, 0.08);
+  }
+  .ball-stamp .stamp-brand {
+    font-size: 3.4rem;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    line-height: 1;
+    color: #111827;
+  }
+  .ball-stamp .stamp-stars {
+    font-size: 1.15rem;
+    letter-spacing: 0.25em;
+    margin: 2px 0 3px 0;
+    color: #111827;
+  }
+  .ball-stamp .stamp-spec {
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(17, 24, 39, 0.85);
+  }
+
+  .intro-title {
+    font-size: 1.25rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.25;
+    margin: 0 0 8px 0;
+    color: #111827;
+  }
+  .intro-desc {
+    font-size: 0.88rem;
+    font-weight: 500;
+    line-height: 1.45;
+    color: rgba(17, 24, 39, 0.8);
+    margin: 0 0 20px 0;
+    max-width: 360px;
+  }
+
   #btn-comenzar {
-    background: #0f172a;
+    background: #111827;
     color: #ffffff;
-    font-size: 0.95rem;
+    font-size: 0.92rem;
     font-weight: 800;
     letter-spacing: 0.08em;
-    padding: 13px 32px;
+    padding: 13px 36px;
     border-radius: var(--radius-pill);
     border: 2px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+    box-shadow: 0 8px 24px rgba(17, 24, 39, 0.35);
     cursor: pointer;
     transition: transform 0.15s ease, background-color 0.15s ease;
   }
   #btn-comenzar:hover {
-    background: #1e293b;
+    background: #1f2937;
     transform: scale(1.04);
   }
   #btn-comenzar:active {
@@ -701,24 +773,38 @@
   }
   #intro-skip {
     font-size: 0.72rem;
-    color: rgba(15, 23, 42, 0.75);
+    color: rgba(17, 24, 39, 0.7);
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.08em;
+    margin-top: 10px;
     cursor: pointer;
     user-select: none;
+    transition: color 0.15s ease;
   }
   #intro-skip:hover {
-    color: #0f172a;
+    color: #111827;
   }
 </style>
 </head>
 <body>
 
-<!-- Intro interactiva de la pelota de Ping Pong -->
+<!-- Intro interactiva de la pelota de Ping Pong (DOC) -->
 <div id="intro-overlay">
   <canvas id="canvas-intro"></canvas>
   <div id="intro-ui">
+    <div class="intro-eyebrow">TinyML · ESP32-S3</div>
+
+    <!-- Sello estampado nítido vectorial -->
+    <div class="ball-stamp">
+      <div class="stamp-brand">DOC</div>
+      <div class="stamp-stars">★ ★ ★</div>
+      <div class="stamp-spec">40+ · CINEMÁTICA</div>
+    </div>
+
+    <h1 class="intro-title">Diagnóstico y Optimización de Cinemática</h1>
+    <p class="intro-desc">Tu entrenador de rincón en cada golpe. Telemetría y corrección técnica en tiempo real.</p>
+
     <button id="btn-comenzar" type="button">COMENZAR ➔</button>
     <div id="intro-skip">Tocar para saltear</div>
   </div>
@@ -729,7 +815,7 @@
   <header class="app-bar">
     <div class="brand">
       <div class="brand-title">
-        <span>PALETA</span>
+        <span>DOC</span>
         <span class="tag-chip">IMU // S3</span>
       </div>
       <div class="connection-status">
@@ -2042,10 +2128,10 @@ function initIntroBall() {
   const h = window.innerHeight;
 
   introScene = new THREE.Scene();
-  introScene.background = new THREE.Color(0xff8000); // Naranja pleno celuloide
+  introScene.background = new THREE.Color(0xff7700); // Naranja pleno celuloide
 
   introCamera = new THREE.PerspectiveCamera(40, w / h, 0.005, 10);
-  // Cámara pegada al centro: la textura cubre el 100% de la pantalla
+  // Cámara pegada al centro mirando al sello DOC
   introCamera.position.set(0, 0, 0.0238);
 
   introRenderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
@@ -2055,38 +2141,44 @@ function initIntroBall() {
   // Geometría: radio 2 cm (0.02)
   const geometry = new THREE.SphereGeometry(0.02, 64, 32);
 
-  // Sello estampado generado en canvas 2D
+  // Sello estampado generado en alta resolución (2048x2048) para máxima nitidez
   const c = document.createElement('canvas');
-  c.width = 1024; c.height = 1024;
+  c.width = 2048; c.height = 2048;
   const ctx = c.getContext('2d');
-  ctx.fillStyle = '#ff8000';
-  ctx.fillRect(0, 0, 1024, 1024);
+  ctx.fillStyle = '#ff7700';
+  ctx.fillRect(0, 0, 2048, 2048);
 
-  // Marca negra mate típica de competición
+  // Marca DOC y especificación
   ctx.fillStyle = '#111827';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
 
-  // Marca
-  ctx.font = '900 84px system-ui, sans-serif';
-  ctx.fillText('PALETA', 512, 410);
+  // Marca DOC
+  ctx.font = '900 210px system-ui, -apple-system, sans-serif';
+  ctx.letterSpacing = '14px';
+  ctx.fillText('DOC', 1024, 820);
 
   // 3 Estrellas de torneo
-  ctx.font = '64px system-ui, sans-serif';
-  ctx.fillText('★ ★ ★', 512, 505);
+  ctx.font = '140px system-ui, sans-serif';
+  ctx.fillText('★ ★ ★', 1024, 1020);
 
   // Especificación ITTF / Torneo
-  ctx.font = '700 46px system-ui, sans-serif';
-  ctx.fillText('40+ · ESP32-S3', 512, 595);
+  ctx.font = '800 90px system-ui, sans-serif';
+  ctx.letterSpacing = '8px';
+  ctx.fillText('40+ · CINEMÁTICA', 1024, 1200);
 
   // Círculo del sello
-  ctx.strokeStyle = 'rgba(17, 24, 39, 0.3)';
-  ctx.lineWidth = 6;
+  ctx.strokeStyle = 'rgba(17, 24, 39, 0.35)';
+  ctx.lineWidth = 14;
   ctx.beginPath();
-  ctx.arc(512, 512, 275, 0, Math.PI * 2);
+  ctx.arc(1024, 1024, 560, 0, Math.PI * 2);
   ctx.stroke();
 
   const stampTex = new THREE.CanvasTexture(c);
+  stampTex.generateMipmaps = true;
+  if (introRenderer.capabilities) {
+    stampTex.anisotropy = introRenderer.capabilities.getMaxAnisotropy();
+  }
 
   // Material plástico mate celuloide / ABS
   const material = new THREE.MeshStandardMaterial({
@@ -2100,9 +2192,9 @@ function initIntroBall() {
   introScene.add(introBall);
 
   // Luces
-  const amb = new THREE.AmbientLight(0xffffff, 0.9);
+  const amb = new THREE.AmbientLight(0xffffff, 0.95);
   introScene.add(amb);
-  const dir = new THREE.DirectionalLight(0xffffff, 0.7);
+  const dir = new THREE.DirectionalLight(0xffffff, 0.75);
   dir.position.set(0.15, 0.25, 0.3);
   introScene.add(dir);
 
@@ -2125,11 +2217,7 @@ function arrancarSecuenciaPelota() {
   animandoIntro = true;
 
   const ui = $('intro-ui');
-  if (ui) {
-    ui.style.opacity = '0';
-    ui.style.transform = 'translateY(20px)';
-    ui.style.pointerEvents = 'none';
-  }
+  if (ui) ui.classList.add('animando');
 
   if (!introBall || !introCamera || !introRenderer) {
     cerrarIntro();
@@ -2137,42 +2225,42 @@ function arrancarSecuenciaPelota() {
   }
 
   const startTime = performance.now();
-  const duracionTotal = 1500; // ms
+  const duracionTotal = 2400; // ms (más pausada y cinematográfica)
   let ultimoPique = 0;
 
   function loop(now) {
     const elapsed = now - startTime;
     const progress = Math.min(1, elapsed / duracionTotal);
 
-    // 1. Fase Zoom out (0 a 480 ms): retroceso de cámara
-    const zoomT = Math.min(1, elapsed / 480);
+    // 1. Fase Zoom out (0 a 800 ms): retroceso suave de cámara
+    const zoomT = Math.min(1, elapsed / 800);
     const easeZoom = 1 - Math.pow(1 - zoomT, 3);
-    introCamera.position.z = 0.0238 + (0.19 - 0.0238) * easeZoom;
+    introCamera.position.z = 0.0238 + (0.195 - 0.0238) * easeZoom;
 
-    // Transición de fondo de naranja a grafito mesa
+    // Transición de fondo de naranja a grafito mesa (#0c1322)
     const r = (0xff - (0xff - 0x0c) * easeZoom) / 255;
-    const g = (0x80 - (0x80 - 0x14) * easeZoom) / 255;
-    const b = (0x00 + (0x24 - 0x00) * easeZoom) / 255;
+    const g = (0x77 - (0x77 - 0x13) * easeZoom) / 255;
+    const b = (0x00 + (0x22 - 0x00) * easeZoom) / 255;
     introScene.background.setRGB(r, g, b);
 
-    // 2. Fase de física y rebote (380 ms a 1400 ms)
-    if (elapsed > 380) {
-      const tFisica = (elapsed - 380) / 1000;
-      const frecuencia = 14;
-      const amortiguacion = Math.exp(-tFisica * 3.4);
+    // 2. Fase de física y rebote (600 ms a 2200 ms)
+    if (elapsed > 600) {
+      const tFisica = (elapsed - 600) / 1000;
+      const frecuencia = 11;
+      const amortiguacion = Math.exp(-tFisica * 2.5);
       const yPiso = -0.045;
       const rebote = Math.abs(Math.sin(tFisica * frecuencia)) * amortiguacion * 0.065;
       introBall.position.y = yPiso + rebote;
 
-      if (rebote < 0.006 && amortiguacion > 0.08) {
-        if (now - ultimoPique > 150) {
+      if (rebote < 0.005 && amortiguacion > 0.06) {
+        if (now - ultimoPique > 180) {
           sonarPique(Math.min(0.35, amortiguacion * 0.45));
           ultimoPique = now;
         }
       }
 
-      introBall.rotation.x += 0.035;
-      introBall.rotation.y += 0.015;
+      introBall.rotation.x += 0.025;
+      introBall.rotation.y += 0.012;
     }
 
     introRenderer.render(introScene, introCamera);
