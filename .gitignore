@@ -7,3 +7,7 @@ __pycache__/
 
 # Libreria de Arduino generada por firmware/armar_libreria_arduino.py
 firmware/*_arduino.zip
+
+# Prueba del ángulo compilada para la PC (firmware/prueba_pc/comparar.py)
+firmware/prueba_pc/prueba_angulo
+firmware/prueba_pc/prueba_angulo.exe

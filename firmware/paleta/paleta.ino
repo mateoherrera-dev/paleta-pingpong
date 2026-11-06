@@ -1,4 +1,4 @@
-// Paleta de ping pong inteligente — firmware de la clase 2
+// Paleta de ping pong inteligente — firmware de la clase 4
 //
 // Lee el MPU-6500 por SPI 1000 veces por segundo y manda cada muestra por el puerto serie:
 //   t_us,ax_g,ay_g,az_g,gx_dps,gy_dps,gz_dps,impacto
@@ -6,9 +6,16 @@
 //
 // Placa: ESP32S3 Dev Module. Configuración completa del Arduino IDE en el README.
 // La cámara no se usa: se puede desconectar.
+//
+// En cada impacto, 76 ms después (cuando ya está completa la ventana del modelo), arma el struct
+// BlePayload de 14 bytes y lo manda por BLE a la app (docs/CONTRATOS.md, sección 5).
 
 #include <SPI.h>
+#include <BLEDevice.h>
+#include <BLEServer.h>
+#include <BLE2902.h>
 #include "ml_inference.h"
+#include "angulo.h"
 
 // Pines SPI del MPU-6500 (pin del módulo → función). Revisar en el pinout de la placa que estén libres.
 // SCL y SDA quedan en los GPIO que usaba el I2C: si hay que volver a I2C, esos dos cables no se mueven.
@@ -43,6 +50,13 @@ const float OFFSET_AX_G = 0.028f;
 const float OFFSET_AY_G = -0.002f;
 const float OFFSET_AZ_G = 0.264f;
 
+// Offset del giróscopo, en °/s y en los ejes del módulo. No es fijo como el del acelerómetro
+// (cambia con la temperatura), así que se mide en cada arranque con la paleta quieta (calibrarGiro).
+// Sin esto el rumbo (yaw) del cuaternión que va por BLE se corre varios grados por minuto.
+float offsetGiro[3] = {0, 0, 0};
+const int CALIBRAR_GIRO_MUESTRAS = 1000;   // 1 s a 1000 Hz
+const float CALIBRAR_GIRO_QUIETA_DPS = 5;  // si alguna muestra se aleja más que esto, se movió
+
 // Detección de impacto por Jerk: cuánto cambia el vector aceleración entre dos muestras seguidas,
 // |a[k] - a[k-1]|, en g por muestra (g/ms a 1000 Hz). El swing cambia la aceleración en
 // 30-100 ms; el choque con la pelota, en 1-2 ms (PLAN.md, 7.2).
@@ -60,6 +74,150 @@ const uint32_t REFRACTARIO_US = 300000;  // después de un impacto, ignorar 300 
 // Distancia del plano inferior del pomo (donde apoya el sensor) al centro de la cabeza de la paleta,
 // medida con regla el 16/10 (docs/CONTRATOS.md). Para la velocidad tangencial v = ω · L (vel_kmh).
 const float L_PALETA_M = 0.18f;
+
+// Velocidad y pico de giro: la misma cuenta que herramientas/cinematica.py (P3).
+// ω del swing = hypot(gy, gz) (girar sobre el mango, eje X, no hace avanzar la paleta),
+// suavizado con un promedio de 5 muestras centrado para que la vibración del golpe no cuente.
+// L es la distancia del eje de giro (muñeca/codo, no el sensor) al centro de la paleta:
+// 0,30 m es el provisorio de cinematica.py hasta medirlo con --estimar-L.
+const float L_GIRO_M = 0.30f;
+const int VEL_ANTES = 5;       // la velocidad es el promedio de ω en los 5 ms antes del impacto
+const int PICO_ANTES = 200;    // el pico de giro se busca desde 200 ms antes del impacto...
+const int PICO_DESPUES = 50;   // ...hasta 50 ms después
+const int MUESTRAS_DESPUES = 76;  // se espera hasta completar la ventana del modelo (120 + 76)
+
+// Últimas muestras de ω del swing, en °/s. 512 alcanzan para 200 antes + 76 después del impacto.
+const int OMEGA_N = 512;
+float omega[OMEGA_N];
+
+// Últimas 196 muestras de los 6 ejes (ax, ay, az, gx, gy, gz), para el modelo: la ventana de
+// CONTRATOS.md son 120 antes del impacto + 76 después, igual que segmentar.py.
+const int VENTANA_ANTES = 120;
+const int VENTANA_MUESTRAS = ML_BUFFER_LONGITUD_ESPERADA / 6;  // 196
+float historia[VENTANA_MUESTRAS][6];
+
+// Clases del modelo → tipo_golpe del struct (CONTRATOS.md): lo que no esté acá (ruido) va como 4
+const char *CLASES[] = {"topspin_derecha", "topspin_reves", "empuje_derecha", "empuje_reves"};
+const uint8_t TIPO_DESCONOCIDO = 4;
+uint32_t muestras = 0;         // muestras leídas desde que arrancó: la k va en omega[k % OMEGA_N]
+uint32_t muestraImpacto = 0;   // número de muestra del último impacto
+bool golpePendiente = false;   // hubo un impacto y todavía no se mandó por BLE
+ResultadoAngulo anguloImpacto; // se calcula en la muestra del impacto (angulo.h) y se manda después
+uint32_t usAngulo = 0;         // cuánto tardó angulo_en_impacto()
+
+// BLE: mismo servicio y característica que espera la app (app/index.html, filtro por nombre "Paleta")
+const char *NOMBRE_BLE = "Paleta";
+const char *UUID_SERVICIO = "6e400001-b5a3-f393-e0a9-e50e24dcca9e";
+const char *UUID_NOTIFY = "6e400003-b5a3-f393-e0a9-e50e24dcca9e";
+
+// Evento de golpe (docs/CONTRATOS.md, sección 5): 20 bytes, little-endian (el ESP32 ya lo es).
+// Los primeros 14 son los de siempre; el cuaternión va al final para que una app que lea 14 siga andando.
+#pragma pack(push, 1)
+struct BlePayload {
+  uint32_t timestamp;     // ms desde el arranque, en el impacto
+  uint16_t numero_golpe;  // contador de impactos de la sesión
+  uint8_t tipo_golpe;     // 0=TD, 1=TR, 2=ED, 3=ER, 4=desconocido o ruido
+  uint8_t confianza;      // 0 a 100
+  int16_t vel_kmh;
+  int16_t ang_deg;        // − cerrada, + abierta
+  int16_t pico_ms;        // − el pico de giro fue antes del impacto
+  int16_t q1, q2, q3;     // orientación en el impacto × 32767 (q0 = √(1 − q1² − q2² − q3²), siempre ≥ 0)
+};
+#pragma pack(pop)
+static_assert(sizeof(BlePayload) == 20, "BlePayload tiene que medir 20 bytes (CONTRATOS.md)");
+
+BLEServer *servidor = nullptr;
+BLECharacteristic *caracteristica = nullptr;
+uint16_t golpes = 0;
+
+// Conexiones BLE. El 30/10 un celular que tenía la paleta guardada se conectaba solo al arrancar
+// y, como se aceptaba una sola conexión, la app nunca la encontraba. Ahora:
+// 1. Se aceptan hasta 3 a la vez (CONFIG_BT_NIMBLE_MAX_CONNECTIONS del core) y se sigue anunciando.
+// 2. La app, al conectarse, se suscribe a las notificaciones (startNotifications en app/index.html).
+//    La conexión que en 10 s no se suscribió no es la app: se corta.
+// No es seguridad (alguien que conozca el UUID puede suscribirse): solo evita que la ocupen.
+const int MAX_CONEXIONES = 3;
+const uint32_t SUSCRIBIRSE_MS = 10000;
+struct Conexion {
+  bool usada;
+  uint16_t id;      // conn_handle de NimBLE
+  uint32_t desde;   // millis() de la conexión (o del último intento de cortarla)
+  bool suscrita;
+};
+Conexion conexiones[MAX_CONEXIONES];
+portMUX_TYPE muxConexiones = portMUX_INITIALIZER_UNLOCKED;  // los callbacks corren en la tarea del BLE
+
+// En la ESP32-S3 la librería BLE del core usa NimBLE por debajo: la conexión viene en ble_gap_conn_desc
+class AlConectar : public BLEServerCallbacks {
+  void onConnect(BLEServer *s, ble_gap_conn_desc *conexion) override {
+    int usadas = 0;
+    bool guardada = false;
+    portENTER_CRITICAL(&muxConexiones);
+    for (Conexion &c : conexiones) {
+      if (!c.usada && !guardada) {
+        c = {true, conexion->conn_handle, millis(), false};
+        guardada = true;
+      }
+      usadas += c.usada;
+    }
+    portEXIT_CRITICAL(&muxConexiones);
+    const uint8_t *mac = conexion->peer_ota_addr.val;  // NimBLE la guarda al revés
+    Serial.printf("# BLE: se conectó %02X:%02X:%02X:%02X:%02X:%02X (%d de %d)\n",
+                  mac[5], mac[4], mac[3], mac[2], mac[1], mac[0], usadas, MAX_CONEXIONES);
+    if (usadas < MAX_CONEXIONES) BLEDevice::startAdvertising();  // NimBLE deja de anunciar al conectarse
+  }
+  void onDisconnect(BLEServer *s, ble_gap_conn_desc *conexion) override {
+    portENTER_CRITICAL(&muxConexiones);
+    for (Conexion &c : conexiones) {
+      if (c.usada && c.id == conexion->conn_handle) c.usada = false;
+    }
+    portEXIT_CRITICAL(&muxConexiones);
+    BLEDevice::startAdvertising();
+    Serial.println("# BLE: se desconectó uno; anunciando");
+  }
+};
+
+class AlSuscribirse : public BLECharacteristicCallbacks {
+  void onSubscribe(BLECharacteristic *car, ble_gap_conn_desc *conexion, uint16_t valor) override {
+    portENTER_CRITICAL(&muxConexiones);
+    for (Conexion &c : conexiones) {
+      if (c.usada && c.id == conexion->conn_handle) c.suscrita = valor & 1;  // bit 0: notificaciones
+    }
+    portEXIT_CRITICAL(&muxConexiones);
+    Serial.printf("# BLE: la conexión %u %s a los golpes\n", conexion->conn_handle,
+                  (valor & 1) ? "se suscribió" : "se desuscribió");
+  }
+};
+
+bool hayAppSuscrita() {
+  bool hay = false;
+  portENTER_CRITICAL(&muxConexiones);
+  for (Conexion &c : conexiones) hay |= c.usada && c.suscrita;
+  portEXIT_CRITICAL(&muxConexiones);
+  return hay;
+}
+
+// Corta las conexiones que pasaron SUSCRIBIRSE_MS sin suscribirse. Se llama desde loop().
+void revisarConexiones() {
+  static uint32_t ultimaRevision = 0;
+  if (millis() - ultimaRevision < 500) return;
+  ultimaRevision = millis();
+  uint16_t cortar[MAX_CONEXIONES];
+  int n = 0;
+  portENTER_CRITICAL(&muxConexiones);
+  for (Conexion &c : conexiones) {
+    if (c.usada && !c.suscrita && millis() - c.desde > SUSCRIBIRSE_MS) {
+      cortar[n++] = c.id;
+      c.desde = millis();  // si no se corta, se vuelve a intentar en 10 s
+    }
+  }
+  portEXIT_CRITICAL(&muxConexiones);
+  for (int i = 0; i < n; i++) {
+    Serial.printf("# BLE: la conexión %u no se suscribió en %lu s: se corta\n", cortar[i],
+                  (unsigned long)(SUSCRIBIRSE_MS / 1000));
+    servidor->disconnect(cortar[i]);
+  }
+}
 
 uint32_t proximaMuestra = 0;
 uint32_t ultimaLectura = 0;   // micros() de la última muestra leída
@@ -149,6 +307,31 @@ void alinearEjes(float &x, float &y, float &z) {
   z = mx;
 }
 
+// Promedia el giro durante 1 s al arrancar. Si la paleta se movió, no calibra (queda en 0)
+// y avisa: el ángulo y el cuaternión andan igual, pero el rumbo se corre más rápido.
+void calibrarGiro() {
+  float suma[3] = {0, 0, 0}, minimo[3], maximo[3];
+  for (int n = 0; n < CALIBRAR_GIRO_MUESTRAS; n++) {
+    int16_t crudo[7];
+    leerMPU(crudo);
+    for (int e = 0; e < 3; e++) {
+      float g = crudo[4 + e] / LSB_POR_DPS;
+      suma[e] += g;
+      minimo[e] = n ? fminf(minimo[e], g) : g;
+      maximo[e] = n ? fmaxf(maximo[e], g) : g;
+    }
+    delayMicroseconds(PERIODO_US);
+  }
+  for (int e = 0; e < 3; e++) {
+    if (maximo[e] - minimo[e] > 2 * CALIBRAR_GIRO_QUIETA_DPS) {
+      Serial.println("# Giróscopo: la paleta se movió al arrancar, no se calibra (dejarla quieta y reiniciar)");
+      return;
+    }
+  }
+  for (int e = 0; e < 3; e++) offsetGiro[e] = suma[e] / CALIBRAR_GIRO_MUESTRAS;
+  Serial.printf("# Giróscopo calibrado: offset %+.2f / %+.2f / %+.2f °/s\n", offsetGiro[0], offsetGiro[1], offsetGiro[2]);
+}
+
 // Corre el modelo una vez al arrancar, para ver que está cargado y cuánto tarda.
 // La ventana es la paleta quieta (az = 1 g): con el modelo dummy no importa qué etiqueta dé.
 void probarModelo() {
@@ -161,7 +344,93 @@ void probarModelo() {
   Serial.printf("# Modelo: %s con %.0f %% de certeza, en %.2f ms\n", p.etiqueta, p.probabilidad * 100, ms);
 }
 
+void iniciarBLE() {
+  BLEDevice::init(NOMBRE_BLE);
+  servidor = BLEDevice::createServer();
+  servidor->setCallbacks(new AlConectar());
+  BLEService *servicio = servidor->createService(UUID_SERVICIO);
+  caracteristica = servicio->createCharacteristic(UUID_NOTIFY, BLECharacteristic::PROPERTY_NOTIFY);
+  caracteristica->setCallbacks(new AlSuscribirse());
+  caracteristica->addDescriptor(new BLE2902());  // lo que escribe el celular para suscribirse
+  servicio->start();
+  BLEAdvertising *anuncio = BLEDevice::getAdvertising();
+  anuncio->addServiceUUID(UUID_SERVICIO);
+  anuncio->setScanResponse(true);  // el nombre va en la respuesta al escaneo: no entra junto al UUID
+  BLEDevice::startAdvertising();
+  Serial.printf("# BLE: anunciando como \"%s\"\n", NOMBRE_BLE);
+}
+
+// ω del swing en la muestra k, promediado con las 2 de cada lado (como suavizar() de cinematica.py)
+float omegaSuave(uint32_t k) {
+  float suma = 0;
+  for (int j = -2; j <= 2; j++) suma += omega[(k + j) % OMEGA_N];
+  return suma / 5;
+}
+
+// Corre el modelo sobre la ventana del último impacto (muestras i-120 a i+75, como segmentar.py)
+// y devuelve el tipo_golpe del struct. La confianza va de 0 a 100.
+uint8_t clasificarGolpe(uint8_t &confianza, float &ms) {
+  static float ventana[ML_BUFFER_LONGITUD_ESPERADA];  // static: 4,7 kB, mejor fuera de la pila
+  uint32_t desde = muestraImpacto - VENTANA_ANTES;
+  for (int j = 0; j < VENTANA_MUESTRAS; j++) {
+    for (int e = 0; e < 6; e++) ventana[j * 6 + e] = historia[(desde + j) % VENTANA_MUESTRAS][e];
+  }
+  uint32_t inicio = micros();
+  PrediccionGolpe p = predecir_golpe(ventana, ML_BUFFER_LONGITUD_ESPERADA);
+  ms = (micros() - inicio) / 1000.0f;
+  confianza = (uint8_t)lroundf(p.probabilidad * 100);
+  for (uint8_t t = 0; t < 4; t++) {
+    if (strcmp(p.etiqueta, CLASES[t]) == 0) return t;
+  }
+  return TIPO_DESCONOCIDO;
+}
+
+// Arma el evento del último impacto y lo manda. Se llama con la ventana del modelo completa.
+void mandarGolpe() {
+  uint32_t i = muestraImpacto;
+  float w = 0;
+  for (uint32_t k = i - VEL_ANTES; k < i; k++) w += omegaSuave(k);
+  w /= VEL_ANTES;
+  uint32_t kPico = i - PICO_ANTES;
+  for (uint32_t k = kPico; k <= i + PICO_DESPUES; k++) {
+    if (omegaSuave(k) > omegaSuave(kPico)) kPico = k;
+  }
+
+  BlePayload p;
+  float msModelo;
+  p.timestamp = ultimoImpacto / 1000;
+  p.numero_golpe = ++golpes;
+  p.tipo_golpe = clasificarGolpe(p.confianza, msModelo);
+  p.vel_kmh = (int16_t)lroundf(w * DEG_TO_RAD * L_GIRO_M * 3.6f);
+  p.ang_deg = (int16_t)lroundf(anguloImpacto.grados);
+  // q y −q son la misma orientación: se elige la de q0 ≥ 0 para que la app pueda reconstruir q0
+  float signo = anguloImpacto.q[0] < 0 ? -32767.0f : 32767.0f;
+  p.q1 = (int16_t)lroundf(anguloImpacto.q[1] * signo);
+  p.q2 = (int16_t)lroundf(anguloImpacto.q[2] * signo);
+  p.q3 = (int16_t)lroundf(anguloImpacto.q[3] * signo);
+  p.pico_ms = (int16_t)((int32_t)kPico - (int32_t)i);  // 1 muestra = 1 ms
+
+  bool enviado = hayAppSuscrita();
+  if (enviado) {
+    caracteristica->setValue((uint8_t *)&p, sizeof(p));
+    caracteristica->notify();
+  }
+  const char *nombres[] = {"TD", "TR", "ED", "ER", "ruido"};
+  Serial.printf("# Golpe %u: %s %u %% (modelo en %.1f ms), %d km/h (%.0f °/s), cara %s a %+d° (en %lu µs), "
+                "q (%.2f, %.2f, %.2f, %.2f), pico %+d ms%s\n",
+                p.numero_golpe, nombres[p.tipo_golpe], p.confianza, msModelo, p.vel_kmh, w,
+                anguloImpacto.cara_roja ? "roja" : "negra", p.ang_deg, (unsigned long)usAngulo,
+                anguloImpacto.q[0], anguloImpacto.q[1], anguloImpacto.q[2], anguloImpacto.q[3], p.pico_ms,
+                enviado ? ", enviado por BLE" : ", sin la app conectada");
+}
+
 void setup() {
+  // Si nadie lee el USB (la app por BLE sin grabar.py, o con el powerbank) cada Serial.printf
+  // esperaba hasta 2 s a que la compu leyera: el loop iba a 1 muestra cada 2 s y los golpes no
+  // salían nunca por BLE (30/10). Con timeout 0 lo que no entra se tira, y el buffer de 16 kB
+  // (~350 ms de muestras) aguanta los tirones de Windows cuando grabar.py sí está leyendo.
+  Serial.setTxBufferSize(16384);
+  Serial.setTxTimeoutMs(0);
   Serial.begin(921600);
   delay(1500);  // tiempo para abrir el monitor serie
   pinMode(PIN_CS, OUTPUT);
@@ -181,6 +450,9 @@ void setup() {
     Serial.println("# Muestreo cada 1 ms con micros() (USAR_INT = false)");
   }
   probarModelo();
+  iniciarBLE();
+  calibrarGiro();        // la paleta tiene que arrancar quieta: para esto y para la vertical del ángulo
+  angulo_inicializar();  // la primera muestra fija la vertical
   Serial.println("# Paleta lista. Columnas: t_us,ax_g,ay_g,az_g,gx_dps,gy_dps,gz_dps,impacto");
   avisosLeidos = avisos;  // los avisos que llegaron mientras se imprimía no cuentan como perdidos
   proximaMuestra = ultimaLectura = micros();
@@ -210,6 +482,7 @@ bool tocaLeer() {
 }
 
 void loop() {
+  revisarConexiones();
   if (!tocaLeer()) return;
   uint32_t ahora = micros();
   ultimaLectura = ahora;
@@ -227,17 +500,29 @@ void loop() {
   float ax = crudo[0] / LSB_POR_G - OFFSET_AX_G;
   float ay = crudo[1] / LSB_POR_G - OFFSET_AY_G;
   float az = crudo[2] / LSB_POR_G - OFFSET_AZ_G;
-  float gx = crudo[4] / LSB_POR_DPS, gy = crudo[5] / LSB_POR_DPS, gz = crudo[6] / LSB_POR_DPS;  // crudo[3] es la temperatura
+  float gx = crudo[4] / LSB_POR_DPS - offsetGiro[0];  // crudo[3] es la temperatura
+  float gy = crudo[5] / LSB_POR_DPS - offsetGiro[1];
+  float gz = crudo[6] / LSB_POR_DPS - offsetGiro[2];
   alinearEjes(ax, ay, az);
   alinearEjes(gx, gy, gz);
+  omega[muestras % OMEGA_N] = hypotf(gy, gz);
+  float *h = historia[muestras % VENTANA_MUESTRAS];
+  h[0] = ax; h[1] = ay; h[2] = az; h[3] = gx; h[4] = gy; h[5] = gz;
+  angulo_actualizar(ax, ay, az, gx, gy, gz);  // Madgwick en cada muestra (angulo.cpp de Mateo)
 
   int impacto = 0;
   if (hayAnterior) {
     float dx = ax - axAnterior, dy = ay - ayAnterior, dz = az - azAnterior;
     float jerk = sqrtf(dx * dx + dy * dy + dz * dz);
-    if (jerk > UMBRAL_JERK_G && ahora - ultimoImpacto > REFRACTARIO_US) {
+    // un impacto en los primeros 200 ms no tiene de dónde sacar el pico de giro: se ignora
+    if (jerk > UMBRAL_JERK_G && ahora - ultimoImpacto > REFRACTARIO_US && muestras > PICO_ANTES + 2) {
       impacto = 1;
       ultimoImpacto = ahora;
+      muestraImpacto = muestras;
+      golpePendiente = true;
+      uint32_t t0 = micros();
+      anguloImpacto = angulo_en_impacto();  // justo después de procesar la muestra del impacto
+      usAngulo = micros() - t0;  // tiene que ser bastante menos que 1000 µs: si no, se pierden muestras de la ventana
     }
   }
   axAnterior = ax;
@@ -247,4 +532,11 @@ void loop() {
 
   Serial.printf("%lu,%.3f,%.3f,%.3f,%.1f,%.1f,%.1f,%d\n",
                 (unsigned long)ahora, ax, ay, az, gx, gy, gz, impacto);
+
+  // la ventana termina en la muestra i+75: el impacto más 75 después (196 en total, como segmentar.py)
+  if (golpePendiente && muestras == muestraImpacto + MUESTRAS_DESPUES - 1) {
+    golpePendiente = false;
+    mandarGolpe();
+  }
+  muestras++;
 }

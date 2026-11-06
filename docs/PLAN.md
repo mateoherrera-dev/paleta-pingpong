@@ -279,6 +279,21 @@ Aprovechando que entre semana se trabaja en desarrollo en computadora, el ciclo 
 
 ---
 
+#### Estado al 30/10 (P1)
+
+**Firmware definitivo andando** (PR #24, rama `firmware-ble`, base en el #22). Con la paleta en el powerbank y sin la compu, cada golpe llega a la app por BLE con todos los campos del struct:
+
+- **BLE** con la libreria del core de la ESP32 (por debajo es NimBLE): se anuncia como "Paleta" con los UUID de `CONTRATOS.md`. Acepta hasta 3 conexiones y corta la que en 10 s no se suscribe a los golpes: un celular que tenia la paleta guardada se conectaba solo y no dejaba entrar a la app.
+- **Modelo v5 de P2** en la placa: ventana de 120 antes + 75 despues del impacto (igual que `segmentar.py`), **4,4 ms** por inferencia. La clase va a `tipo_golpe` (ruido = 4) y la certeza a `confianza`. Para compilar hay que instalar la libreria del modelo (`armar_libreria_arduino.py` si viene como export C++).
+- **Angulo** con `angulo.cpp` de Mateo: acostada ±87°, parada ±3°. ~365 µs por golpe.
+- **`vel_kmh` y `pico_ms`** con la cuenta de `cinematica.py` (L = 0,30 m provisorio).
+- **Serie sin bloqueo:** antes, con el USB enchufado y nadie leyendo, el loop iba a 1 muestra cada 2 s. Ahora no frena y `grabar.py` sigue sin perdidas.
+- **Powerbank:** 15 min con BLE y golpes cada 5 min, sin cortes. **USB por el OTG ya soldado:** 5 min sin cortes.
+
+**Falta:** golpes reales con pelota (ver el signo del angulo y que el modelo acierte), probar la app en el celular, y decidir que hacer con el ruido (hoy la app lo muestra como "Golpe no reconocido": no mandarlo o separarlo en el contrato).
+
+---
+
 ### Clase 5 · Viernes 6/11 · Validacion Ciega y Congelamiento
 **Materiales a llevar:** Hardware 100 % ensamblado y funcional, red y pelotas para las pruebas ciegas.
 

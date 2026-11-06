@@ -37,7 +37,7 @@ Si una tarea necesita tocar la zona de otro, hacerlo igual pero decirlo en el PR
 - **Ejes, formatos y signos:** los define `docs/CONTRATOS.md`. Lo mas facil de romper sin que de error:
   - Signo del angulo: 0° = cara vertical, **negativo = cerrada** (mira a la mesa), **positivo = abierta** (mira al techo).
   - Ejes: X a lo largo del mango hacia la paleta, Z saliendo por la goma roja, Y = Z × X.
-  - Struct BLE de 14 bytes, little-endian.
+  - Struct BLE de 20 bytes, little-endian (los primeros 14 son los de antes; la app acepta 14 o 20).
   - Ventana del modelo: 196 muestras (120 antes del impacto + 76 despues).
 - **Un cambio de contrato** (formato, signo, ventana, struct) se discute entre los tres y se actualiza `CONTRATOS.md` en el mismo PR que el codigo.
 - Si dos documentos se contradicen, no elegir uno en silencio: marcarlo en el PR.
