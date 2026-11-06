@@ -2147,9 +2147,9 @@ function getMacroZ() {
   const aspect = window.innerWidth / window.innerHeight;
   // A mayor ancho de pantalla, cámara más cercana para que la superficie
   // de la esfera cubra el 100% del viewport sin mostrar bordes ni silueta
-  if (aspect >= 1.6) return 0.029;
-  if (aspect >= 1.0) return 0.032;
-  return 0.035; // Móvil vertical
+  if (aspect >= 1.6) return 0.033;
+  if (aspect >= 1.0) return 0.035;
+  return 0.038; // Móvil vertical
 }
 
 function initIntroBall() {
@@ -2180,14 +2180,14 @@ function initIntroBall() {
   const uvs = geometry.attributes.uv;
 
   // Proyección UV planar ortogonal frontal macro:
-  // Calibrada para que el cuño llene con elegancia la pantalla plana sin distorsión
-  const stampSpan = 0.009;
+  // Calibrada para que el cuño tenga un tamaño armónico y no sea tapado por el botón
+  const stampSpan = 0.0135;
   for (let i = 0; i < pos.count; i++) {
     const x = pos.getX(i);
     const y = pos.getY(i);
     const z = pos.getZ(i);
 
-    if (z > 0.008) {
+    if (z > 0.006) {
       uvs.setXY(i, (x / stampSpan) + 0.5, (y / stampSpan) + 0.5);
     } else {
       uvs.setXY(i, 0.02, 0.02);
@@ -2207,25 +2207,26 @@ function initIntroBall() {
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
 
-  // 1. Marca principal DOC en bloque grueso
-  ctx.font = '900 360px system-ui, -apple-system, sans-serif';
-  ctx.letterSpacing = '24px';
-  ctx.fillText('DOC', 1024, 680);
+  // Centrado armónico superior (y: 620 a 1100), dejando el tercio inferior 100% despejado para el botón:
+  // 1. Marca principal DOC
+  ctx.font = '900 240px system-ui, -apple-system, sans-serif';
+  ctx.letterSpacing = '18px';
+  ctx.fillText('DOC', 1024, 620);
 
   // 2. Tres estrellas de competición (★ ★ ★)
-  ctx.font = '170px system-ui, sans-serif';
-  ctx.letterSpacing = '32px';
-  ctx.fillText('★ ★ ★', 1024, 910);
+  ctx.font = '120px system-ui, sans-serif';
+  ctx.letterSpacing = '24px';
+  ctx.fillText('★ ★ ★', 1024, 790);
 
   // 3. Especificación oficial 40+
-  ctx.font = '800 130px system-ui, sans-serif';
-  ctx.letterSpacing = '18px';
-  ctx.fillText('40+', 1024, 1100);
+  ctx.font = '800 95px system-ui, sans-serif';
+  ctx.letterSpacing = '14px';
+  ctx.fillText('40+', 1024, 930);
 
   // 4. Lema FIND YOUR EDGE
-  ctx.font = '900 90px system-ui, -apple-system, sans-serif';
-  ctx.letterSpacing = '14px';
-  ctx.fillText('FIND YOUR EDGE', 1024, 1340);
+  ctx.font = '900 68px system-ui, -apple-system, sans-serif';
+  ctx.letterSpacing = '12px';
+  ctx.fillText('FIND YOUR EDGE', 1024, 1100);
 
   const stampTex = new THREE.CanvasTexture(c);
   stampTex.generateMipmaps = true;
@@ -2313,9 +2314,9 @@ function dispararIntroCinematica() {
   }
 
   const startTime = performance.now();
-  const dur = 1150; // ms: tiempo justo para apreciar la revelación sin demoras
+  const dur = 1300; // ms: ritmo calmo y cinematográfico para apreciar la pelota física
   const zStart = getMacroZ();
-  const zEnd = 0.44;
+  const zEnd = 0.125; // Zoom-out suave: la pelota queda en ~60% del alto, sin volverse diminuta
 
   function loop(now) {
     if (!introActiva) return;
@@ -2323,20 +2324,18 @@ function dispararIntroCinematica() {
     const t = Math.min(1, elapsed / dur);
 
     // -------------------------------------------------------------
-    // FASE 1: Revelación Frontal (0 <= t <= 0.38)
-    // El zoom out retrocede la cámara; el cuño frontal DOC ★★★ 40+ 
-    // se mantiene de frente y 100% legible mientras la pantalla plana
-    // se curva para revelar que ES la pelota física de celuloide.
+    // FASE 1: Revelación Frontal (0 <= t <= 0.40)
+    // El zoom out moderado aleja la cámara lo justo para ver
+    // formarse la esfera 3D manteniendo el cuño en tamaño grande y nítido.
     // -------------------------------------------------------------
-    const pZ = Math.min(1, t / 0.48);
+    const pZ = Math.min(1, t / 0.45);
     const easeZ = 1 - Math.pow(1 - pZ, 3.2);
     introCamera.position.z = zStart + (zEnd - zStart) * easeZ;
 
     // -------------------------------------------------------------
     // FASE 2: Giro Lateral Elegante (0.35 <= t <= 0.75)
-    // En lugar de rodar alocadamente hacia abajo, la pelota rota
-    // suavemente de costado (eje Y), mostrando su volumen tridimensional,
-    // el brillo del celuloide y la perspectiva 3D del estampado.
+    // Rota suavemente de costado (~25° en Y) revelando la redondez
+    // física y el brillo de celuloide con las letras aún legibles.
     // -------------------------------------------------------------
     if (t < 0.35) {
       introBall.rotation.set(0, 0, 0);
@@ -2344,21 +2343,20 @@ function dispararIntroCinematica() {
     } else {
       const pYaw = Math.min(1, (t - 0.35) / 0.40);
       const easeYaw = Math.sin(pYaw * Math.PI * 0.5);
-      introBall.rotation.y = -0.44 * easeYaw; // ~25° de giro lateral
-      introBall.rotation.x = 0.08 * easeYaw;  // leve perspectiva vertical
-      introBall.rotation.z = -0.04 * easeYaw;
+      introBall.rotation.y = -0.42 * easeYaw; // ~24° de giro lateral
+      introBall.rotation.x = 0.06 * easeYaw;
+      introBall.rotation.z = -0.03 * easeYaw;
     }
 
     // -------------------------------------------------------------
-    // FASE 3: Descenso con Gravedad y Salida (t >= 0.62)
-    // La pelota desciende con aceleración gravitacional suave
-    // saliendo por el borde inferior de la pantalla.
+    // FASE 3: Descenso con Gravedad y Salida (t >= 0.65)
+    // La pelota desciende suavemente por el borde inferior.
     // -------------------------------------------------------------
-    if (t >= 0.62) {
-      const pFall = (t - 0.62) / 0.38;
+    if (t >= 0.65) {
+      const pFall = (t - 0.65) / 0.35;
       const tau = pFall * pFall;
-      introBall.position.y = -0.28 * tau;
-      introCamera.position.y = -0.04 * tau;
+      introBall.position.y = -0.09 * tau;
+      introCamera.position.y = -0.015 * tau;
       introCamera.lookAt(0, introCamera.position.y * 1.1, 0);
 
       // El dashboard emerge suavemente con la misma inercia
