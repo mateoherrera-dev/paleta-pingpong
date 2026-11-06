@@ -2247,26 +2247,39 @@ function initIntroBall() {
   ctx.letterSpacing = '6px';
   ctx.fillText('40+', cx, 1075);
 
-  // 4. Bajada institucional en arco inferior inverso (⌣): FIND YOUR EDGE
+  // 4. Bajada institucional en arco inferior cóncavo (⌣): FIND YOUR EDGE
+  // Medición dinámica por glifo para kerning uniforme y corrección del ángulo de la tangente
   const textBottom = 'FIND YOUR EDGE';
   const chars = textBottom.split('');
-  const nChars = chars.length;
-  const cyBottom = 690;
-  const rBottom = 630;
-  const arcSpan = 0.76; // ~43.5° de apertura
+  ctx.font = '800 52px -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif';
 
-  ctx.font = '900 64px -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif';
+  const charGap = 16;
+  const widths = chars.map((ch) => ch === ' ' ? 24 : ctx.measureText(ch).width);
+  const totalArc = widths.reduce((sum, w) => sum + w + charGap, -charGap);
+
+  // Radio y centro calibrados para subir el texto y abrazar el 40+ con curvatura suave
+  const rBottom = 880;
+  const cyBottom = 325; // Punto más bajo en y = 325 + 880 = 1205 (subido desde 1320)
+  const totalSpan = totalArc / rBottom;
+
+  let currentAngle = -totalSpan / 2;
   chars.forEach((ch, i) => {
-    const p = (i - (nChars - 1) / 2) / (nChars - 1);
-    const x = cx + rBottom * Math.sin(p * arcSpan);
-    const y = cyBottom + rBottom * Math.cos(p * arcSpan);
-    const rot = p * arcSpan;
+    const w = widths[i];
+    const charAngle = currentAngle + (w / 2) / rBottom;
+    const x = cx + rBottom * Math.sin(charAngle);
+    const y = cyBottom + rBottom * Math.cos(charAngle);
+    // Tangente matemática correcta para arco cóncavo hacia arriba (⌣):
+    // A la izquierda (charAngle < 0), rot > 0 acompaña la bajada hacia el vértice;
+    // A la derecha (charAngle > 0), rot < 0 acompaña la subida del arco.
+    const rot = -charAngle;
 
     ctx.save();
     ctx.translate(x, y);
     ctx.rotate(rot);
     ctx.fillText(ch, 0, 0);
     ctx.restore();
+
+    currentAngle += (w + charGap) / rBottom;
   });
 
   const stampTex = new THREE.CanvasTexture(c);
