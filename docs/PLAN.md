@@ -313,6 +313,27 @@ Aprovechando que entre semana se trabaja en desarrollo en computadora, el ciclo 
 
 ---
 
+#### Estado al 6/11 (P1)
+
+**La app anda con la paleta real y reconoce bien los golpes** ([GitHub Pages](https://mateoherrera-dev.github.io/paleta-pingpong/app/), desde `main`, con los #30 y #31 de Mateo).
+
+- **Firmware:** la placa tiene cargado el del **#29**: el umbral de Jerk queda en 1,0 g (subirlo pierde golpes reales antes que los falsos) y lo que el modelo llama `ruido` o tiene giro maximo < 300 °/s no se manda por BLE (sale `# Descartado` por el serie). Saca 7 de 8 falsos (tirones del cable, roces) y en el dataset pierde 4 de 315 golpes reales.
+  - **Ojo, contrato:** con el #29 `numero_golpe` cuenta solo los golpes que se mandan y a la app ya no le llega `tipo_golpe = 4`. El struct no cambia, pero `CONTRATOS.md` dice "contador de impactos en la sesion": hay que acordar entre los tres si se cambia el texto.
+- **Validacion con externos: no se hizo.** El protocolo quedo en `PROTOCOLO.md` seccion 5 (#34 de Mateo). Lo que se vio con p1 y p3: cuando acierta lo hace con 100 %, y los errores son golpes rapidos que llama ruido y el topspin de reves (lo confunde con empuje de reves).
+
+**Para congelar el codigo:** mergear el #29 (asi `main` es lo que tiene la placa) y despues no tocar `firmware/` ni `app/` salvo bugs.
+
+**Falta para el 13/11:**
+- [ ] Mergear el #29. Cerrar el #33: lo cubre el protocolo del #34 y ahora tiene conflicto con el.
+- [ ] Capsula: `hardware/` esta vacio en `main`. Entrar el #21 (`CAPSULA.md`, Mateo) y el STL de `hardware-capsula-stl` (P2).
+- [ ] Ramas de P2 sin PR: `datos-segmentar-p3` (descartes de `NOTAS*.md` en `segmentar.py`) y `datos-segmentar-ruido` (modelo v1 en este PLAN). Borrar `firmware-angulo` (ya esta en `main` mas nuevo) y revisar `app-timing-pico`.
+- [ ] Signo del angulo: a la mañana el topspin daba positivo (deberia ser negativo). En los empujes de derecha el firmware a veces elige la otra cara; la app ya lo corrige con el cuaternion (#31). Confirmar en la app que el topspin da negativo.
+- [ ] Medir `L` con la paleta armada (`vel_kmh` usa 0,30 m provisorio).
+- [ ] Metricas finales: tasa de acierto (con el protocolo de la seccion 5), autonomia con el powerbank (hasta ahora 15 min), latencia (el modelo tarda 4,4 ms).
+- [ ] Video de respaldo de la demo.
+
+---
+
 ### Clase 6 · Viernes 13/11 · Entrega del MVP
 **Materiales a llevar:** MVP completo, Powerbank cargado al 100%, celular extra con memoria y tripode para filmar la demo.
 
