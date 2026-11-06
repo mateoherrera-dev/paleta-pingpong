@@ -2207,26 +2207,26 @@ function initIntroBall() {
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
 
-  // Centrado armónico superior (y: 620 a 1100), dejando el tercio inferior 100% despejado para el botón:
+  // Bloque del cuño centrado exactamente en el eje vertical (Y = 1024):
   // 1. Marca principal DOC
   ctx.font = '900 240px system-ui, -apple-system, sans-serif';
   ctx.letterSpacing = '18px';
-  ctx.fillText('DOC', 1024, 620);
+  ctx.fillText('DOC', 1024, 780);
 
   // 2. Tres estrellas de competición (★ ★ ★)
   ctx.font = '120px system-ui, sans-serif';
   ctx.letterSpacing = '24px';
-  ctx.fillText('★ ★ ★', 1024, 790);
+  ctx.fillText('★ ★ ★', 1024, 950);
 
   // 3. Especificación oficial 40+
   ctx.font = '800 95px system-ui, sans-serif';
   ctx.letterSpacing = '14px';
-  ctx.fillText('40+', 1024, 930);
+  ctx.fillText('40+', 1024, 1090);
 
   // 4. Lema FIND YOUR EDGE
   ctx.font = '900 68px system-ui, -apple-system, sans-serif';
   ctx.letterSpacing = '12px';
-  ctx.fillText('FIND YOUR EDGE', 1024, 1100);
+  ctx.fillText('FIND YOUR EDGE', 1024, 1260);
 
   const stampTex = new THREE.CanvasTexture(c);
   stampTex.generateMipmaps = true;
