@@ -228,9 +228,14 @@
     letter-spacing: 0.5px;
     font-weight: 600;
   }
+  .visor-sin-3d {
+    padding: 48px 16px;
+    margin: 0;
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
 </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 </head>
 <body>
 <main>
@@ -331,7 +336,7 @@ let targetRotY = 0.25, currentRotY = 0.25, rotYDrag = 0;
 let targetRotZ = 0, currentRotZ = 0;
 let isDragging = false, prevMouseX = 0;
 let mixer = null;
-const clock3d = new THREE.Clock();
+let clock3d = null;
 let modeloActual = 'paleta.glb';
 
 function cargarModelo(archivo) {
@@ -493,14 +498,15 @@ function animarVisor() {
   }
 }
 
-let targetQuat = new THREE.Quaternion();
+// Se crean en iniciarVisor3D(), cuando ya está Three.js (se baja aparte y puede no llegar).
+let targetQuat = null;
 let usaCuaternion = false;
 
 // paleta.glb tiene la punta en +Y y la goma roja en +Z. Con los ejes de la paleta pasados a
 // Three.js (CONTRATOS.md: x → x, z → y, y → −z) la punta queda en +x y la roja en +y, así que
 // este giro fijo lleva el modelo a esos ejes: X del modelo → z, Y → x, Z → y.
-const MODELO_A_PALETA = new THREE.Quaternion(-0.5, -0.5, -0.5, 0.5);
-const VERTICAL_3D = new THREE.Vector3(0, 1, 0);
+let MODELO_A_PALETA = null;
+let VERTICAL_3D = null;
 
 // Orientación del modelo a partir del cuaternión del struct (paleta → mundo, Z del mundo para arriba).
 function orientacionVisor(q, cara) {
@@ -571,7 +577,9 @@ function actualizarVisor3D(ang, golpe, q = null, caraOverride = null) {
     }
   }
 
-  if (q) {
+  if (!paletaGroup) {
+    // Sin visor 3D (Three.js no llegó): se actualizan solo el ángulo y la etiqueta
+  } else if (q) {
     // Modo 20 bytes: orientación real de la paleta en el impacto
     usaCuaternion = true;
     targetQuat.copy(orientacionVisor(q, cara));
@@ -580,7 +588,7 @@ function actualizarVisor3D(ang, golpe, q = null, caraOverride = null) {
     // Con las dos caras el giro en X es −ang: así la cara que mira a la cámara sube cuando
     // ang > 0 (abierta). Con +ang la negra se inclinaba al revés por el giro de 180° en Y.
     usaCuaternion = false;
-    targetRotX = THREE.MathUtils.degToRad(-ang);
+    targetRotX = -ang * Math.PI / 180;
 
     if (cara === 'negra') {
       // Cara negra al frente: giro 180° en Y
@@ -810,8 +818,51 @@ if (badgeEl) {
   });
 }
 
-window.addEventListener('DOMContentLoaded', iniciarVisor3D);
-if (document.readyState !== 'loading') iniciarVisor3D();
+// Three.js se baja recién cuando la página terminó de cargar y sin frenarla: si la red no deja
+// llegar a cdnjs o jsdelivr, la app anda igual (Bluetooth, golpe, ángulo, consejo) sin el visor.
+const LIBRERIAS_3D = [
+  'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js',
+  'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js',
+];
+
+function cargarScript(url) {
+  return new Promise((ok, mal) => {
+    const s = document.createElement('script');
+    s.src = url;
+    s.onload = ok;
+    s.onerror = () => mal(new Error(url));
+    document.head.appendChild(s);
+  });
+}
+
+function avisoSinVisor() {
+  const container = $('canvas3d-container');
+  if (container && !paletaGroup) {
+    container.insertAdjacentHTML('beforeend',
+      '<p class="visor-sin-3d">No se pudo cargar el visor 3D (revisá la conexión). El resto de la app anda igual.</p>');
+  }
+}
+
+async function cargarVisor3D() {
+  const espera = setTimeout(avisoSinVisor, 15000);
+  try {
+    for (const url of LIBRERIAS_3D) await cargarScript(url);
+    clearTimeout(espera);
+    clock3d = new THREE.Clock();
+    targetQuat = new THREE.Quaternion();
+    MODELO_A_PALETA = new THREE.Quaternion(-0.5, -0.5, -0.5, 0.5);
+    VERTICAL_3D = new THREE.Vector3(0, 1, 0);
+    iniciarVisor3D();
+    if (ultimoEvento) actualizarVisor3D(ultimoEvento.ang, ultimoEvento.golpe, ultimoEvento.q);
+  } catch (err) {
+    clearTimeout(espera);
+    console.warn('Visor 3D no disponible:', err.message);
+    avisoSinVisor();
+  }
+}
+
+if (document.readyState === 'complete') cargarVisor3D();
+else window.addEventListener('load', cargarVisor3D);
 </script>
 </body>
 </html>
