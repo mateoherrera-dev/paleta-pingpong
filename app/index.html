@@ -672,9 +672,9 @@
   #intro-landing {
     position: relative;
     z-index: 10;
-    max-width: 520px;
+    max-width: 640px;
     margin: 0 auto;
-    padding: 32px 24px;
+    padding: 28px 24px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -710,18 +710,64 @@
     letter-spacing: 0.18em;
     text-transform: uppercase;
     color: rgba(15, 23, 42, 0.85);
-    margin: 0 0 24px 0;
+    margin: 0 0 20px 0;
   }
 
-  /* Subtítulo nítido */
+  /* Bajada conceptual Find Your Edge */
   #intro-sub {
-    font-size: 1.15rem;
-    font-weight: 700;
-    letter-spacing: -0.01em;
+    margin: 0 0 28px 0;
+    width: 100%;
+    max-width: 620px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+  .intro-claim {
+    font-size: 1.55rem;
+    font-weight: 900;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: #0f172a;
+    line-height: 1;
+    border-bottom: 2px solid rgba(15, 23, 42, 0.25);
+    padding-bottom: 6px;
+    user-select: none;
+  }
+  .intro-edge-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    text-align: center;
+    width: 100%;
+  }
+  @media (max-width: 620px) {
+    .intro-edge-grid {
+      grid-template-columns: 1fr;
+      gap: 8px;
+    }
+  }
+  .edge-col {
+    background: rgba(15, 23, 42, 0.05);
+    border: 1px solid rgba(15, 23, 42, 0.12);
+    border-radius: 12px;
+    padding: 10px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .edge-title {
+    font-size: 0.76rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #0f172a;
+  }
+  .edge-desc {
+    font-size: 0.72rem;
     line-height: 1.35;
-    margin: 0 0 36px 0;
-    color: rgba(15, 23, 42, 0.9);
-    max-width: 380px;
+    color: rgba(15, 23, 42, 0.82);
+    font-weight: 500;
   }
 
   /* Botón y acciones */
@@ -782,8 +828,24 @@
       <div class="stamp-spec">40+</div>
     </div>
 
-    <!-- Subtítulo plano nítido (desaparece en 100ms) -->
-    <h1 id="intro-sub">Diagnóstico y Optimización de Cinemática</h1>
+    <!-- Bajada conceptual Find Your Edge -->
+    <div id="intro-sub">
+      <div class="intro-claim">FIND YOUR EDGE</div>
+      <div class="intro-edge-grid">
+        <div class="edge-col">
+          <div class="edge-title">El canto de la mesa</div>
+          <div class="edge-desc">La pelota al fleje o la línea blanca: el tiro definitivo que nadie levanta.</div>
+        </div>
+        <div class="edge-col">
+          <div class="edge-title">Ventaja competitiva</div>
+          <div class="edge-desc">Tener ese plus técnico y milimétrico sobre el rival en cada punto.</div>
+        </div>
+        <div class="edge-col">
+          <div class="edge-title">Tu propio límite</div>
+          <div class="edge-desc">Descubrir hasta dónde acelerar el brazo y cerrar la cara sin perder el control.</div>
+        </div>
+      </div>
+    </div>
 
     <!-- Botón de acción (desaparece en 100ms) -->
     <div id="intro-actions">
