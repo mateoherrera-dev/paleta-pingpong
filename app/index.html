@@ -2211,35 +2211,63 @@ function initIntroBall() {
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
 
-  // Bloque del cuño con simetría matemática y óptica absoluta:
-  // Eje central de referencia: X = 1024
-  const xCenter = 1024;
-  const letterDist = 215; // D (-215) y C (+215) simétricas respecto a la O
-  const starDist = 125;   // Constelación de 3 estrellas compacta y simétrica
+  // =======================================================================
+  // Sello Circular Oficial de Competición ITTF:
+  // 1. Corona de 3 estrellas en arco superior (⌒)
+  // 2. Núcleo central: DOC horizontal en bloque
+  // 3. Especificación técnica: 40+
+  // 4. Bajada institucional en arco inferior inverso (⌣): FIND YOUR EDGE
+  // =======================================================================
+  const cx = 1024;
 
-  const yDoc = 780;
-  const yStars = 945;
+  // 1. Corona de 3 estrellas en arco superior (⌒)
+  const cyTop = 1240;
+  const rTop = 520;
+  const thetaTop = 0.28; // ~16°
 
-  ctx.font = '900 240px -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif';
-  ctx.fillText('D', xCenter - letterDist, yDoc);
-  ctx.fillText('O', xCenter, yDoc);
-  ctx.fillText('C', xCenter + letterDist, yDoc);
-
-  // Las 3 estrellas forman un bloque compacto de certificación de torneo,
-  // con la estrella central clavada en el eje vertical de la 'O':
   ctx.font = '105px sans-serif';
-  ctx.fillText('★', xCenter - starDist, yStars);
-  ctx.fillText('★', xCenter, yStars);
-  ctx.fillText('★', xCenter + starDist, yStars);
+  [-1, 0, 1].forEach((i) => {
+    const angle = i * thetaTop;
+    const x = cx + rTop * Math.sin(angle);
+    const y = cyTop - rTop * Math.cos(angle);
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(angle);
+    ctx.fillText('★', 0, 0);
+    ctx.restore();
+  });
 
-  // 3. Especificación oficial 40+
+  // 2. Núcleo de marca: DOC en bloque horizontal mayúsculo
+  ctx.font = '900 240px -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif';
+  ctx.letterSpacing = '14px';
+  ctx.fillText('DOC', cx, 915);
+
+  // 3. Especificación técnica: 40+ en el centro
   ctx.font = '800 95px -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif';
-  ctx.fillText('40+', xCenter, 1085);
+  ctx.letterSpacing = '6px';
+  ctx.fillText('40+', cx, 1075);
 
-  // 4. Lema FIND YOUR EDGE
-  ctx.font = '900 68px -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif';
-  ctx.letterSpacing = '10px';
-  ctx.fillText('FIND YOUR EDGE', xCenter, 1250);
+  // 4. Bajada institucional en arco inferior inverso (⌣): FIND YOUR EDGE
+  const textBottom = 'FIND YOUR EDGE';
+  const chars = textBottom.split('');
+  const nChars = chars.length;
+  const cyBottom = 690;
+  const rBottom = 630;
+  const arcSpan = 0.76; // ~43.5° de apertura
+
+  ctx.font = '900 64px -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif';
+  chars.forEach((ch, i) => {
+    const p = (i - (nChars - 1) / 2) / (nChars - 1);
+    const x = cx + rBottom * Math.sin(p * arcSpan);
+    const y = cyBottom + rBottom * Math.cos(p * arcSpan);
+    const rot = p * arcSpan;
+
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(rot);
+    ctx.fillText(ch, 0, 0);
+    ctx.restore();
+  });
 
   const stampTex = new THREE.CanvasTexture(c);
   stampTex.generateMipmaps = true;
