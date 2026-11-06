@@ -778,28 +778,28 @@
     transition: opacity 0.1s ease, transform 0.15s ease;
   }
   #btn-comenzar {
-    background: rgba(15, 23, 42, 0.08);
-    color: #0f172a;
-    font-size: 0.80rem;
+    background: #0f172a;
+    color: #ffffff;
+    font-size: 0.82rem;
     font-weight: 800;
     letter-spacing: 0.12em;
     text-transform: uppercase;
-    padding: 10px 28px;
+    padding: 12px 32px;
     border-radius: var(--radius-pill);
-    border: 1.5px solid rgba(15, 23, 42, 0.28);
-    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.28), 0 2px 6px rgba(15, 23, 42, 0.16);
     cursor: pointer;
-    transition: transform 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+    transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s ease, box-shadow 0.15s ease;
   }
   #btn-comenzar:hover {
-    background: rgba(15, 23, 42, 0.16);
-    border-color: rgba(15, 23, 42, 0.45);
-    transform: scale(1.03);
+    background: #1e293b;
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-1px) scale(1.02);
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.35);
   }
   #btn-comenzar:active {
-    transform: scale(0.97);
+    transform: translateY(0) scale(0.98);
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.2);
   }
   .intro-hint {
     font-size: 0.68rem;
@@ -2213,23 +2213,24 @@ function initIntroBall() {
 
   // =======================================================================
   // Sello Circular Oficial de Competición ITTF:
-  // 1. Corona de 3 estrellas en arco superior (⌒)
-  // 2. Núcleo central: DOC horizontal en bloque
-  // 3. Especificación técnica: 40+
-  // 4. Bajada institucional en arco inferior inverso (⌣): FIND YOUR EDGE
+  // Origen común (cx, cy) centrado en el medio de la 'O' de DOC.
+  // 1. Corona de 3 estrellas: arco superior convexo (cúpula simétrica)
+  // 2. Núcleo central: DOC horizontal en el origen
+  // 3. Especificación técnica: 40+ bajo DOC
+  // 4. Bajada institucional: arco inferior cóncavo (⌣) que envuelve la base del 40+
   // =======================================================================
   const cx = 1024;
+  const cy = 980; // Centro exacto de la 'O' de DOC y origen concéntrico de ambos arcos
 
-  // 1. Corona de 3 estrellas en arco superior (⌒)
-  const cyTop = 1240;
-  const rTop = 520;
-  const thetaTop = 0.28; // ~16°
-
-  ctx.font = '105px sans-serif';
+  // 1. Arco superior simétrico en las estrellas (Cúpula superior del círculo)
+  // Estrella central más elevada; dos laterales descendiendo en ángulo
+  const rTop = 235;
+  const thetaTop = 0.28; // ~16° de separación angular
+  ctx.font = '85px sans-serif';
   [-1, 0, 1].forEach((i) => {
     const angle = i * thetaTop;
     const x = cx + rTop * Math.sin(angle);
-    const y = cyTop - rTop * Math.cos(angle);
+    const y = cy - rTop * Math.cos(angle);
     ctx.save();
     ctx.translate(x, y);
     ctx.rotate(angle);
@@ -2237,29 +2238,28 @@ function initIntroBall() {
     ctx.restore();
   });
 
-  // 2. Núcleo de marca: DOC en bloque horizontal mayúsculo
-  ctx.font = '900 240px -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif';
+  // 2. Núcleo de marca: DOC centrado en el origen (cx, cy)
+  ctx.font = '900 215px -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif';
   ctx.letterSpacing = '14px';
-  ctx.fillText('DOC', cx, 915);
+  ctx.fillText('DOC', cx, cy);
 
-  // 3. Especificación técnica: 40+ en el centro
-  ctx.font = '800 95px -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif';
+  // 3. Especificación técnica: 40+ bajo DOC
+  ctx.font = '800 84px -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif';
   ctx.letterSpacing = '6px';
-  ctx.fillText('40+', cx, 1075);
+  ctx.fillText('40+', cx, cy + 115);
 
-  // 4. Bajada institucional en arco inferior cóncavo (⌣): FIND YOUR EDGE
-  // Arco cerrado de sello deportivo (~360px) que abraza el 40+ y completa la circunferencia
+  // 4. Curvatura inferior más cerrada: FIND YOUR EDGE envolviendo la base del 40+
+  // Comparte exactamente el mismo origen (cx, cy) con radio cerrado (rBottom = 245)
+  // y letter-spacing ampliado (charGap = 13) para abarcar un arco amplio (~114°) sin empastarse
   const textBottom = 'FIND YOUR EDGE';
   const chars = textBottom.split('');
-  ctx.font = '800 44px -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif';
+  ctx.font = '800 38px -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif';
 
-  const charGap = 8;
-  const widths = chars.map((ch) => ch === ' ' ? 20 : ctx.measureText(ch).width);
+  const charGap = 13;
+  const widths = chars.map((ch) => ch === ' ' ? 18 : ctx.measureText(ch).width);
   const totalArc = widths.reduce((sum, w) => sum + w + charGap, -charGap);
 
-  // Radio ~360px para lograr una apertura envolvente de ~84° tipo sello ITTF
-  const rBottom = 360;
-  const cyBottom = 845; // Vértice inferior en y = 845 + 360 = 1205; extremos suben a y = 1115
+  const rBottom = 245;
   const totalSpan = totalArc / rBottom;
 
   let currentAngle = -totalSpan / 2;
@@ -2267,7 +2267,7 @@ function initIntroBall() {
     const w = widths[i];
     const charAngle = currentAngle + (w / 2) / rBottom;
     const x = cx + rBottom * Math.sin(charAngle);
-    const y = cyBottom + rBottom * Math.cos(charAngle);
+    const y = cy + rBottom * Math.cos(charAngle);
     const rot = -charAngle;
 
     ctx.save();
