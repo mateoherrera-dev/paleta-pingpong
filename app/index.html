@@ -2194,79 +2194,83 @@ function dispararIntroCinematica() {
   if (animandoCinematica || !introActiva) return;
   animandoCinematica = true;
 
-  // 1. Desvanecimiento inmediato del botón y texto (< 80ms)
+  // Feedback auditivo sutil instantáneo al accionar
+  sonarPique(0.25);
+
+  // 1. Desvanecimiento inmediato del botón y texto (< 60ms)
   const actionsWrap = $('intro-actions-wrap');
   if (actionsWrap) {
     actionsWrap.style.opacity = '0';
-    actionsWrap.style.transform = 'translateY(18px) scale(0.96)';
+    actionsWrap.style.transform = 'translateY(16px) scale(0.95)';
     actionsWrap.style.pointerEvents = 'none';
   }
 
   const startTime = performance.now();
-  const dur = 1150; // ms: ágil, cinematográfico
+  const dur = 1550; // ms: arco cinemático con física real
   const zStart = getMacroZ();
-  const zEnd = 0.21;
-  piqueFired = false;
+  const zEnd = 0.44; // Cámara se aleja mucho más para mostrar escala real
 
   function loop(now) {
     if (!introActiva) return;
     const elapsed = now - startTime;
     const t = Math.min(1, elapsed / dur);
 
-    // Curva Apple ease-out cuártica: reactiva al inicio, desaceleración orgánica
-    const ease = 1 - Math.pow(1 - t, 4);
+    // -------------------------------------------------------------
+    // FASE 1: Retroceso de Cámara en Z (Curva suave hasta t=0.70)
+    // -------------------------------------------------------------
+    const pCam = Math.min(1, t / 0.70);
+    const easeCam = 1 - Math.pow(1 - pCam, 3);
+    introCamera.position.z = zStart + (zEnd - zStart) * easeCam;
 
-    // Zoom out de la cámara en Z
-    introCamera.position.z = zStart + (zEnd - zStart) * ease;
+    // -------------------------------------------------------------
+    // FASE 2: Dinámica de Tiro con Topspin (Rotación angular viva)
+    // -------------------------------------------------------------
+    // Rotación continua de topspin (revoluciones sobre el eje X)
+    const spinT = Math.pow(t, 1.25);
+    introBall.rotation.x = spinT * Math.PI * 6.5; 
+    introBall.rotation.y = 0.35 * Math.sin(t * Math.PI);
+    introBall.rotation.z = -0.12 * Math.sin(t * Math.PI);
 
-    // Rotación angular progresiva del celuloide
-    introBall.rotation.y = 0.44 * ease;
-    introBall.rotation.x = 0.12 * ease;
-
-    // Encendido de la luz direccional: despierta el 3D y el brillo especular
-    const pLight = Math.min(1, ease / 0.40);
-    const dirLight = introScene.userData && introScene.userData.dirLight;
-    const ambLight = introScene.userData && introScene.userData.ambLight;
-    if (dirLight) dirLight.intensity = 0.75 * pLight;
-    if (ambLight) ambLight.intensity = 1.0 - 0.22 * pLight;
-
-    // Transición de fondo de naranja torneo al fondo del dashboard (#090d16)
-    const pBg = Math.max(0, (ease - 0.12) / 0.88);
-    const r = (0xff - (0xff - 0x09) * pBg) / 255;
-    const g = (0x77 - (0x77 - 0x0d) * pBg) / 255;
-    const b = (0x00 + (0x16 - 0x00) * pBg) / 255;
-    introScene.background.setRGB(r, g, b);
-
-    // Física de caída y rebote de la pelota hacia la mesa
-    if (ease >= 0.42) {
-      const pDrop = (ease - 0.42) / 0.58;
-      const yPiso = -0.040;
-
-      // Cámara acompaña sutilmente hacia abajo
-      introCamera.position.y = (-0.016) * pDrop;
-      introCamera.lookAt(0, -0.020 * pDrop, 0);
-
-      if (pDrop < 0.45) {
-        // Caída libre acelerada
-        const fallT = pDrop / 0.45;
-        introBall.position.y = -(0.040 * (fallT * fallT));
-      } else {
-        // Rebote con amortiguación física real
-        const bounceT = (pDrop - 0.45) / 0.55;
-        const amort = Math.exp(-bounceT * 3.8);
-        const rebote = Math.abs(Math.sin(bounceT * 12)) * amort * 0.044;
-        introBall.position.y = yPiso + rebote;
-        introBall.position.x = 0.012 * bounceT;
-
-        if (!piqueFired) {
-          sonarPique(0.40);
-          piqueFired = true;
-        }
-      }
-    } else {
-      introBall.position.set(0, 0, 0);
+    // -------------------------------------------------------------
+    // FASE 3: Trayectoria Parabólica & Caída por el Borde Inferior
+    // -------------------------------------------------------------
+    if (t <= 0.32) {
+      // Flote inicial ascendente (pequeña parábola de saque)
+      const pFloat = t / 0.32;
+      const arc = Math.sin(pFloat * Math.PI * 0.5);
+      introBall.position.y = 0.016 * arc;
       introCamera.position.y = 0;
       introCamera.lookAt(0, 0, 0);
+    } else {
+      // Gravedad acelerada: cae y se zambulle fuera de la vista
+      const tau = (t - 0.32) / 0.68;
+      introBall.position.y = 0.016 - 0.22 * (tau * tau);
+      
+      // Cámara acompaña sutilmente el descenso
+      introCamera.position.y = (-0.035) * (tau * tau);
+      introCamera.lookAt(0, introCamera.position.y * 1.15, 0);
+    }
+
+    // Encendido suave de luz direccional (revela el volumen plástico)
+    const pLight = Math.min(1, t / 0.35);
+    const dirLight = introScene.userData && introScene.userData.dirLight;
+    const ambLight = introScene.userData && introScene.userData.ambLight;
+    if (dirLight) dirLight.intensity = 0.80 * pLight;
+    if (ambLight) ambLight.intensity = 1.0 - 0.22 * pLight;
+
+    // Transición de fondo de naranja torneo al fondo idéntico del dashboard (#090d16)
+    const pBg = Math.min(1, t / 0.45);
+    const easeBg = pBg * pBg * (3 - 2 * pBg);
+    const r = (0xff - (0xff - 0x09) * easeBg) / 255;
+    const g = (0x77 - (0x77 - 0x0d) * easeBg) / 255;
+    const b = (0x00 + (0x16 - 0x00) * easeBg) / 255;
+    introScene.background.setRGB(r, g, b);
+
+    // Cuando la pelota cruza el borde inferior (t >= 0.82), fundido suave al dashboard
+    const stage = $('intro-stage');
+    if (stage && t >= 0.80) {
+      const pFade = (t - 0.80) / 0.20;
+      stage.style.opacity = String(Math.max(0, 1 - pFade));
     }
 
     renderIntroFrame();
