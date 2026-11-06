@@ -4,6 +4,7 @@ Uso:
     python grabar.py --listar
     python grabar.py --puerto COM5 --jugador mateo --golpe topspin_derecha
     python grabar.py --puerto COM5 --jugador prueba --golpe libre --segundos 300
+    python grabar.py --puerto COM7 --jugador calibracion --golpe libre --carpeta ../datos/pruebas
 
 Cortar con Ctrl+C (o esperar --segundos). El archivo queda en datos/crudos/ con fecha, jugador y
 golpe en el nombre. Si se pierden muestras en el camino (huecos en t_us), lo avisa en vivo y al final.
@@ -21,6 +22,7 @@ from senal import COLUMNAS, GOLPES
 
 CARPETA = pathlib.Path(__file__).resolve().parent.parent / "datos" / "crudos"
 BUFFER_PUERTO = 1 << 20  # 1 MB: si Windows se traba un momento, que el buffer del puerto no se llene
+RECONEXION_S = 20  # si se corta el USB, cuánto esperar a que vuelva antes de cortar la grabación
 
 # Una muestra tal como la imprime paleta.ino: t_us y 3 decimales en g, 1 decimal en °/s.
 # Si se pierden bytes en el camino, dos líneas pueden quedar pegadas y tener igual 8 columnas
@@ -42,6 +44,33 @@ def lineas(puerto):
             yield cruda.decode("ascii", errors="ignore").strip()
 
 
+def lineas_con_reconexion(puerto):
+    """Como lineas(), pero si se corta el USB espera y se reconecta solo.
+
+    Pasó el 23/10 en una tanda de reveses: un tirón del cable cortó el USB un instante (la placa
+    no se reinició) y grabar.py se cerraba con error. Las muestras del corte quedan como pérdidas.
+    """
+    while True:
+        try:
+            yield from lineas(puerto)
+        except serial.SerialException:
+            puerto.close()
+            print("\nSe cortó el USB: revisá el cable en el conector OTG. Reconectando...", flush=True)
+            limite = time.monotonic() + RECONEXION_S
+            while True:
+                time.sleep(0.5)
+                try:
+                    puerto.open()
+                    break
+                except serial.SerialException:
+                    if time.monotonic() > limite:
+                        print(f"No volvió en {RECONEXION_S} s: corto la grabación.")
+                        return
+            if hasattr(puerto, "set_buffer_size"):
+                puerto.set_buffer_size(rx_size=BUFFER_PUERTO)
+            print("Reconectado: sigue grabando en el mismo archivo.", flush=True)
+
+
 def listar_puertos():
     for puerto in list_ports.comports():
         nota = {0x303A: "  ← USB nativo de la ESP32 (conector OTG): usar este",
@@ -56,6 +85,9 @@ def main():
     parser.add_argument("--golpe", choices=GOLPES + ["libre"])
     parser.add_argument("--baudios", type=int, default=921600)
     parser.add_argument("--segundos", type=float, help="cortar solo después de estos segundos")
+    parser.add_argument("--carpeta", type=pathlib.Path, default=CARPETA,
+                        help="dónde guardar el CSV (default datos/crudos, que es solo para el dataset; "
+                             "para pruebas: ../datos/pruebas)")
     parser.add_argument("--listar", action="store_true", help="muestra los puertos disponibles")
     args = parser.parse_args()
 
@@ -75,52 +107,57 @@ def main():
         listar_puertos()
         return
 
-    CARPETA.mkdir(parents=True, exist_ok=True)
+    args.carpeta.mkdir(parents=True, exist_ok=True)
     marca = datetime.datetime.now().strftime("%Y-%m-%d_%H%M%S")
-    ruta = CARPETA / f"{marca}_{args.jugador}_{args.golpe}.csv"
+    ruta = args.carpeta / f"{marca}_{args.jugador}_{args.golpe}.csv"
 
     muestras = impactos = perdidas = rotas = 0
     t_anterior = t_rechazado = None
-    with puerto, open(ruta, "w", newline="") as archivo:
-        if hasattr(puerto, "set_buffer_size"):  # solo existe en Windows
-            puerto.set_buffer_size(rx_size=BUFFER_PUERTO)
-        archivo.write(",".join(COLUMNAS) + "\n")
-        puerto.reset_input_buffer()
-        print(f"Grabando {args.golpe} de {args.jugador}. Ctrl+C para terminar.")
-        inicio = ultimo_aviso = time.monotonic()
-        try:
-            for linea in lineas(puerto):
-                if linea.startswith("#"):
-                    print(f"\n{linea}")
-                    continue
-                if not MUESTRA.fullmatch(linea):
-                    # vacía, cortada o pegada; antes de la primera muestra es el arranque de la placa
-                    rotas += linea != "" and t_anterior is not None
-                    continue
-                campos = linea.split(",")
-                t = int(campos[0])
-                if t_anterior is not None and not 0 < t - t_anterior < 1_000_000:
-                    # Tiempo imposible: la línea quedó pegada con otra, o la placa se reinició.
-                    # Si sigue a la que se rechazó recién, es un reinicio: se acepta y se sigue de ahí.
-                    if t_rechazado is None or not 0 < t - t_rechazado < 2000:
-                        t_rechazado = t
-                        rotas += 1
+    try:
+        with puerto, open(ruta, "w", newline="") as archivo:
+            if hasattr(puerto, "set_buffer_size"):  # solo existe en Windows
+                puerto.set_buffer_size(rx_size=BUFFER_PUERTO)
+            archivo.write(",".join(COLUMNAS) + "\n")
+            puerto.reset_input_buffer()
+            print(f"Grabando {args.golpe} de {args.jugador}. Ctrl+C para terminar.")
+            inicio = ultimo_aviso = time.monotonic()
+            try:
+                for linea in lineas_con_reconexion(puerto):
+                    if linea.startswith("#"):
+                        print(f"\n{linea}")
                         continue
-                elif t_anterior is not None and t - t_anterior > 1500:  # una muestra cada ~1000 µs
-                    perdidas += round((t - t_anterior) / 1000) - 1
-                t_anterior = t
-                t_rechazado = None
-                archivo.write(linea + "\n")
-                muestras += 1
-                impactos += campos[-1] == "1"
-                ahora = time.monotonic()
-                if ahora - ultimo_aviso >= 1:
-                    print(f"\r{muestras} muestras · {impactos} impactos · {perdidas} perdidas", end="", flush=True)
-                    ultimo_aviso = ahora
-                if args.segundos and ahora - inicio >= args.segundos:
-                    break
-        except KeyboardInterrupt:
-            pass
+                    if not MUESTRA.fullmatch(linea):
+                        # vacía, cortada o pegada; antes de la primera muestra es el arranque de la placa
+                        rotas += linea != "" and t_anterior is not None
+                        continue
+                    campos = linea.split(",")
+                    t = int(campos[0])
+                    if t_anterior is not None and not 0 < t - t_anterior < 1_000_000:
+                        # Tiempo imposible: la línea quedó pegada con otra, o la placa se reinició.
+                        # Si sigue a la que se rechazó recién, es un reinicio: se acepta y se sigue de ahí.
+                        if t_rechazado is None or not 0 < t - t_rechazado < 2000:
+                            t_rechazado = t
+                            rotas += 1
+                            continue
+                        if t > t_anterior:  # el tiempo siguió: no fue un reinicio sino un corte largo del USB
+                            perdidas += round((t - t_anterior) / 1000) - 1
+                    elif t_anterior is not None and t - t_anterior > 1500:  # una muestra cada ~1000 µs
+                        perdidas += round((t - t_anterior) / 1000) - 1
+                    t_anterior = t
+                    t_rechazado = None
+                    archivo.write(linea + "\n")
+                    muestras += 1
+                    impactos += campos[-1] == "1"
+                    ahora = time.monotonic()
+                    if ahora - ultimo_aviso >= 1:
+                        print(f"\r{muestras} muestras · {impactos} impactos · {perdidas} perdidas", end="", flush=True)
+                        ultimo_aviso = ahora
+                    if args.segundos and ahora - inicio >= args.segundos:
+                        break
+            except KeyboardInterrupt:
+                pass
+    except KeyboardInterrupt:
+        pass  # un segundo Ctrl+C mientras se cerraba el puerto: el archivo igual queda guardado
 
     print(f"\nGuardado en {ruta} ({muestras} muestras, {impactos} impactos)")
     if perdidas or rotas:

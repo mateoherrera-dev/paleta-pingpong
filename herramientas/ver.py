@@ -16,7 +16,7 @@ from senal import cargar_sesion, detectar_impactos, revisar_muestreo
 def main():
     parser = argparse.ArgumentParser(description="Grafica una sesión de la paleta")
     parser.add_argument("archivo")
-    parser.add_argument("--umbral", type=float, default=1.5, help="umbral de Jerk en g por muestra (default 1.5)")
+    parser.add_argument("--umbral", type=float, default=1.0, help="umbral de Jerk en g por muestra (default 1.0, igual que paleta.ino)")
     parser.add_argument("--png", help="guardar el gráfico en un archivo en vez de mostrarlo")
     args = parser.parse_args()
 

@@ -35,13 +35,13 @@ const float LSB_POR_DPS = 16.4f;
 
 // Offset del acelerómetro de ESTE módulo, en g y en los ejes del módulo: se resta a cada lectura.
 // Se mide con herramientas/calibrar.py y hay que volver a medirlo cada vez que se cambia el módulo.
-// Son los del módulo de la clase 1, que en la clase 2 se montó en el pomo sin soldar (sin Pieza A
-// todavía). Su eje Z lee ≈ +0,46 g de más (la hoja de datos admite hasta ±0,08 g). Medido el 9/10.
-// Cuando se suelde el módulo de repuesto en la Pieza A: calibrar.py → estos 3 valores, después
-// ejes.py → alinearEjes(), y volver a revisar UMBRAL_JERK_G. Los pines no cambian.
-const float OFFSET_AX_G = 0.033f;
-const float OFFSET_AY_G = -0.012f;
-const float OFFSET_AZ_G = 0.460f;
+// Módulo de repuesto soldado con chicotes (clase 3), calibrado el 23/10 con 6 posiciones
+// (datos/pruebas/2026-10-23_094814_calibracion_libre.csv, error residual 0,021 g).
+// Su eje Z también lee de más (+0,26 g; la hoja de datos admite ±0,08 g): el de la clase 1 tenía
+// +0,46 g (0.033 / -0.012 / 0.460). Parece del lote de módulos: calibrar siempre cada uno.
+const float OFFSET_AX_G = 0.028f;
+const float OFFSET_AY_G = -0.002f;
+const float OFFSET_AZ_G = 0.264f;
 
 // Detección de impacto por Jerk: cuánto cambia el vector aceleración entre dos muestras seguidas,
 // |a[k] - a[k-1]|, en g por muestra (g/ms a 1000 Hz). El swing cambia la aceleración en
@@ -49,9 +49,12 @@ const float OFFSET_AZ_G = 0.460f;
 // Es la resta de vectores y no la de módulos (|a[k]| - |a[k-1]|) porque si la vibración del
 // choque es de costado respecto de la aceleración del swing, el módulo casi no cambia: con la
 // resta de módulos se perdían los golpes sintéticos de las pruebas y 2 de 3 toques reales.
-// Es un primer valor: con el sensor en el pomo el golpe llega más débil que en el cuello.
-// Ajustarlo con herramientas/ver.py --umbral sobre toques y swings reales.
-const float UMBRAL_JERK_G = 1.5f;
+// Medido el 23/10 con el módulo firme en la Pieza A (datos/pruebas/2026-10-23_104715_umbral_libre.csv):
+// pelota cayendo desde 30 cm → 1,28 a 18,5 g; swings al aire hasta 606 °/s → 0,06 a 0,17 g.
+// 1,0 g agarra los golpes suaves (empujes) con mucho margen sobre los swings. Con el montaje
+// provisorio del 16/10 (dupont colgando) los swings llegaban a 1,02 g y se usaba 1,5.
+// Revisarlo con herramientas/ver.py --umbral si cambia el montaje.
+const float UMBRAL_JERK_G = 1.0f;
 const uint32_t REFRACTARIO_US = 300000;  // después de un impacto, ignorar 300 ms
 
 // Distancia del plano inferior del pomo (donde apoya el sensor) al centro de la cabeza de la paleta,
@@ -136,8 +139,9 @@ void leerMPU(int16_t crudo[7]) {
 // Pasa de los ejes del módulo a los ejes de la paleta (docs/CONTRATOS.md).
 // En la base del pomo la plaqueta queda perpendicular al mango, así que hay que intercambiar ejes:
 // el cuerpo de esta función lo escribe herramientas/ejes.py a partir de 3 posiciones grabadas.
-// Módulo de la clase 1 pegado en el pomo con el chip hacia afuera (16/10, 2026-10-16_102554_ejes_libre.csv):
-// la punta de la paleta es -Z del módulo y la goma roja es +X del módulo.
+// Módulo de repuesto pegado en la base del pomo dentro de la Pieza A, con el chip hacia afuera
+// (23/10, datos/pruebas/2026-10-23_101954_ejes_libre.csv): la punta de la paleta es -Z del módulo
+// y la goma roja es +X del módulo. Quedó igual que el módulo de la clase 1 en el mismo lugar.
 void alinearEjes(float &x, float &y, float &z) {
   float mx = x, my = y, mz = z;
   x = -mz;

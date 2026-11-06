@@ -223,6 +223,40 @@ Aprovechando que entre semana se trabaja en desarrollo en computadora, el ciclo 
   - Ensayos en mesa con 3 a 5 compañeros externos para medir precision en vivo fuera del dataset de entrenamiento.
   - **Hito:** Precision medida en hardware real ($\ge 80\%$ avanza a integracion final; $60-80\%$ reentrenamiento; $< 60\%$ reducir alcance a 3 golpes).
 
+#### Estado al 23/10 a las 11:00 (P1)
+
+**El dataset v1 no se grabo el 16/10.** Hoy a la mañana se armo la paleta y a la tarde se graba el dataset. Propuesta (a confirmar entre los tres): P2 entrena en Edge Impulse durante la semana y el modelo real, el powerbank y NimBLE pasan a la clase 4.
+
+**Hecho a la mañana** (PR de la rama `firmware-modulo-nuevo`):
+- **MPU de repuesto** soldado con chicotes y pegado con VHB en la base del pomo, adentro de la **Pieza A** (encastra bien). Se le saco la camara a la placa (no se usa, y la placa queda mas finita).
+- **Calibrado** con `calibrar.py`: offset +0,028 / -0,002 / +0,264 g. **Su eje Z tambien viene corrido** (+0,26 g; el modulo de la clase 1 tenia +0,46; la hoja de datos dice ±0,08): parece del lote, hay que calibrar cada modulo.
+- **Ejes** con `ejes.py`: `x = -mz; y = my; z = mx` (chip hacia afuera, igual que el provisorio).
+- **Umbral de Jerk bajado a 1,0 g**: pelota desde 30 cm → 1,28 a 18,5 g; swings al aire → 0,06 a 0,17 g. Con el modulo firme los swings casi no dan Jerk (con los dupont colgando llegaban a 1,02 g).
+- `grabar.py --carpeta ../datos/pruebas` para las pruebas: `datos/crudos/` queda solo para el dataset (`segmentar.py` procesa todo lo que hay ahi).
+
+**Pieza B: la primera impresion no entro.** Mateo hizo el rediseño en `hardware/CAPSULA.md` (PR #21): interior de 31 × 21 mm y ranura de 26 × 13 mm que deja a la vista los dos USB-C (se usa el OTG). Mientras tanto la placa va sujeta con cinta. Dos cosas de hoy que cambian ese documento:
+- **Se le saco la camara** a la placa: queda mas finita que los 18,1 mm que se midieron con camara.
+- **Los chicotes de 4-5 cm con dupont no alcanzan** para el armado en la Pieza B: GND, G21 (NCS) y G14 (AD0) estan del lado de los USB-C, a unos 45-50 mm de la punta de la antena. Hay que rehacerlos con el largo de `CAPSULA.md` (35 mm + la distancia del pin a la punta de la antena).
+
+**Pendiente hoy:** 14:00 prueba de 5 min (`grabar.py --puerto COM7 --jugador prueba5min --golpe libre --segundos 300 --carpeta ../datos/pruebas`, el COM lo dice `--listar`); 14:30 grabacion masiva (en la primera tanda de 36 se tienen que marcar 36 impactos); 17:00 `segmentar.py` y Drive.
+
+#### Estado al 23/10 a las 15:45 (P1)
+
+**Dataset v1 grabado y en el Drive** (`paleta-pingpong · datos`): **343 ventanas validas** en `segmentados/`, todas de 196 muestras y sin huecos. Los descartes de cada tanda (red, afuera, golpes sin querer) estan en `segmentados_descartados/` y anotados en `crudos/NOTAS.md`.
+
+| Clase | Validas | Quien |
+| --- | --- | --- |
+| topspin_derecha | 62 | p2 + p1 |
+| topspin_reves | 68 | p2 + p1 |
+| empuje_derecha | 78 | p1 + p2 |
+| empuje_reves | 63 | p1 + p2 |
+| ruido | 72 | p1 + p2 |
+
+- A la mañana cada golpe lo grabo una sola persona (topspins p2, empujes p1): el modelo podia aprender quien pega y no que golpe. A la tarde se grabaron las **tandas cruzadas** y ahora los 4 golpes tienen a p1 y a p2.
+- **Para P2:** ya se puede entrenar con las 343. Los swings al aire y la caminata casi no marcan impactos, asi que en `ruido` casi todo es rebotes y golpes contra la mesa (ver `NOTAS.md`).
+- **Falta:** las tandas de Mateo (p3) con los 4 golpes, para despues.
+- **El USB se corta seguido** (~0,5 s, hasta 4 veces por tanda, a veces con la paleta quieta). `grabar.py` ahora se reconecta solo, pero en el empuje de reves de p2 dos cortes cayeron en medio de un swing y esos golpes se perdieron. Hay que revisar el cable y el conector OTG.
+
 ---
 
 ### Clase 4 · Viernes 30/10 · Integracion Total y Ensamble Definitivo
