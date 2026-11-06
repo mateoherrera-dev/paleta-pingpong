@@ -2211,32 +2211,35 @@ function initIntroBall() {
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
 
-  // Bloque del cuño centrado exactamente en el eje vertical (Y = 1024):
-  // 1 & 2. Marca principal DOC y sus 3 estrellas de competición:
-  // Alineación exacta columna por columna para que cada estrella quede
-  // matemáticamente centrada bajo su respectiva letra (D-★, O-★, C-★):
-  const colOffset = 230; // Distancia simétrica entre columnas de letras
+  // Bloque del cuño con simetría matemática y óptica absoluta:
+  // Eje central de referencia: X = 1024
+  const xCenter = 1024;
+  const letterDist = 215; // D (-215) y C (+215) simétricas respecto a la O
+  const starDist = 125;   // Constelación de 3 estrellas compacta y simétrica
+
   const yDoc = 780;
   const yStars = 945;
 
   ctx.font = '900 240px -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif';
-  ctx.fillText('D', 1024 - colOffset, yDoc);
-  ctx.fillText('O', 1024, yDoc);
-  ctx.fillText('C', 1024 + colOffset, yDoc);
+  ctx.fillText('D', xCenter - letterDist, yDoc);
+  ctx.fillText('O', xCenter, yDoc);
+  ctx.fillText('C', xCenter + letterDist, yDoc);
 
-  ctx.font = '115px sans-serif';
-  ctx.fillText('★', 1024 - colOffset, yStars);
-  ctx.fillText('★', 1024, yStars);
-  ctx.fillText('★', 1024 + colOffset, yStars);
+  // Las 3 estrellas forman un bloque compacto de certificación de torneo,
+  // con la estrella central clavada en el eje vertical de la 'O':
+  ctx.font = '105px sans-serif';
+  ctx.fillText('★', xCenter - starDist, yStars);
+  ctx.fillText('★', xCenter, yStars);
+  ctx.fillText('★', xCenter + starDist, yStars);
 
   // 3. Especificación oficial 40+
   ctx.font = '800 95px -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif';
-  ctx.fillText('40+', 1024, 1085);
+  ctx.fillText('40+', xCenter, 1085);
 
   // 4. Lema FIND YOUR EDGE
   ctx.font = '900 68px -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif';
   ctx.letterSpacing = '10px';
-  ctx.fillText('FIND YOUR EDGE', 1024, 1250);
+  ctx.fillText('FIND YOUR EDGE', xCenter, 1250);
 
   const stampTex = new THREE.CanvasTexture(c);
   stampTex.generateMipmaps = true;
