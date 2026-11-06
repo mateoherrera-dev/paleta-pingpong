@@ -2212,23 +2212,23 @@ function initIntroBall() {
   ctx.textBaseline = 'middle';
 
   // =======================================================================
-  // Sello Circular Oficial de Competición ITTF:
-  // Círculo único unificado de radio R = 360px con centro común en (cx, cy).
-  // La corona superior de estrellas y la bajada inferior comparten el mismo radio y ancho,
-  // definiendo los dos hemisferios del medallón deportivo.
+  // Sello Oficial de Torneo:
+  // 1. Corona de 3 estrellas con arco suave superior (⌒)
+  // 2. Núcleo central: DOC horizontal
+  // 3. Especificación técnica: 40+ horizontal
+  // 4. Bajada institucional: FIND YOUR EDGE recto horizontal
   // =======================================================================
   const cx = 1024;
-  const cy = 1000;
-  const rBadge = 360;
 
-  // 1. Cúpula superior de 3 estrellas en arco (rBadge = 360px, apertura ~60°)
-  // Abarca todo el ancho de DOC con la estrella central en la cúspide
-  const thetaStar = 0.52; // ~30° de apertura lateral
-  ctx.font = '78px sans-serif';
+  // 1. Estrellas con arco suave superior (~10° de curvatura sutil)
+  const cyStarCenter = 1300;
+  const rStars = 600;
+  const thetaStar = 0.18;
+  ctx.font = '85px sans-serif';
   [-1, 0, 1].forEach((i) => {
     const angle = i * thetaStar;
-    const x = cx + rBadge * Math.sin(angle);
-    const y = cy - rBadge * Math.cos(angle);
+    const x = cx + rStars * Math.sin(angle);
+    const y = cyStarCenter - rStars * Math.cos(angle);
     ctx.save();
     ctx.translate(x, y);
     ctx.rotate(angle);
@@ -2236,43 +2236,20 @@ function initIntroBall() {
     ctx.restore();
   });
 
-  // 2. Núcleo de marca: DOC centrado armónicamente
-  ctx.font = '900 210px -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif';
+  // 2. Núcleo de marca: DOC en bloque horizontal
+  ctx.font = '900 230px -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif';
   ctx.letterSpacing = '14px';
-  ctx.fillText('DOC', cx, cy - 65);
+  ctx.fillText('DOC', cx, 880);
 
-  // 3. Especificación técnica: 40+ en bloque
-  ctx.font = '800 85px -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif';
+  // 3. Especificación técnica: 40+ horizontal
+  ctx.font = '800 90px -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif';
   ctx.letterSpacing = '6px';
-  ctx.fillText('40+', cx, cy + 65);
+  ctx.fillText('40+', cx, 1030);
 
-  // 4. Bajada institucional en arco inferior (rBadge = 360px, apertura ~74°): FIND YOUR EDGE
-  // Concavidad complementaria a las estrellas que cierra la circunferencia del sello
-  const textBottom = 'FIND YOUR EDGE';
-  const chars = textBottom.split('');
-  ctx.font = '800 42px -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif';
-
-  const charGap = 12;
-  const widths = chars.map((ch) => ch === ' ' ? 20 : ctx.measureText(ch).width);
-  const totalArc = widths.reduce((sum, w) => sum + w + charGap, -charGap);
-  const totalSpan = totalArc / rBadge;
-
-  let currentAngle = -totalSpan / 2;
-  chars.forEach((ch, i) => {
-    const w = widths[i];
-    const charAngle = currentAngle + (w / 2) / rBadge;
-    const x = cx + rBadge * Math.sin(charAngle);
-    const y = cy + rBadge * Math.cos(charAngle);
-    const rot = -charAngle;
-
-    ctx.save();
-    ctx.translate(x, y);
-    ctx.rotate(rot);
-    ctx.fillText(ch, 0, 0);
-    ctx.restore();
-
-    currentAngle += (w + charGap) / rBadge;
-  });
+  // 4. Bajada institucional: FIND YOUR EDGE recta horizontal con tracking deportivo
+  ctx.font = '900 62px -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif';
+  ctx.letterSpacing = '12px';
+  ctx.fillText('FIND YOUR EDGE', cx, 1180);
 
   const stampTex = new THREE.CanvasTexture(c);
   stampTex.generateMipmaps = true;
@@ -2283,9 +2260,11 @@ function initIntroBall() {
     stampTex.anisotropy = introRenderer.capabilities.getMaxAnisotropy();
   }
 
-  // Material plástico 100% mate sin brillo especular (Lambert puro: cero reflejo GGX/Cook-Torrance)
-  const material = new THREE.MeshLambertMaterial({
+  // Material físico con reflejo sutil que revela el volumen 3D durante el giro
+  const material = new THREE.MeshStandardMaterial({
     map: stampTex,
+    roughness: 0.58,
+    metalness: 0.04,
   });
 
   introBall = new THREE.Mesh(geometry, material);
@@ -2413,12 +2392,12 @@ function dispararIntroCinematica() {
       introCamera.lookAt(0, 0, 0);
     }
 
-    // Encendido suave de luz difusa ambiental (volumen mate sin crear hotspots ni brillos)
+    // Encendido de luz direccional para revelar el volumen y brillo físico 3D
     const pLight = Math.min(1, easeZ / 0.40);
     const dirLight = introScene.userData && introScene.userData.dirLight;
     const ambLight = introScene.userData && introScene.userData.ambLight;
-    if (dirLight) dirLight.intensity = 0.15 * pLight;
-    if (ambLight) ambLight.intensity = 1.0;
+    if (dirLight) dirLight.intensity = 0.65 * pLight;
+    if (ambLight) ambLight.intensity = 1.0 - 0.15 * pLight;
 
     // Cuando la pelota cruza el borde inferior (t >= 0.75), fundido del telón
     const stage = $('intro-stage');
