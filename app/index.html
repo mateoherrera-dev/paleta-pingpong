@@ -2191,7 +2191,12 @@ function renderIntroFrame() {
 }
 
 function dispararIntroCinematica() {
-  if (animandoCinematica || !introActiva) return;
+  if (animandoCinematica) {
+    // Si ya está en movimiento, un segundo click desestima de inmediato (Principio de Agencia)
+    cerrarIntro();
+    return;
+  }
+  if (!introActiva) return;
   animandoCinematica = true;
 
   // Feedback auditivo sutil instantáneo al accionar
@@ -2206,70 +2211,66 @@ function dispararIntroCinematica() {
   }
 
   const startTime = performance.now();
-  const dur = 1550; // ms: arco cinemático con física real
+  const dur = 950; // ms: ágil, decisiva y sin demoras
   const zStart = getMacroZ();
-  const zEnd = 0.44; // Cámara se aleja mucho más para mostrar escala real
+  const zEnd = 0.44;
 
   function loop(now) {
     if (!introActiva) return;
     const elapsed = now - startTime;
     const t = Math.min(1, elapsed / dur);
 
-    // -------------------------------------------------------------
-    // FASE 1: Retroceso de Cámara en Z (Curva suave hasta t=0.70)
-    // -------------------------------------------------------------
-    const pCam = Math.min(1, t / 0.70);
-    const easeCam = 1 - Math.pow(1 - pCam, 3);
-    introCamera.position.z = zStart + (zEnd - zStart) * easeCam;
+    // Curva Apple ease-out cuártica suave
+    const ease = 1 - Math.pow(1 - t, 3.5);
 
     // -------------------------------------------------------------
-    // FASE 2: Dinámica de Tiro con Topspin (Rotación angular viva)
+    // FASE 1: Retroceso de Cámara en Z
     // -------------------------------------------------------------
-    // Rotación continua de topspin (revoluciones sobre el eje X)
-    const spinT = Math.pow(t, 1.25);
-    introBall.rotation.x = spinT * Math.PI * 6.5; 
-    introBall.rotation.y = 0.35 * Math.sin(t * Math.PI);
-    introBall.rotation.z = -0.12 * Math.sin(t * Math.PI);
+    introCamera.position.z = zStart + (zEnd - zStart) * ease;
 
     // -------------------------------------------------------------
-    // FASE 3: Trayectoria Parabólica & Caída por el Borde Inferior
+    // FASE 2: Rotación de Topspin Suave y Legible
     // -------------------------------------------------------------
-    if (t <= 0.32) {
-      // Flote inicial ascendente (pequeña parábola de saque)
-      const pFloat = t / 0.32;
+    // Giro controlado: el cuño DOC y las estrellas se aprecian nítidos sin estroboscopía
+    introBall.rotation.x = ease * Math.PI * 1.35; 
+    introBall.rotation.y = 0.22 * Math.sin(ease * Math.PI);
+    introBall.rotation.z = -0.06 * Math.sin(ease * Math.PI);
+
+    // -------------------------------------------------------------
+    // FASE 3: Trayectoria y Salida Decisiva por el Borde Inferior
+    // -------------------------------------------------------------
+    if (t <= 0.28) {
+      const pFloat = t / 0.28;
       const arc = Math.sin(pFloat * Math.PI * 0.5);
-      introBall.position.y = 0.016 * arc;
+      introBall.position.y = 0.012 * arc;
       introCamera.position.y = 0;
       introCamera.lookAt(0, 0, 0);
     } else {
-      // Gravedad acelerada: cae y se zambulle fuera de la vista
-      const tau = (t - 0.32) / 0.68;
-      introBall.position.y = 0.016 - 0.22 * (tau * tau);
-      
-      // Cámara acompaña sutilmente el descenso
-      introCamera.position.y = (-0.035) * (tau * tau);
+      const tau = (t - 0.28) / 0.72;
+      introBall.position.y = 0.012 - 0.24 * (tau * tau);
+      introCamera.position.y = (-0.030) * (tau * tau);
       introCamera.lookAt(0, introCamera.position.y * 1.15, 0);
     }
 
     // Encendido suave de luz direccional (revela el volumen plástico)
-    const pLight = Math.min(1, t / 0.35);
+    const pLight = Math.min(1, ease / 0.35);
     const dirLight = introScene.userData && introScene.userData.dirLight;
     const ambLight = introScene.userData && introScene.userData.ambLight;
     if (dirLight) dirLight.intensity = 0.80 * pLight;
     if (ambLight) ambLight.intensity = 1.0 - 0.22 * pLight;
 
     // Transición de fondo de naranja torneo al fondo idéntico del dashboard (#090d16)
-    const pBg = Math.min(1, t / 0.45);
+    const pBg = Math.min(1, ease / 0.45);
     const easeBg = pBg * pBg * (3 - 2 * pBg);
     const r = (0xff - (0xff - 0x09) * easeBg) / 255;
     const g = (0x77 - (0x77 - 0x0d) * easeBg) / 255;
     const b = (0x00 + (0x16 - 0x00) * easeBg) / 255;
     introScene.background.setRGB(r, g, b);
 
-    // Cuando la pelota cruza el borde inferior (t >= 0.82), fundido suave al dashboard
+    // Cuando la pelota cruza el borde inferior (t >= 0.75), fundido suave al dashboard
     const stage = $('intro-stage');
-    if (stage && t >= 0.80) {
-      const pFade = (t - 0.80) / 0.20;
+    if (stage && t >= 0.75) {
+      const pFade = (t - 0.75) / 0.25;
       stage.style.opacity = String(Math.max(0, 1 - pFade));
     }
 
