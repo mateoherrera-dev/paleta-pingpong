@@ -317,12 +317,16 @@ const TAM_EVENTO = 14;
 // Rangos de ángulo de la cara en el impacto (negativo = cerrada, positivo = abierta),
 // sacados de docs/GOLPES.md. Hay que ajustarlos con el jugador de referencia.
 const CRITERIOS = {
-  TD: { angulo: [-50, -30], pico: true },
-  TR: { angulo: [-45, -25], pico: true },
+  // Topspin ajustado con lo medido en la mesa el 6/11: nadie pega tan cerrado como pedia
+  // GOLPES.md (-50 a -30). Derecha normal de -11 a +10; exagerando, derecha -8 y reves -17.
+  TD: { angulo: [-25, 5], pico: true },
+  TR: { angulo: [-30, 0], pico: true },
   ED: { angulo: [30, 50], pico: false },
   ER: { angulo: [25, 45], pico: false },
 };
 const PICO_ANTES_MS = -25;  // si el pico de giro llega antes que esto, el jugador frena antes de pegar
+// El 6/11 muchos golpes buenos tuvieron el pico de +20 a +50 ms: con +5 casi todos decían "tarde".
+const PICO_TARDE_MS = 30;
 
 const sesion = { golpes: [], conteo: {} };
 const $ = (id) => document.getElementById(id);
@@ -680,7 +684,7 @@ function consejo(e) {
   }
   if (c.pico && e.pico !== null) {
     if (e.pico < PICO_ANTES_MS) avisos.push('Estás frenando antes de la pelota: acelerá a través del golpe.');
-    else if (e.pico > 5) avisos.push('Aceleraste tarde: el latigazo debe ser justo antes del contacto.');
+    else if (e.pico > PICO_TARDE_MS) avisos.push('Aceleraste tarde: el latigazo debe ser justo antes del contacto.');
   }
   return avisos.length ? { texto: avisos.join(' '), ok: false } : { texto: 'Buen golpe.', ok: true };
 }
