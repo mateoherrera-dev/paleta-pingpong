@@ -4,12 +4,12 @@ Generados a partir de la auditoría de diseño e ingeniería de animación ([`im
 
 ## Tabla de Planes
 
-| # | Plan | Severidad | Categoría | Estado |
+| # | Plan | Severidad | Categoria | Estado |
 | :--- | :--- | :--- | :--- | :--- |
-| **001** | [Calibrar rotación, duración y resolución de la cinemática 3D](001-cinematica-pelota-rotacion-y-duracion.md) | **HIGH** | Easing & duration / Physicality | `DONE` |
-| **002** | [Definir tokens globales de movimiento y eliminar `transition: all`](002-motion-tokens-y-eliminar-transition-all.md) | **HIGH** | Performance / Cohesion & tokens | `TODO` |
-| **003** | [Acelerar la barra de progreso por GPU mediante `transform: scaleX`](003-gpu-progress-bar-scale-x.md) | **HIGH** | Performance | `TODO` |
-| **004** | [Soporte de accesibilidad `prefers-reduced-motion`](004-prefers-reduced-motion-accessibility.md) | **MEDIUM** | Accessibility | `TODO` |
+| **001** | [Calibrar rotacion, duracion y resolucion de la cinematica 3D](001-cinematica-pelota-rotacion-y-duracion.md) | **HIGH** | Easing & duration / Physicality | `DONE` |
+| **002** | [Definir tokens globales de movimiento y eliminar `transition: all`](002-motion-tokens-y-eliminar-transition-all.md) | **HIGH** | Performance / Cohesion & tokens | `DONE` |
+| **003** | [Acelerar la barra de progreso por GPU mediante `transform: scaleX`](003-gpu-progress-bar-scale-x.md) | **HIGH** | Performance | `DONE` |
+| **004** | [Soporte de accesibilidad `prefers-reduced-motion`](004-prefers-reduced-motion-accessibility.md) | **MEDIUM** | Accessibility | `DONE` |
 
 ## Orden de Ejecución Recomendado
 
