@@ -2248,18 +2248,18 @@ function initIntroBall() {
   ctx.fillText('40+', cx, 1075);
 
   // 4. Bajada institucional en arco inferior cóncavo (⌣): FIND YOUR EDGE
-  // Radio circular marcado (~500px) concéntrico con la corona superior para cerrar la forma redonda
+  // Arco cerrado de sello deportivo (~360px) que abraza el 40+ y completa la circunferencia
   const textBottom = 'FIND YOUR EDGE';
   const chars = textBottom.split('');
-  ctx.font = '800 48px -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif';
+  ctx.font = '800 44px -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif';
 
-  const charGap = 11;
-  const widths = chars.map((ch) => ch === ' ' ? 22 : ctx.measureText(ch).width);
+  const charGap = 8;
+  const widths = chars.map((ch) => ch === ' ' ? 20 : ctx.measureText(ch).width);
   const totalArc = widths.reduce((sum, w) => sum + w + charGap, -charGap);
 
-  // Radio ~490px calibrado para cerrar el círculo con la corona de estrellas (rTop = 520px)
-  const rBottom = 490;
-  const cyBottom = 715; // Vértice inferior en y = 715 + 490 = 1205; extremos suben hacia y = 1135
+  // Radio ~360px para lograr una apertura envolvente de ~84° tipo sello ITTF
+  const rBottom = 360;
+  const cyBottom = 845; // Vértice inferior en y = 845 + 360 = 1205; extremos suben a y = 1115
   const totalSpan = totalArc / rBottom;
 
   let currentAngle = -totalSpan / 2;
@@ -2288,11 +2288,11 @@ function initIntroBall() {
     stampTex.anisotropy = introRenderer.capabilities.getMaxAnisotropy();
   }
 
-  // Material plástico mate celuloide
+  // Material plástico 100% mate (reglamentación ITTF oficial: acabado tizado sin brillo especular)
   const material = new THREE.MeshStandardMaterial({
     map: stampTex,
-    roughness: 0.65,
-    metalness: 0.02,
+    roughness: 1.0,
+    metalness: 0.0,
   });
 
   introBall = new THREE.Mesh(geometry, material);
