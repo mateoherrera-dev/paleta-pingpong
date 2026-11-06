@@ -670,114 +670,86 @@
   #intro-ui {
     position: relative;
     z-index: 10;
-    max-width: 440px;
+    max-width: 520px;
     margin: 0 auto;
-    padding: 24px;
+    padding: 32px 24px;
     display: flex;
     flex-direction: column;
     align-items: center;
     text-align: center;
     color: #111827;
-    transition: opacity 0.35s ease, transform 0.35s ease;
+    transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
   }
   #intro-ui.animando {
     opacity: 0;
-    transform: scale(0.92) translateY(30px);
+    transform: scale(0.65);
     pointer-events: none;
   }
 
-  .intro-eyebrow {
-    font-size: 0.7rem;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 0.14em;
-    color: rgba(17, 24, 39, 0.7);
-    margin-bottom: 12px;
-    background: rgba(17, 24, 39, 0.08);
-    padding: 3px 10px;
-    border-radius: var(--radius-pill);
-    border: 1px solid rgba(17, 24, 39, 0.15);
-  }
-
-  /* Sello central de la pelota */
-  .ball-stamp {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    width: 220px;
-    height: 220px;
-    border: 3px solid rgba(17, 24, 39, 0.4);
-    border-radius: 50%;
-    margin: 4px 0 16px 0;
-    background: radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.18) 0%, transparent 65%);
-    box-shadow: inset 0 0 16px rgba(17, 24, 39, 0.08);
-  }
-  .ball-stamp .stamp-brand {
-    font-size: 3.4rem;
+  .stamp-brand {
+    font-size: 5.5rem;
     font-weight: 900;
-    letter-spacing: 0.08em;
-    line-height: 1;
+    letter-spacing: 0.12em;
+    line-height: 0.95;
     color: #111827;
+    margin: 0 0 8px 0;
+    user-select: none;
   }
-  .ball-stamp .stamp-stars {
-    font-size: 1.15rem;
-    letter-spacing: 0.25em;
-    margin: 2px 0 3px 0;
+  .stamp-stars {
+    font-size: 1.45rem;
+    letter-spacing: 0.35em;
     color: #111827;
+    margin: 0 0 6px 0;
+    user-select: none;
   }
-  .ball-stamp .stamp-spec {
-    font-size: 0.75rem;
+  .stamp-spec {
+    font-size: 0.85rem;
     font-weight: 800;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.15em;
     text-transform: uppercase;
-    color: rgba(17, 24, 39, 0.85);
+    color: rgba(17, 24, 39, 0.8);
+    margin: 0 0 22px 0;
+    user-select: none;
   }
 
   .intro-title {
-    font-size: 1.25rem;
-    font-weight: 800;
-    letter-spacing: -0.02em;
-    line-height: 1.25;
-    margin: 0 0 8px 0;
-    color: #111827;
-  }
-  .intro-desc {
-    font-size: 0.88rem;
-    font-weight: 500;
-    line-height: 1.45;
-    color: rgba(17, 24, 39, 0.8);
-    margin: 0 0 20px 0;
-    max-width: 360px;
+    font-size: 1.15rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    line-height: 1.35;
+    margin: 0 0 32px 0;
+    color: rgba(17, 24, 39, 0.9);
+    max-width: 400px;
   }
 
   #btn-comenzar {
     background: #111827;
     color: #ffffff;
-    font-size: 0.92rem;
+    font-size: 0.95rem;
     font-weight: 800;
     letter-spacing: 0.08em;
-    padding: 13px 36px;
+    padding: 14px 40px;
     border-radius: var(--radius-pill);
-    border: 2px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 0 8px 24px rgba(17, 24, 39, 0.35);
+    border: 2px solid rgba(255, 255, 255, 0.25);
+    box-shadow: 0 10px 28px rgba(17, 24, 39, 0.3);
     cursor: pointer;
-    transition: transform 0.15s ease, background-color 0.15s ease;
+    transition: transform 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
   }
   #btn-comenzar:hover {
     background: #1f2937;
     transform: scale(1.04);
+    box-shadow: 0 12px 32px rgba(17, 24, 39, 0.4);
   }
   #btn-comenzar:active {
     transform: scale(0.97);
   }
   #intro-skip {
     font-size: 0.72rem;
-    color: rgba(17, 24, 39, 0.7);
+    color: rgba(17, 24, 39, 0.65);
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    margin-top: 10px;
+    margin-top: 14px;
     cursor: pointer;
     user-select: none;
     transition: color 0.15s ease;
@@ -793,17 +765,11 @@
 <div id="intro-overlay">
   <canvas id="canvas-intro"></canvas>
   <div id="intro-ui">
-    <div class="intro-eyebrow">TinyML · ESP32-S3</div>
-
-    <!-- Sello estampado nítido vectorial -->
-    <div class="ball-stamp">
-      <div class="stamp-brand">DOC</div>
-      <div class="stamp-stars">★ ★ ★</div>
-      <div class="stamp-spec">40+ · CINEMÁTICA</div>
-    </div>
+    <div class="stamp-brand">DOC</div>
+    <div class="stamp-stars">★ ★ ★</div>
+    <div class="stamp-spec">40+</div>
 
     <h1 class="intro-title">Diagnóstico y Optimización de Cinemática</h1>
-    <p class="intro-desc">Tu entrenador de rincón en cada golpe. Telemetría y corrección técnica en tiempo real.</p>
 
     <button id="btn-comenzar" type="button">COMENZAR ➔</button>
     <div id="intro-skip">Tocar para saltear</div>
@@ -2131,8 +2097,8 @@ function initIntroBall() {
   introScene.background = new THREE.Color(0xff7700); // Naranja pleno celuloide
 
   introCamera = new THREE.PerspectiveCamera(40, w / h, 0.005, 10);
-  // Cámara pegada al centro mirando al sello DOC
-  introCamera.position.set(0, 0, 0.0238);
+  // Cámara pegada al centro mirando a la superficie plana
+  introCamera.position.set(0, 0, 0.0215);
 
   introRenderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
   introRenderer.setSize(w, h);
@@ -2154,25 +2120,18 @@ function initIntroBall() {
   ctx.textBaseline = 'middle';
 
   // Marca DOC
-  ctx.font = '900 210px system-ui, -apple-system, sans-serif';
+  ctx.font = '900 240px system-ui, -apple-system, sans-serif';
   ctx.letterSpacing = '14px';
-  ctx.fillText('DOC', 1024, 820);
+  ctx.fillText('DOC', 1024, 850);
 
   // 3 Estrellas de torneo
-  ctx.font = '140px system-ui, sans-serif';
-  ctx.fillText('★ ★ ★', 1024, 1020);
+  ctx.font = '150px system-ui, sans-serif';
+  ctx.fillText('★ ★ ★', 1024, 1050);
 
-  // Especificación ITTF / Torneo
-  ctx.font = '800 90px system-ui, sans-serif';
+  // Especificación 40+
+  ctx.font = '800 110px system-ui, sans-serif';
   ctx.letterSpacing = '8px';
-  ctx.fillText('40+ · CINEMÁTICA', 1024, 1200);
-
-  // Círculo del sello
-  ctx.strokeStyle = 'rgba(17, 24, 39, 0.35)';
-  ctx.lineWidth = 14;
-  ctx.beginPath();
-  ctx.arc(1024, 1024, 560, 0, Math.PI * 2);
-  ctx.stroke();
+  ctx.fillText('40+', 1024, 1220);
 
   const stampTex = new THREE.CanvasTexture(c);
   stampTex.generateMipmaps = true;
@@ -2192,9 +2151,9 @@ function initIntroBall() {
   introScene.add(introBall);
 
   // Luces
-  const amb = new THREE.AmbientLight(0xffffff, 0.95);
+  const amb = new THREE.AmbientLight(0xffffff, 1.0);
   introScene.add(amb);
-  const dir = new THREE.DirectionalLight(0xffffff, 0.75);
+  const dir = new THREE.DirectionalLight(0xffffff, 0.7);
   dir.position.set(0.15, 0.25, 0.3);
   introScene.add(dir);
 
@@ -2232,10 +2191,10 @@ function arrancarSecuenciaPelota() {
     const elapsed = now - startTime;
     const progress = Math.min(1, elapsed / duracionTotal);
 
-    // 1. Fase Zoom out (0 a 800 ms): retroceso suave de cámara
-    const zoomT = Math.min(1, elapsed / 800);
+    // 1. Fase Zoom out (0 a 850 ms): retroceso suave de cámara alejándose de la superficie
+    const zoomT = Math.min(1, elapsed / 850);
     const easeZoom = 1 - Math.pow(1 - zoomT, 3);
-    introCamera.position.z = 0.0238 + (0.195 - 0.0238) * easeZoom;
+    introCamera.position.z = 0.0215 + (0.20 - 0.0215) * easeZoom;
 
     // Transición de fondo de naranja a grafito mesa (#0c1322)
     const r = (0xff - (0xff - 0x0c) * easeZoom) / 255;
@@ -2287,8 +2246,18 @@ function cerrarIntro() {
   }
 }
 
-$('btn-comenzar').addEventListener('click', arrancarSecuenciaPelota);
-$('intro-skip').addEventListener('click', cerrarIntro);
+$('btn-comenzar').addEventListener('click', (ev) => {
+  ev.stopPropagation();
+  arrancarSecuenciaPelota();
+});
+$('intro-overlay').addEventListener('click', (ev) => {
+  if (ev.target.id === 'intro-skip') return;
+  arrancarSecuenciaPelota();
+});
+$('intro-skip').addEventListener('click', (ev) => {
+  ev.stopPropagation();
+  cerrarIntro();
+});
 window.addEventListener('keydown', (ev) => {
   if (ev.key === 'Escape' || ev.key === 'Enter') cerrarIntro();
 });
