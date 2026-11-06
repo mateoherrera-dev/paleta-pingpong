@@ -2248,18 +2248,18 @@ function initIntroBall() {
   ctx.fillText('40+', cx, 1075);
 
   // 4. Bajada institucional en arco inferior cóncavo (⌣): FIND YOUR EDGE
-  // Medición dinámica por glifo para kerning uniforme y corrección del ángulo de la tangente
+  // Radio circular marcado (~500px) concéntrico con la corona superior para cerrar la forma redonda
   const textBottom = 'FIND YOUR EDGE';
   const chars = textBottom.split('');
-  ctx.font = '800 52px -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif';
+  ctx.font = '800 48px -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif';
 
-  const charGap = 16;
-  const widths = chars.map((ch) => ch === ' ' ? 24 : ctx.measureText(ch).width);
+  const charGap = 11;
+  const widths = chars.map((ch) => ch === ' ' ? 22 : ctx.measureText(ch).width);
   const totalArc = widths.reduce((sum, w) => sum + w + charGap, -charGap);
 
-  // Radio y centro calibrados para subir el texto y abrazar el 40+ con curvatura suave
-  const rBottom = 880;
-  const cyBottom = 325; // Punto más bajo en y = 325 + 880 = 1205 (subido desde 1320)
+  // Radio ~490px calibrado para cerrar el círculo con la corona de estrellas (rTop = 520px)
+  const rBottom = 490;
+  const cyBottom = 715; // Vértice inferior en y = 715 + 490 = 1205; extremos suben hacia y = 1135
   const totalSpan = totalArc / rBottom;
 
   let currentAngle = -totalSpan / 2;
@@ -2268,9 +2268,6 @@ function initIntroBall() {
     const charAngle = currentAngle + (w / 2) / rBottom;
     const x = cx + rBottom * Math.sin(charAngle);
     const y = cyBottom + rBottom * Math.cos(charAngle);
-    // Tangente matemática correcta para arco cóncavo hacia arriba (⌣):
-    // A la izquierda (charAngle < 0), rot > 0 acompaña la bajada hacia el vértice;
-    // A la derecha (charAngle > 0), rot < 0 acompaña la subida del arco.
     const rot = -charAngle;
 
     ctx.save();
