@@ -778,28 +778,41 @@
     transition: opacity 0.1s ease, transform 0.15s ease;
   }
   #btn-comenzar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
     background: #0f172a;
     color: #ffffff;
     font-size: 0.82rem;
     font-weight: 800;
     letter-spacing: 0.12em;
     text-transform: uppercase;
-    padding: 12px 32px;
+    padding: 12px 28px;
     border-radius: var(--radius-pill);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.28), 0 2px 6px rgba(15, 23, 42, 0.16);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    box-shadow: 0 6px 20px rgba(15, 23, 42, 0.28), 0 2px 6px rgba(15, 23, 42, 0.16);
     cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
     transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  #btn-comenzar .btn-arrow {
+    display: inline-block;
+    transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
   }
   #btn-comenzar:hover {
     background: #1e293b;
-    border-color: rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.32);
     transform: translateY(-1px) scale(1.02);
-    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.35);
+    box-shadow: 0 10px 26px rgba(15, 23, 42, 0.35);
+  }
+  #btn-comenzar:hover .btn-arrow {
+    transform: translateX(3px);
   }
   #btn-comenzar:active {
-    transform: translateY(0) scale(0.98);
-    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.2);
+    transform: translateY(0) scale(0.97);
+    box-shadow: 0 3px 10px rgba(15, 23, 42, 0.2);
   }
   .intro-hint {
     font-size: 0.68rem;
@@ -836,7 +849,12 @@
 
   <div id="stage-landing">
     <div id="intro-actions-wrap">
-      <button id="btn-comenzar" type="button">ENTRENAR ➔</button>
+      <button id="btn-comenzar" type="button">
+        <span>ENTRENAR</span>
+        <svg class="btn-arrow" viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M3 8h10M9 4l4 4-4 4"/>
+        </svg>
+      </button>
       <div class="intro-hint">Tocá para iniciar o presioná Espacio</div>
     </div>
   </div>
@@ -2242,14 +2260,16 @@ function initIntroBall() {
   ctx.fillText('DOC', cx, 880);
 
   // 3. Especificación técnica: 40+ horizontal
+  // Calibrado a y = 1055 para lograr ~60px de aire óptico simétrico tanto con DOC como con FIND YOUR EDGE
   ctx.font = '800 90px -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif';
   ctx.letterSpacing = '6px';
-  ctx.fillText('40+', cx, 1030);
+  ctx.fillText('40+', cx, 1055);
 
   // 4. Bajada institucional: FIND YOUR EDGE recta horizontal con tracking deportivo
+  // Calibrado a y = 1170 para equilibrar el ritmo visual en 61px de aire exactos
   ctx.font = '900 62px -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif';
   ctx.letterSpacing = '12px';
-  ctx.fillText('FIND YOUR EDGE', cx, 1180);
+  ctx.fillText('FIND YOUR EDGE', cx, 1170);
 
   const stampTex = new THREE.CanvasTexture(c);
   stampTex.generateMipmaps = true;
