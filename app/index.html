@@ -2189,6 +2189,15 @@ let introScene, introCamera, introRenderer, introBall;
 let introIniciada = false;
 let piqueFired = false;
 
+function getMacroZ() {
+  const aspect = window.innerWidth / window.innerHeight;
+  // A mayor ancho de pantalla, cámara más cercana para que la superficie
+  // de la esfera cubra el 100% del viewport sin mostrar bordes ni silueta
+  if (aspect >= 1.6) return 0.034;
+  if (aspect >= 1.0) return 0.037;
+  return 0.040; // Móvil vertical
+}
+
 function initIntroBall() {
   if (introIniciada || !window.THREE) return;
   introIniciada = true;
@@ -2202,8 +2211,8 @@ function initIntroBall() {
   introScene = new THREE.Scene();
   introScene.background = new THREE.Color(0xff7700); // Naranja celuloide torneo
 
-  introCamera = new THREE.PerspectiveCamera(32, w / h, 0.001, 10);
-  introCamera.position.set(0, 0, 0.088);
+  introCamera = new THREE.PerspectiveCamera(30, w / h, 0.001, 10);
+  introCamera.position.set(0, 0, getMacroZ());
 
   introRenderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
   introRenderer.setSize(w, h);
@@ -2216,15 +2225,15 @@ function initIntroBall() {
   const pos = geometry.attributes.position;
   const uvs = geometry.attributes.uv;
 
-  // Proyección UV planar ortogonal en el frente:
-  // Hace que el cuño en el frente sea matemáticamente plano y rectilíneo, sin deformación esférica
-  const stampSpan = 0.028;
+  // Proyección UV planar ortogonal frontal macro:
+  // Calibrada para que el cuño llene con elegancia la pantalla plana sin distorsión
+  const stampSpan = 0.009;
   for (let i = 0; i < pos.count; i++) {
     const x = pos.getX(i);
     const y = pos.getY(i);
     const z = pos.getZ(i);
 
-    if (z > 0.001) {
+    if (z > 0.008) {
       uvs.setXY(i, (x / stampSpan) + 0.5, (y / stampSpan) + 0.5);
     } else {
       uvs.setXY(i, 0.02, 0.02);
@@ -2245,24 +2254,24 @@ function initIntroBall() {
   ctx.textBaseline = 'middle';
 
   // 1. Marca principal DOC en bloque grueso
-  ctx.font = '900 290px system-ui, -apple-system, sans-serif';
-  ctx.letterSpacing = '22px';
-  ctx.fillText('DOC', 1024, 730);
+  ctx.font = '900 360px system-ui, -apple-system, sans-serif';
+  ctx.letterSpacing = '24px';
+  ctx.fillText('DOC', 1024, 680);
 
   // 2. Tres estrellas de competición (★ ★ ★)
-  ctx.font = '150px system-ui, sans-serif';
-  ctx.letterSpacing = '30px';
-  ctx.fillText('★ ★ ★', 1024, 940);
+  ctx.font = '170px system-ui, sans-serif';
+  ctx.letterSpacing = '32px';
+  ctx.fillText('★ ★ ★', 1024, 910);
 
   // 3. Especificación oficial 40+
-  ctx.font = '800 115px system-ui, sans-serif';
+  ctx.font = '800 130px system-ui, sans-serif';
   ctx.letterSpacing = '18px';
   ctx.fillText('40+', 1024, 1100);
 
   // 4. Lema FIND YOUR EDGE
-  ctx.font = '900 84px system-ui, -apple-system, sans-serif';
+  ctx.font = '900 90px system-ui, -apple-system, sans-serif';
   ctx.letterSpacing = '14px';
-  ctx.fillText('FIND YOUR EDGE', 1024, 1310);
+  ctx.fillText('FIND YOUR EDGE', 1024, 1340);
 
   const stampTex = new THREE.CanvasTexture(c);
   stampTex.generateMipmaps = true;
@@ -2283,13 +2292,15 @@ function initIntroBall() {
   introBall = new THREE.Mesh(geometry, material);
   introBall.rotation.set(0, 0, 0); // Cara frontal hacia la cámara
   introBall.position.set(0, 0, 0);
-  introBall.visible = true; // La pelota ES la landing desde el frame 0
+  introBall.visible = true;
   introScene.add(introBall);
 
-  // Iluminación
-  const amb = new THREE.AmbientLight(0xffffff, 0.78);
+  // Iluminación: a p = 0 la luz es 100% ambiental y plana (sin sombras ni gradientes)
+  const amb = new THREE.AmbientLight(0xffffff, 1.0);
   introScene.add(amb);
-  const dir = new THREE.DirectionalLight(0xffffff, 0.32);
+  introScene.userData.ambLight = amb;
+
+  const dir = new THREE.DirectionalLight(0xffffff, 0.0); // Desactivada en reposo
   dir.position.set(0.18, 0.3, 0.45);
   introScene.add(dir);
   introScene.userData.dirLight = dir;
@@ -2339,13 +2350,22 @@ function onScrollyScroll() {
   // -------------------------------------------------------------
   // Tramo 2: 0% a 60% — El Zoom Out & La Física Tridimensional
   // -------------------------------------------------------------
-  // Zoom out de cámara en Z: de 0.088 a 0.22
+  // Zoom out de cámara en Z: arranca en macro absoluto (la pantalla ES la piel de la pelota)
+  const zMacro = getMacroZ();
+  const zTarget = 0.22;
   const pZoom = Math.max(0, Math.min(1, p / 0.55));
-  introCamera.position.z = 0.088 + (0.22 - 0.088) * pZoom;
+  introCamera.position.z = zMacro + (zTarget - zMacro) * pZoom;
 
-  // Rotación angular sutil para revelar el brillo de la esfera
-  introBall.rotation.y = 0.42 * pZoom;
-  introBall.rotation.x = 0.12 * pZoom;
+  // Rotación angular sutil para revelar el brillo y curvatura de la esfera
+  introBall.rotation.y = 0.45 * pZoom;
+  introBall.rotation.x = 0.14 * pZoom;
+
+  // Encendido gradual de la luz direccional: de 0 (plana en reposo) a 0.70 (3D realista)
+  const pLight = Math.max(0, Math.min(1, p / 0.35));
+  const dirLight = introScene.userData && introScene.userData.dirLight;
+  const ambLight = introScene.userData && introScene.userData.ambLight;
+  if (dirLight) dirLight.intensity = 0.70 * pLight;
+  if (ambLight) ambLight.intensity = 1.0 - 0.22 * pLight;
 
   // Transición de fondo de naranja celuloide (#ff7700) a grafito mesa (#0c1322)
   const pBg = Math.max(0, Math.min(1, (p - 0.15) / 0.45));
@@ -2353,10 +2373,6 @@ function onScrollyScroll() {
   const g = (0x77 - (0x77 - 0x13) * pBg) / 255;
   const b = (0x00 + (0x22 - 0x00) * pBg) / 255;
   introScene.background.setRGB(r, g, b);
-
-  // Luz direccional sube sutilmente
-  const dirLight = introScene.userData && introScene.userData.dirLight;
-  if (dirLight) dirLight.intensity = 0.32 + (0.75 - 0.32) * pZoom;
 
   // Captions flotantes: 01. El borde de la mesa
   const capEdge = $('caption-edge');
