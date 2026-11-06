@@ -85,6 +85,38 @@
     display: flex;
     flex-direction: column;
   }
+  .brand-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .brand-ball-slot {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    position: relative;
+    flex-shrink: 0;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(255, 119, 0, 0.28), 0 0 0 1px rgba(255, 119, 0, 0.2);
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease;
+  }
+  .brand-ball-slot:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 18px rgba(255, 119, 0, 0.45), 0 0 0 1.5px rgba(255, 119, 0, 0.4);
+  }
+  .brand-ball-slot:active {
+    transform: scale(0.95);
+  }
+  .brand-ball-slot canvas {
+    width: 36px !important;
+    height: 36px !important;
+    display: block;
+    border-radius: 50%;
+  }
+  .brand-meta {
+    display: flex;
+    flex-direction: column;
+  }
   .brand-title {
     font-size: 1.25rem;
     font-weight: 900;
@@ -864,14 +896,21 @@
   <!-- Barra de Identidad y Conexión -->
   <header class="app-bar">
     <div class="brand">
-      <div class="brand-title">
-        <span class="brand-doc">DOC</span>
-        <span class="brand-stars">★★★</span>
-        <span class="tag-chip">40+ // S3</span>
-      </div>
-      <div class="connection-status">
-        <span class="dot-status" id="dot-ble"></span>
-        <span id="estado">Sin conectar</span>
+      <div class="brand-row">
+        <div class="brand-ball-slot" id="header-ball-slot" title="Pelota oficial DOC 40+">
+          <canvas id="canvas-header-ball" width="72" height="72"></canvas>
+        </div>
+        <div class="brand-meta">
+          <div class="brand-title">
+            <span class="brand-doc">DOC</span>
+            <span class="brand-stars">★★★</span>
+            <span class="tag-chip">40+ // S3</span>
+          </div>
+          <div class="connection-status">
+            <span class="dot-status" id="dot-ble"></span>
+            <span id="estado">Sin conectar</span>
+          </div>
+        </div>
       </div>
     </div>
     <div class="header-actions">
@@ -1613,6 +1652,7 @@ function mostrar(e, registrarSesion = true) {
   }
 
   actualizarVisor3D(e.ang, e.golpe, e.q);
+  if (typeof acelerarSpinPelotaHeader === 'function') acelerarSpinPelotaHeader();
   $('certeza').textContent = e.conf !== null ? `Certeza del modelo: ${e.conf} %` : '';
   $('consejo').textContent = c.texto;
   $('consejo').classList.toggle('ok', c.ok);
@@ -2162,8 +2202,80 @@ function sonarPique(vol = 0.25) {
 
 let introAnimId = null;
 let introScene, introCamera, introRenderer, introBall;
+let introStampTex = null;
 let introIniciada = false;
 let piqueFired = false;
+
+// Variables y lógica para la mini pelota 3D interactiva en el Header
+let headerBallRenderer, headerBallScene, headerBallCamera, headerBallMesh;
+let headerBallSpinVel = 0.65;
+let headerBallIniciado = false;
+
+function initHeaderBall(stampTex) {
+  if (headerBallIniciado) return;
+  const canvas = $('canvas-header-ball');
+  if (!canvas || !window.THREE) return;
+  headerBallIniciado = true;
+
+  try {
+    const size = 36;
+    headerBallRenderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+    headerBallRenderer.setSize(size, size);
+    headerBallRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    headerBallRenderer.outputColorSpace = THREE.SRGBColorSpace;
+
+    headerBallScene = new THREE.Scene();
+    headerBallCamera = new THREE.PerspectiveCamera(36, 1, 0.01, 10);
+    headerBallCamera.position.set(0, 0, 0.08);
+
+    const amb = new THREE.AmbientLight(0xffffff, 0.95);
+    headerBallScene.add(amb);
+    const dir = new THREE.DirectionalLight(0xffffff, 0.75);
+    dir.position.set(0.2, 0.3, 0.4);
+    headerBallScene.add(dir);
+
+    const geo = new THREE.SphereGeometry(0.02, 32, 24);
+    const mat = new THREE.MeshStandardMaterial({
+      map: stampTex,
+      roughness: 0.58,
+      metalness: 0.04,
+    });
+    headerBallMesh = new THREE.Mesh(geo, mat);
+    headerBallScene.add(headerBallMesh);
+
+    let lastT = performance.now();
+    function animateHeaderBall(now) {
+      requestAnimationFrame(animateHeaderBall);
+      const dt = Math.min(0.05, (now - lastT) / 1000);
+      lastT = now;
+      if (headerBallMesh) {
+        headerBallMesh.rotation.y -= headerBallSpinVel * dt;
+        headerBallMesh.rotation.x = 0.06 * Math.sin(now * 0.001);
+        if (headerBallSpinVel > 0.65) {
+          headerBallSpinVel = Math.max(0.65, headerBallSpinVel - 4.0 * dt);
+        }
+      }
+      headerBallRenderer.render(headerBallScene, headerBallCamera);
+    }
+    requestAnimationFrame(animateHeaderBall);
+
+    const slot = $('header-ball-slot');
+    if (slot) {
+      slot.addEventListener('click', () => {
+        headerBallSpinVel = 9.0;
+        sonarPique(0.18);
+        slot.style.transform = 'scale(1.18)';
+        setTimeout(() => { slot.style.transform = ''; }, 160);
+      });
+    }
+  } catch (err) {
+    console.warn('Mini pelota header:', err.message);
+  }
+}
+
+function acelerarSpinPelotaHeader() {
+  headerBallSpinVel = 7.5;
+}
 
 function getMacroZ() {
   const aspect = window.innerWidth / window.innerHeight;
@@ -2185,12 +2297,11 @@ function initIntroBall() {
   const h = window.innerHeight;
 
   introScene = new THREE.Scene();
-  introScene.background = new THREE.Color(0x080c14); // Fondo oscuro de cancha constante
-
+  // Sin color de fondo fijo en Three.js para permitir que la pelota vuele transparente sobre el dashboard
   introCamera = new THREE.PerspectiveCamera(30, w / h, 0.001, 10);
   introCamera.position.set(0, 0, getMacroZ());
 
-  introRenderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
+  introRenderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
   introRenderer.setSize(w, h);
   introRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   introRenderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -2303,6 +2414,10 @@ function initIntroBall() {
   introScene.add(dir);
   introScene.userData.dirLight = dir;
 
+  // Guardar textura y pre-inicializar el logo 3D del Header
+  introStampTex = stampTex;
+  initHeaderBall(stampTex);
+
   // Render inicial en reposo
   renderIntroFrame();
 
@@ -2345,10 +2460,10 @@ function dispararIntroCinematica() {
   if (!introActiva) return;
   animandoCinematica = true;
 
-  // Feedback auditivo sutil instantáneo al accionar
-  sonarPique(0.25);
+  // Feedback auditivo sutil instantáneo al accionar (Apple HIG: Causality + Harmony)
+  sonarPique(0.28);
 
-  // 1. Desvanecimiento inmediato del botón y texto (< 60ms)
+  // 1. Desvanecimiento inmediato de los botones de la landing (< 60ms)
   const actionsWrap = $('intro-actions-wrap');
   if (actionsWrap) {
     actionsWrap.style.opacity = '0';
@@ -2356,74 +2471,85 @@ function dispararIntroCinematica() {
     actionsWrap.style.pointerEvents = 'none';
   }
 
+  // 2. Hacer visible el dashboard subyacente para calcular la posición exacta de destino del logo
+  const appMain = $('app-main');
+  if (appMain && !appMain.classList.contains('visible')) {
+    appMain.classList.add('visible');
+  }
+
+  // Medir slot de destino en el header (esquina superior izquierda)
+  const slot = $('header-ball-slot');
+  const slotRect = slot ? slot.getBoundingClientRect() : { left: 24, top: 16, width: 36, height: 36 };
+  const targetScreenX = slotRect.left + (slotRect.width || 36) * 0.5;
+  const targetScreenY = slotRect.top + (slotRect.height || 36) * 0.5;
+  const targetPx = slotRect.width || 36;
+
   const startTime = performance.now();
-  const dur = 1300; // ms: ritmo calmo y cinematográfico para apreciar la pelota física
+  const dur = 1150; // ms: duración perfecta para un vuelo orgánico fluido
   const zStart = getMacroZ();
-  const zEnd = 0.125; // Zoom-out suave: la pelota queda en ~60% del alto, sin volverse diminuta
+  const zMid = 0.125; // Zoom out inicial frontal para apreciar la pelota física
+
+  // Profundidad 3D en Three.js para que el diámetro de la pelota coincida exactamente con targetPx:
+  const radFovHalf = (introCamera.fov * Math.PI / 180) * 0.5;
+  const depthTarget = (0.04 * window.innerHeight) / (2 * Math.tan(radFovHalf) * targetPx);
 
   function loop(now) {
     if (!introActiva) return;
     const elapsed = now - startTime;
     const t = Math.min(1, elapsed / dur);
 
-    // -------------------------------------------------------------
-    // FASE 1: Revelación Frontal (0 <= t <= 0.40)
-    // El zoom out moderado aleja la cámara lo justo para ver
-    // formarse la esfera 3D manteniendo el cuño en tamaño grande y nítido.
-    // -------------------------------------------------------------
-    const pZ = Math.min(1, t / 0.45);
-    const easeZ = 1 - Math.pow(1 - pZ, 3.2);
-    introCamera.position.z = zStart + (zEnd - zStart) * easeZ;
+    // FASE 1 (0 <= t <= 0.25): Despegue frontal suave
+    // FASE 2 (0.25 < t <= 1.0): Vuelo en arco y docking hacia el slot del logo en el header
+    const W = window.innerWidth;
+    const H = window.innerHeight;
+    let curScreenX, curScreenY, curDepth;
 
-    // -------------------------------------------------------------
-    // FASE 2: Giro Lateral Elegante (0.35 <= t <= 0.75)
-    // Rota suavemente de costado (~25° en Y) revelando la redondez
-    // física y el brillo de celuloide con las letras aún legibles.
-    // -------------------------------------------------------------
-    if (t < 0.35) {
-      introBall.rotation.set(0, 0, 0);
-      introBall.position.y = 0;
+    if (t < 0.25) {
+      const pZ = t / 0.25;
+      const easeZ = 1 - Math.pow(1 - pZ, 3);
+      curDepth = zStart + (zMid - zStart) * easeZ;
+      curScreenX = W * 0.5;
+      curScreenY = H * 0.5;
+      introBall.rotation.y = -0.20 * Math.sin(pZ * Math.PI * 0.5);
+      introBall.rotation.x = 0.05 * Math.sin(pZ * Math.PI * 0.5);
     } else {
-      const pYaw = Math.min(1, (t - 0.35) / 0.40);
-      const easeYaw = Math.sin(pYaw * Math.PI * 0.5);
-      introBall.rotation.y = -0.42 * easeYaw; // ~24° de giro lateral
-      introBall.rotation.x = 0.06 * easeYaw;
-      introBall.rotation.z = -0.03 * easeYaw;
+      const pFlight = (t - 0.25) / 0.75;
+      // Curva suave de desaceleración tipo resorte Apple (cubic-bezier 0.16, 1, 0.3, 1)
+      const easeFlight = 1 - Math.pow(1 - pFlight, 3.2);
+
+      curScreenX = (W * 0.5) + (targetScreenX - (W * 0.5)) * easeFlight;
+      // Arco suave: elevación aerodinámica intermedia durante la trayectoria
+      const arcLift = Math.sin(pFlight * Math.PI) * 20;
+      curScreenY = (H * 0.5) + (targetScreenY - (H * 0.5)) * easeFlight - arcLift;
+      curDepth = zMid + (depthTarget - zMid) * easeFlight;
+
+      // Rotación continua mientras viaja hacia la esquina superior izquierda
+      introBall.rotation.y = -0.20 - pFlight * Math.PI * 1.6;
+      introBall.rotation.x = 0.05 * (1 - pFlight);
     }
 
-    // -------------------------------------------------------------
-    // FASE 3: Descenso con Gravedad y Salida (t >= 0.65)
-    // La pelota desciende suavemente por el borde inferior.
-    // -------------------------------------------------------------
-    if (t >= 0.65) {
-      const pFall = (t - 0.65) / 0.35;
-      const tau = pFall * pFall;
-      introBall.position.y = -0.09 * tau;
-      introCamera.position.y = -0.015 * tau;
-      introCamera.lookAt(0, introCamera.position.y * 1.1, 0);
+    // Convertir de coordenadas de pantalla a coordenadas 3D de Three.js:
+    const ndcX = (curScreenX / W) * 2 - 1;
+    const ndcY = -(curScreenY / H) * 2 + 1;
+    const halfH = Math.tan(radFovHalf) * curDepth;
+    const halfW = halfH * introCamera.aspect;
 
-      // El dashboard emerge suavemente con la misma inercia
-      const appMain = $('app-main');
-      if (appMain && !appMain.classList.contains('visible')) {
-        appMain.classList.add('visible');
-      }
-    } else {
-      introCamera.position.y = 0;
-      introCamera.lookAt(0, 0, 0);
-    }
+    introBall.position.set(ndcX * halfW, ndcY * halfH, 0);
+    introCamera.position.set(0, 0, curDepth);
+    introCamera.lookAt(0, 0, 0);
 
-    // Encendido de luz direccional para revelar el volumen y brillo físico 3D
-    const pLight = Math.min(1, easeZ / 0.40);
+    // Iluminación que acompaña el volumen 3D
+    const pLight = Math.min(1, t / 0.35);
     const dirLight = introScene.userData && introScene.userData.dirLight;
     const ambLight = introScene.userData && introScene.userData.ambLight;
     if (dirLight) dirLight.intensity = 0.65 * pLight;
     if (ambLight) ambLight.intensity = 1.0 - 0.15 * pLight;
 
-    // Cuando la pelota cruza el borde inferior (t >= 0.75), fundido del telón
+    // Desvanecimiento del telón de fondo para revelar el dashboard (a partir de t >= 0.25)
     const stage = $('intro-stage');
-    if (stage && t >= 0.75) {
-      const pFade = (t - 0.75) / 0.25;
-      stage.style.opacity = String(Math.max(0, 1 - pFade));
+    if (stage && t >= 0.25) {
+      const pFade = (t - 0.25) / 0.55;
+      stage.style.background = `rgba(8, 12, 20, ${Math.max(0, 1 - pFade)})`;
     }
 
     renderIntroFrame();
@@ -2432,6 +2558,10 @@ function dispararIntroCinematica() {
       requestAnimationFrame(loop);
     } else {
       cerrarIntro();
+      if (slot) {
+        slot.style.transform = 'scale(1.15)';
+        setTimeout(() => { slot.style.transform = ''; }, 180);
+      }
     }
   }
 
@@ -2442,7 +2572,7 @@ function cerrarIntro() {
   introActiva = false;
   animandoCinematica = false;
   const appMain = $('app-main');
-  if (appMain) {
+  if (appMain && !appMain.classList.contains('visible')) {
     appMain.classList.add('visible');
   }
   const stage = $('intro-stage');
@@ -2450,7 +2580,10 @@ function cerrarIntro() {
     stage.classList.add('oculto');
     setTimeout(() => {
       stage.style.display = 'none';
-    }, 320);
+    }, 280);
+  }
+  if (!headerBallIniciado && introStampTex) {
+    initHeaderBall(introStampTex);
   }
 }
 
