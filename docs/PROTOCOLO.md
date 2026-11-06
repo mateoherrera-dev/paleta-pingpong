@@ -97,3 +97,11 @@ python validar.py --confianza-min 60
 ```
 
 Muestra los aciertos de cada tanda, la matriz de confusion por jugador y la total, y si se llega al 80 %. Un golpe que el modelo llama `ruido` cuenta como error. Con el filtro del PR #29 en la placa, lo que sale como `# Descartado` no le llega a la app: cuenta como `ruido` o como `lento` (giro maximo < 300 °/s), los dos error. Con `--confianza-min` los golpes por debajo de esa certeza cuentan como `dudoso` (tambien error): sirve para elegir el umbral de confianza de la app.
+
+### Antes de empezar y avisos de la placa (probado el 6/11)
+
+- **Cada vez que se cierra y se abre `grabar.py`, la placa se resetea**: vuelve a calibrar el giroscopio y se corta el Bluetooth. Como aca se graba un archivo por tanda, **al arrancar cada tanda la paleta tiene que estar quieta en la mesa** (si se movio, la serie dice `la paleta se movio al arrancar, no se calibra`: cortar y volver a arrancar sin tocarla) y, si se usa la app, hay que volver a tocar "Conectar paleta".
+- En Windows, `--listar` se rompe con la flecha si no se pone antes `$env:PYTHONIOENCODING = 'utf-8'` (en PowerShell).
+- **Agarre fijo (CONTRATOS 1.1):** derecha con la goma **negra**, reves con la **roja**. Decirselo a cada jugador antes de la primera tanda: al reves, el modelo falla.
+- **App:** como conectarla y que muestra, en [`app/README.md`](../app/README.md). Con datos moviles puede no cargar el visor 3D: usar wifi.
+- **Lo que ya se vio el 6/11 con p1 y p3 (modelo v5):** cuando acierta lo hace con 100 % de certeza; los errores son golpes reales rapidos (540-820 °/s) que llama ruido y el topspin de reves, que confunde con empuje de reves (p1: 2/5, p3: 1/10). Detalle en `datos/pruebas/NOTAS_p3_2026-11-06.md` y `LEEME.md` del Drive.
