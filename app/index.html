@@ -646,6 +646,19 @@ function parsearEvento(datos, i = 0, tam = 14) {
     const sumaSq = q1 * q1 + q2 * q2 + q3 * q3;
     const q0 = Math.sqrt(Math.max(0, 1.0 - sumaSq));
     evento.q = { w: q0, x: q1, y: q2, z: q3 };
+
+    // El firmware elige la cara por el sentido del giro en los 20 ms antes del impacto, y en los
+    // empujes a veces elige la otra: el ángulo sale con el signo cambiado (6/11: 3 de 10 ED con
+    // la roja a −50° en vez de la negra a +50°). Si el modelo reconoció el golpe, la cara es la
+    // del agarre fijo (CONTRATOS.md 1.1) y el ángulo se recalcula con ella desde el cuaternión.
+    if (evento.golpe !== '??') {
+      const vertRoja = q0 * q0 - q1 * q1 - q2 * q2 + q3 * q3;  // componente vertical de la normal roja
+      const angRoja = Math.asin(Math.max(-1, Math.min(1, vertRoja))) * 180 / Math.PI;
+      const roja = evento.golpe === 'TR' || evento.golpe === 'ER';
+      const ang = Math.round(roja ? angRoja : -angRoja);
+      if (Math.sign(ang) !== Math.sign(evento.ang) && Math.abs(ang) > 2) evento.angFirmware = evento.ang;
+      evento.ang = ang;
+    }
   }
 
   return evento;
