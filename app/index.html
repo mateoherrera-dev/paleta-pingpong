@@ -689,7 +689,7 @@ function mostrar(e, registrarSesion = true) {
     .filter((k) => sesion.conteo[k])
     .map((k) => `<span>${GOLPES[k]}</span><b>${sesion.conteo[k]}</b>`).join('');
   $('historial').innerHTML = sesion.golpes.slice(0, 15)
-    .map((g) => `<li><span>#${g.n} ${GOLPES[g.golpe]}</span><span>${(g.golpe === 'TR' || g.golpe === 'ER') ? '⚫ Negra' : '🔴 Roja'} · ${g.vel ?? '–'} km/h · ${g.ang ?? '–'}° · ${formatearPico(g.pico)}</span></li>`).join('');
+    .map((g) => `<li><span>#${g.n} ${GOLPES[g.golpe]}</span><span>${determinarCara(g.golpe, g.ang, g.q) === 'roja' ? '🔴 Roja' : '⚫ Negra'} · ${g.vel ?? '–'} km/h · ${g.ang ?? '–'}° · ${formatearPico(g.pico)}</span></li>`).join('');
 }
 
 // Bluetooth: cada notificación trae un struct de 14 bytes (entra entero en un paquete).
