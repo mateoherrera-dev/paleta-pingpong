@@ -654,7 +654,7 @@
     align-items: center;
     justify-content: center;
     overflow: hidden;
-    transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   }
   #intro-overlay.oculto {
     opacity: 0;
@@ -667,23 +667,75 @@
     height: 100% !important;
     display: block;
   }
-  #intro-ui {
-    position: absolute;
-    bottom: 9%;
-    left: 0;
-    right: 0;
+
+  /* Interfaz 2D plana original, nítida y perfectamente proporcionada */
+  #intro-landing {
+    position: relative;
     z-index: 10;
+    max-width: 520px;
+    margin: 0 auto;
+    padding: 32px 24px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 10px;
-    transition: opacity 0.09s ease-out, transform 0.09s ease-out;
+    text-align: center;
+    color: #0f172a;
     pointer-events: auto;
   }
-  #intro-ui.animando {
-    opacity: 0;
-    transform: scale(0.96) translateY(6px);
-    pointer-events: none;
+
+  /* Cuño central DOC ★★★ 40+ */
+  #intro-stamp {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease;
+    transform-origin: center center;
+  }
+  .stamp-brand {
+    font-size: 5.2rem;
+    font-weight: 900;
+    letter-spacing: 0.14em;
+    line-height: 0.95;
+    color: #0f172a;
+    margin: 0 0 8px 0;
+    user-select: none;
+  }
+  .stamp-stars {
+    font-size: 1.45rem;
+    letter-spacing: 0.35em;
+    color: #0f172a;
+    margin: 0 0 6px 0;
+    user-select: none;
+  }
+  .stamp-spec {
+    font-size: 0.88rem;
+    font-weight: 800;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(15, 23, 42, 0.85);
+    margin: 0 0 24px 0;
+    user-select: none;
+  }
+
+  /* Subtítulo nítido: desaparece en <= 100 ms */
+  #intro-sub {
+    font-size: 1.15rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    line-height: 1.35;
+    margin: 0 0 36px 0;
+    color: rgba(15, 23, 42, 0.9);
+    max-width: 380px;
+    transition: opacity 0.09s ease-out, transform 0.09s ease-out;
+  }
+
+  /* Botón y acciones: desaparecen en <= 100 ms */
+  #intro-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    transition: opacity 0.09s ease-out, transform 0.09s ease-out;
   }
 
   #btn-comenzar {
@@ -720,16 +772,46 @@
   #intro-skip:hover {
     color: #0f172a;
   }
+
+  /* Al presionar COMENZAR:
+     1. El botón y el subtítulo desaparecen de inmediato (<= 100 ms) sin flotar sobre el 3D
+     2. El cuño se contrae visualmente hacia el centro sincronizado con el retroceso de la cámara
+  */
+  #intro-overlay.intro-iniciada #intro-sub,
+  #intro-overlay.intro-iniciada #intro-actions {
+    opacity: 0;
+    transform: scale(0.95) translateY(12px);
+    pointer-events: none;
+  }
+  #intro-overlay.intro-iniciada #intro-stamp {
+    opacity: 0;
+    transform: scale(0.22);
+    pointer-events: none;
+  }
 </style>
 </head>
 <body>
 
-<!-- Intro interactiva 100% WebGL de la pelota de Ping Pong (DOC) -->
+<!-- Intro de la pelota de Ping Pong (DOC) -->
 <div id="intro-overlay">
   <canvas id="canvas-intro"></canvas>
-  <div id="intro-ui">
-    <button id="btn-comenzar" type="button">COMENZAR ➔</button>
-    <div id="intro-skip">Tocar para saltear</div>
+
+  <div id="intro-landing">
+    <!-- Cuño 2D nítido central -->
+    <div id="intro-stamp">
+      <div class="stamp-brand">DOC</div>
+      <div class="stamp-stars">★ ★ ★</div>
+      <div class="stamp-spec">40+</div>
+    </div>
+
+    <!-- Subtítulo plano nítido (desaparece en 100ms) -->
+    <h1 id="intro-sub">Diagnóstico y Optimización de Cinemática</h1>
+
+    <!-- Botón de acción (desaparece en 100ms) -->
+    <div id="intro-actions">
+      <button id="btn-comenzar" type="button">COMENZAR ➔</button>
+      <div id="intro-skip">Tocar para saltear</div>
+    </div>
   </div>
 </div>
 
@@ -2051,12 +2133,10 @@ function initIntroBall() {
   const h = window.innerHeight;
 
   introScene = new THREE.Scene();
-  introScene.background = new THREE.Color(0xff7700); // Naranja pleno celuloide torneo
+  introScene.background = new THREE.Color(0xff7700); // Naranja celuloide torneo
 
-  // FOV de 36 grados para encuadre cinematográfico
-  introCamera = new THREE.PerspectiveCamera(36, w / h, 0.001, 10);
-  // Cámara macro pegada a la superficie: la esfera llena por completo el campo visual
-  introCamera.position.set(0, 0, 0.048);
+  introCamera = new THREE.PerspectiveCamera(35, w / h, 0.001, 10);
+  introCamera.position.set(0, 0, 0.075);
 
   introRenderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
   introRenderer.setSize(w, h);
@@ -2065,61 +2145,32 @@ function initIntroBall() {
   // Geometría oficial: radio 20 mm (diámetro 40 mm)
   const geometry = new THREE.SphereGeometry(0.02, 64, 32);
 
-  // Sello industrial de pelota de competición (2048x2048 con tinta unificada #0f172a)
+  // Cuño compacto real de competición: ÚNICAMENTE DOC ★★★ 40+ (sin subtítulos deformados)
   const c = document.createElement('canvas');
   c.width = 2048; c.height = 2048;
   const ctx = c.getContext('2d');
   ctx.fillStyle = '#ff7700';
   ctx.fillRect(0, 0, 2048, 2048);
 
-  // Tinta industrial mate (azul marino profundo / grafito de torneo)
   const inkColor = '#0f172a';
   ctx.fillStyle = inkColor;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
 
-  // 1. Marca principal DOC en bloque grueso
-  ctx.font = '900 240px system-ui, -apple-system, sans-serif';
+  // 1. Marca principal DOC
+  ctx.font = '900 230px system-ui, -apple-system, sans-serif';
   ctx.letterSpacing = '18px';
-  ctx.fillText('DOC', 1024, 760);
+  ctx.fillText('DOC', 1024, 860);
 
   // 2. Tres estrellas de competición (★ ★ ★)
   ctx.font = '140px system-ui, sans-serif';
   ctx.letterSpacing = '26px';
-  ctx.fillText('★ ★ ★', 1024, 940);
+  ctx.fillText('★ ★ ★', 1024, 1020);
 
-  // 3. Especificación oficial 40+ con espaciado amplio
+  // 3. Especificación oficial 40+
   ctx.font = '800 110px system-ui, sans-serif';
   ctx.letterSpacing = '16px';
-  ctx.fillText('40+', 1024, 1100);
-
-  // 4. Subtítulo: Diagnóstico y Optimización de Cinemática (D-O-C destacadas)
-  const tokens = [
-    { text: 'D', isKey: true },
-    { text: 'iagnóstico y ', isKey: false },
-    { text: 'O', isKey: true },
-    { text: 'ptimización de ', isKey: false },
-    { text: 'C', isKey: true },
-    { text: 'inemática', isKey: false }
-  ];
-  let subTotalW = 0;
-  const measured = [];
-  tokens.forEach(tok => {
-    ctx.font = tok.isKey ? '900 48px system-ui, -apple-system, sans-serif' : '600 42px system-ui, -apple-system, sans-serif';
-    ctx.letterSpacing = tok.isKey ? '2px' : '0px';
-    const mw = ctx.measureText(tok.text).width;
-    measured.push(mw);
-    subTotalW += mw;
-  });
-  let subX = 1024 - subTotalW / 2;
-  tokens.forEach((tok, i) => {
-    ctx.font = tok.isKey ? '900 48px system-ui, -apple-system, sans-serif' : '600 42px system-ui, -apple-system, sans-serif';
-    ctx.letterSpacing = tok.isKey ? '2px' : '0px';
-    ctx.fillStyle = tok.isKey ? inkColor : 'rgba(15, 23, 42, 0.82)';
-    ctx.textAlign = 'left';
-    ctx.fillText(tok.text, subX, 1260);
-    subX += measured[i];
-  });
+  ctx.fillText('40+', 1024, 1170);
 
   const stampTex = new THREE.CanvasTexture(c);
   stampTex.generateMipmaps = true;
@@ -2135,13 +2186,13 @@ function initIntroBall() {
   });
 
   introBall = new THREE.Mesh(geometry, material);
-  introBall.rotation.y = -Math.PI / 2; // Cara estampada orientada a la cámara
+  introBall.rotation.y = -Math.PI / 2; // Cuño frontal hacia la cámara
   introScene.add(introBall);
 
   // Iluminación
   const amb = new THREE.AmbientLight(0xffffff, 1.0);
   introScene.add(amb);
-  const dir = new THREE.DirectionalLight(0xffffff, 0.35);
+  const dir = new THREE.DirectionalLight(0xffffff, 0.4);
   dir.position.set(0.18, 0.28, 0.45);
   introScene.add(dir);
   introScene.userData.dirLight = dir;
@@ -2164,9 +2215,10 @@ function arrancarSecuenciaPelota() {
   if (animandoIntro) return;
   animandoIntro = true;
 
-  // 1. Ocultar el botón rápidamente (≤ 100 ms) sin tocar el texto 3D
-  const ui = $('intro-ui');
-  if (ui) ui.classList.add('animando');
+  // 1. Desaparecer botón y subtítulo de inmediato (<= 100 ms) sin dejar botones flotando sobre el 3D
+  // 2. Contraer el cuño hacia el centro sincronizado con el retroceso de cámara
+  const overlay = $('intro-overlay');
+  if (overlay) overlay.classList.add('intro-iniciada');
 
   if (!introBall || !introCamera || !introRenderer) {
     cerrarIntro();
@@ -2175,10 +2227,9 @@ function arrancarSecuenciaPelota() {
 
   const dirLight = introScene.userData && introScene.userData.dirLight;
   const startTime = performance.now();
-  const duracionTotal = 1900; // ms
+  const duracionTotal = 1850; // ms
   let ultimoPique = 0;
 
-  // Curva de desaceleración suave easeOutExpo
   function easeOutExpo(x) {
     return x === 1 ? 1 : 1 - Math.pow(2, -10 * x);
   }
@@ -2187,16 +2238,16 @@ function arrancarSecuenciaPelota() {
     const elapsed = now - startTime;
     const progress = Math.min(1, elapsed / duracionTotal);
 
-    // 1. Retroceso cinemático de cámara estilo Marty Supreme (0 a 1100 ms)
-    const tZoom = Math.min(1, elapsed / 1100);
+    // 1. Retroceso de cámara y sincronización de contracción (0 a 1000 ms)
+    const tZoom = Math.min(1, elapsed / 1000);
     const ease = easeOutExpo(tZoom);
 
-    // Desplazamiento en eje Z: de plano macro a encuadre completo de la pelota
-    introCamera.position.z = 0.048 + (0.182 - 0.048) * ease;
+    // Retroceso suave de cámara en eje Z (0.075 -> 0.19)
+    introCamera.position.z = 0.075 + (0.19 - 0.075) * ease;
 
-    // Rotación angular simultánea en Y (~16°) y leve en X (~5°) para que la luz especular viaje
-    introBall.rotation.y = -Math.PI / 2 + 0.28 * ease;
-    introBall.rotation.x = 0.08 * ease;
+    // Rotación angular leve en Y (~13°) y en X (~4°) para deslizar el brillo especular
+    introBall.rotation.y = -Math.PI / 2 + 0.22 * ease;
+    introBall.rotation.x = 0.06 * ease;
 
     // Transición de fondo de naranja (#ff7700) a grafito mesa (#0c1322)
     const r = (0xff - (0xff - 0x0c) * ease) / 255;
@@ -2204,16 +2255,16 @@ function arrancarSecuenciaPelota() {
     const b = (0x00 + (0x22 - 0x00) * ease) / 255;
     introScene.background.setRGB(r, g, b);
 
-    // Luz direccional emerge gradualmente revelando el volumen esférico
-    if (dirLight) dirLight.intensity = 0.35 + (0.85 - 0.35) * ease;
+    // Luz direccional sube revelando el volumen esférico 3D
+    if (dirLight) dirLight.intensity = 0.4 + (0.85 - 0.4) * ease;
 
-    // 2. Física sutil de pique en mesa (950 ms a 1800 ms)
-    if (elapsed > 950) {
-      const tFisica = (elapsed - 950) / 1000;
+    // 2. Física de pique en mesa (850 ms a 1700 ms)
+    if (elapsed > 850) {
+      const tFisica = (elapsed - 850) / 1000;
       const frecuencia = 12;
-      const amortiguacion = Math.exp(-tFisica * 3.5);
-      const yPiso = -0.038;
-      const rebote = Math.abs(Math.sin(tFisica * frecuencia)) * amortiguacion * 0.045;
+      const amortiguacion = Math.exp(-tFisica * 3.4);
+      const yPiso = -0.040;
+      const rebote = Math.abs(Math.sin(tFisica * frecuencia)) * amortiguacion * 0.048;
       introBall.position.y = yPiso + rebote;
 
       if (rebote < 0.004 && amortiguacion > 0.08) {
@@ -2224,10 +2275,9 @@ function arrancarSecuenciaPelota() {
       }
     }
 
-    // 3. Disolución suave del overlay hacia el dashboard (1600 ms a 1900 ms)
-    if (elapsed > 1600) {
-      const fadeProgress = (elapsed - 1600) / 300;
-      const overlay = $('intro-overlay');
+    // 3. Disolución suave del overlay hacia el dashboard (1500 ms a 1850 ms)
+    if (elapsed > 1500) {
+      const fadeProgress = (elapsed - 1500) / 350;
       if (overlay) overlay.style.opacity = String(Math.max(0, 1 - fadeProgress));
     }
 
