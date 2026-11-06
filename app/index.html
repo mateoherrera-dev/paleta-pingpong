@@ -674,18 +674,21 @@
 
   /* Tramo 1: Pantalla 2D inicial plana (0% a 25%) */
   #stage-landing {
-    position: relative;
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    background: #ff7700;
     z-index: 10;
-    max-width: 600px;
-    margin: 0 auto;
-    padding: 24px;
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
     text-align: center;
     color: #0f172a;
     pointer-events: auto;
-    transition: opacity 0.15s ease, transform 0.15s ease;
+    padding: 24px;
+    box-sizing: border-box;
   }
 
   #intro-stamp {
@@ -723,6 +726,7 @@
     flex-direction: column;
     align-items: center;
     gap: 6px;
+    transition: opacity 0.2s ease, transform 0.2s ease;
   }
   .intro-claim {
     font-size: 1.65rem;
@@ -735,11 +739,12 @@
     padding-bottom: 6px;
     user-select: none;
   }
-  .intro-claim-sub {
-    font-size: 0.92rem;
-    font-weight: 700;
-    color: rgba(15, 23, 42, 0.85);
-    margin: 0;
+  #intro-actions-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    transition: opacity 0.2s ease, transform 0.2s ease;
   }
 
   .scrolly-hint {
@@ -891,16 +896,17 @@
 
       <div id="intro-sub">
         <div class="intro-claim">FIND YOUR EDGE</div>
-        <p class="intro-claim-sub">Tu entrenador de rincón en cada golpe</p>
       </div>
 
-      <div class="scrolly-hint">
-        <span>Deslizá para descubrir</span>
-        <span class="scrolly-arrow">↓</span>
-      </div>
+      <div id="intro-actions-wrap">
+        <div class="scrolly-hint">
+          <span>Deslizá para descubrir</span>
+          <span class="scrolly-arrow">↓</span>
+        </div>
 
-      <div class="stage-direct-actions">
-        <button id="btn-comenzar" type="button">ENTRENAR YA ➔</button>
+        <div class="stage-direct-actions">
+          <button id="btn-comenzar" type="button">ENTRENAR YA ➔</button>
+        </div>
       </div>
     </div>
 
@@ -2352,28 +2358,53 @@ function onScrollyScroll() {
   // Tramo 1: 0% a 25% — Macro / El Sello
   // -------------------------------------------------------------
   const stageLanding = $('stage-landing');
-  if (stageLanding) {
-    if (p <= 0.22) {
-      const fadeLanding = Math.max(0, Math.min(1, (0.20 - p) / 0.18));
-      stageLanding.style.opacity = String(fadeLanding);
-      stageLanding.style.transform = `translateY(${-28 * (1 - fadeLanding)}px)`;
-      stageLanding.style.pointerEvents = p > 0.06 ? 'none' : 'auto';
+  const introSub = $('intro-sub');
+  const introActions = $('intro-actions-wrap');
+
+  if (p < 0.15) {
+    // 100% Pantalla 2D inicial plana
+    if (stageLanding) {
       stageLanding.style.display = 'flex';
-    } else {
-      stageLanding.style.opacity = '0';
+      stageLanding.style.opacity = '1';
+      stageLanding.style.pointerEvents = 'auto';
+    }
+    // Fade out suave de acciones secundarias con el primer toque de scroll (0.00 -> 0.12)
+    const fadeSub = Math.max(0, Math.min(1, (0.12 - p) / 0.12));
+    if (introSub) {
+      introSub.style.opacity = String(fadeSub);
+      introSub.style.transform = `translateY(${-16 * (1 - fadeSub)}px)`;
+    }
+    if (introActions) {
+      introActions.style.opacity = String(fadeSub);
+      introActions.style.transform = `translateY(${16 * (1 - fadeSub)}px)`;
+      introActions.style.pointerEvents = p > 0.05 ? 'none' : 'auto';
+    }
+    // Pelota 3D ESTRICTAMENTE INVISIBLE en todo el Tramo 1 (imposible superponerse)
+    introBall.visible = false;
+  } else if (p < 0.24) {
+    // Hand-off limpio: se retira la landing 2D y la pelota 3D toma el control
+    introBall.visible = true;
+    if (stageLanding) {
+      const fadeLanding = Math.max(0, (0.24 - p) / 0.09);
+      stageLanding.style.display = 'flex';
+      stageLanding.style.opacity = String(fadeLanding);
+      stageLanding.style.pointerEvents = 'none';
+    }
+  } else {
+    // Más allá del 24%: landing 2D completamente oculta
+    introBall.visible = true;
+    if (stageLanding) {
       stageLanding.style.display = 'none';
+      stageLanding.style.opacity = '0';
       stageLanding.style.pointerEvents = 'none';
     }
   }
 
-  // Activar pelota 3D tan pronto como se mueve el scroll
-  introBall.visible = p > 0.01;
-
   // -------------------------------------------------------------
   // Tramo 2: 25% a 60% — El Zoom Out & La Física
   // -------------------------------------------------------------
-  // Zoom out de cámara en Z: de 0.075 a 0.185
-  const pZoom = Math.max(0, Math.min(1, (p - 0.15) / 0.45));
+  // Zoom out de cámara en Z: arranca tras el hand-off
+  const pZoom = Math.max(0, Math.min(1, (p - 0.18) / 0.42));
   introCamera.position.z = 0.075 + (0.185 - 0.075) * pZoom;
 
   // Rotación angular sutil para revelar el brillo de la esfera
