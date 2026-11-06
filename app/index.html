@@ -765,7 +765,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: flex-end;
-    padding-bottom: 48px;
+    padding-bottom: 40px;
     box-sizing: border-box;
     z-index: 10;
   }
@@ -773,35 +773,39 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 12px;
+    gap: 8px;
     pointer-events: auto;
     transition: opacity 0.1s ease, transform 0.15s ease;
   }
   #btn-comenzar {
-    background: #0f172a;
-    color: #ffffff;
-    font-size: 0.95rem;
+    background: rgba(15, 23, 42, 0.08);
+    color: #0f172a;
+    font-size: 0.80rem;
     font-weight: 800;
-    letter-spacing: 0.08em;
-    padding: 14px 40px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 10px 28px;
     border-radius: var(--radius-pill);
-    border: 2px solid rgba(255, 255, 255, 0.25);
-    box-shadow: 0 10px 32px rgba(15, 23, 42, 0.35);
+    border: 1.5px solid rgba(15, 23, 42, 0.28);
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     cursor: pointer;
-    transition: transform 0.15s ease, background-color 0.15s ease;
+    transition: transform 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
   }
   #btn-comenzar:hover {
-    background: #1e293b;
-    transform: scale(1.04);
+    background: rgba(15, 23, 42, 0.16);
+    border-color: rgba(15, 23, 42, 0.45);
+    transform: scale(1.03);
   }
   #btn-comenzar:active {
-    transform: scale(0.96);
+    transform: scale(0.97);
   }
   .intro-hint {
-    font-size: 0.76rem;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    color: rgba(15, 23, 42, 0.70);
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: rgba(15, 23, 42, 0.55);
     user-select: none;
   }
 
@@ -832,7 +836,7 @@
 
   <div id="stage-landing">
     <div id="intro-actions-wrap">
-      <button id="btn-comenzar" type="button">ENTRENAR YA ➔</button>
+      <button id="btn-comenzar" type="button">ENTRENAR ➔</button>
       <div class="intro-hint">Tocá para iniciar o presioná Espacio</div>
     </div>
   </div>
@@ -2208,25 +2212,31 @@ function initIntroBall() {
   ctx.textBaseline = 'middle';
 
   // Bloque del cuño centrado exactamente en el eje vertical (Y = 1024):
-  // 1. Marca principal DOC
-  ctx.font = '900 240px system-ui, -apple-system, sans-serif';
-  ctx.letterSpacing = '18px';
-  ctx.fillText('DOC', 1024, 780);
+  // 1 & 2. Marca principal DOC y sus 3 estrellas de competición:
+  // Alineación exacta columna por columna para que cada estrella quede
+  // matemáticamente centrada bajo su respectiva letra (D-★, O-★, C-★):
+  const colOffset = 230; // Distancia simétrica entre columnas de letras
+  const yDoc = 780;
+  const yStars = 945;
 
-  // 2. Tres estrellas de competición (★ ★ ★)
-  ctx.font = '120px system-ui, sans-serif';
-  ctx.letterSpacing = '24px';
-  ctx.fillText('★ ★ ★', 1024, 950);
+  ctx.font = '900 240px -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif';
+  ctx.fillText('D', 1024 - colOffset, yDoc);
+  ctx.fillText('O', 1024, yDoc);
+  ctx.fillText('C', 1024 + colOffset, yDoc);
+
+  ctx.font = '115px sans-serif';
+  ctx.fillText('★', 1024 - colOffset, yStars);
+  ctx.fillText('★', 1024, yStars);
+  ctx.fillText('★', 1024 + colOffset, yStars);
 
   // 3. Especificación oficial 40+
-  ctx.font = '800 95px system-ui, sans-serif';
-  ctx.letterSpacing = '14px';
-  ctx.fillText('40+', 1024, 1090);
+  ctx.font = '800 95px -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif';
+  ctx.fillText('40+', 1024, 1085);
 
   // 4. Lema FIND YOUR EDGE
-  ctx.font = '900 68px system-ui, -apple-system, sans-serif';
-  ctx.letterSpacing = '12px';
-  ctx.fillText('FIND YOUR EDGE', 1024, 1260);
+  ctx.font = '900 68px -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif';
+  ctx.letterSpacing = '10px';
+  ctx.fillText('FIND YOUR EDGE', 1024, 1250);
 
   const stampTex = new THREE.CanvasTexture(c);
   stampTex.generateMipmaps = true;
