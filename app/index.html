@@ -495,6 +495,31 @@ function animarVisor() {
 
 let targetQuat = new THREE.Quaternion();
 let usaCuaternion = false;
+
+// paleta.glb tiene la punta en +Y y la goma roja en +Z. Con los ejes de la paleta pasados a
+// Three.js (CONTRATOS.md: x → x, z → y, y → −z) la punta queda en +x y la roja en +y, así que
+// este giro fijo lleva el modelo a esos ejes: X del modelo → z, Y → x, Z → y.
+const MODELO_A_PALETA = new THREE.Quaternion(-0.5, -0.5, -0.5, 0.5);
+const VERTICAL_3D = new THREE.Vector3(0, 1, 0);
+
+// Orientación del modelo a partir del cuaternión del struct (paleta → mundo, Z del mundo para arriba).
+function orientacionVisor(q, cara) {
+  // Three.js usa Y para arriba: (x, y, z, w) = (q1, q3, −q2, q0), como dice CONTRATOS.md.
+  const qMundo = new THREE.Quaternion(q.x, q.z, -q.y, q.w).multiply(MODELO_A_PALETA);
+  // El rumbo (giro alrededor de la vertical) se corre con el tiempo porque no hay magnetómetro,
+  // así que se descarta: se gira la paleta para que la cara que golpeó mire a la cámara (+z).
+  // La inclinación de la cara (ang_deg) y el giro sobre el mango no cambian.
+  const normal = new THREE.Vector3(0, 0, cara === 'roja' ? 1 : -1).applyQuaternion(qMundo);
+  let rumbo;
+  if (Math.hypot(normal.x, normal.z) > 0.1) {
+    rumbo = Math.atan2(normal.x, normal.z);
+  } else {
+    // Cara casi horizontal: se usa la punta, que queda alejándose de la cámara.
+    const punta = new THREE.Vector3(0, 1, 0).applyQuaternion(qMundo);
+    rumbo = Math.atan2(punta.x, punta.z) - Math.PI;
+  }
+  return new THREE.Quaternion().setFromAxisAngle(VERTICAL_3D, -rumbo).multiply(qMundo);
+}
 let caraForzadaManual = null;
 let ultimoEvento = null;
 let caraActual = 'negra';
@@ -547,17 +572,15 @@ function actualizarVisor3D(ang, golpe, q = null, caraOverride = null) {
   }
 
   if (q) {
-    // Modo 20 bytes: Cuaternión real completo
+    // Modo 20 bytes: orientación real de la paleta en el impacto
     usaCuaternion = true;
-    const qSensor = new THREE.Quaternion(q.x, q.y, q.z, q.w);
-    // Para paleta.glb el modelo ya está de pie (mango en -Y, punta en +Y, roja en +Z).
-    // Si la cara de golpe es negra, se rota 180° en Y para presentarla al frente hacia el usuario.
-    const rotBase = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), cara === 'negra' ? Math.PI : 0);
-    targetQuat.copy(qSensor).multiply(rotBase);
+    targetQuat.copy(orientacionVisor(q, cara));
   } else {
-    // Modo 14 bytes: Fallback con postura biomecánica calculada según cara activa
+    // Modo 14 bytes: Fallback con postura biomecánica calculada según cara activa.
+    // Con las dos caras el giro en X es −ang: así la cara que mira a la cámara sube cuando
+    // ang > 0 (abierta). Con +ang la negra se inclinaba al revés por el giro de 180° en Y.
     usaCuaternion = false;
-    targetRotX = (cara === 'negra') ? THREE.MathUtils.degToRad(ang) : THREE.MathUtils.degToRad(-ang);
+    targetRotX = THREE.MathUtils.degToRad(-ang);
 
     if (cara === 'negra') {
       // Cara negra al frente: giro 180° en Y
@@ -689,7 +712,7 @@ function mostrar(e, registrarSesion = true) {
     .filter((k) => sesion.conteo[k])
     .map((k) => `<span>${GOLPES[k]}</span><b>${sesion.conteo[k]}</b>`).join('');
   $('historial').innerHTML = sesion.golpes.slice(0, 15)
-    .map((g) => `<li><span>#${g.n} ${GOLPES[g.golpe]}</span><span>${(g.golpe === 'TR' || g.golpe === 'ER') ? '⚫ Negra' : '🔴 Roja'} · ${g.vel ?? '–'} km/h · ${g.ang ?? '–'}° · ${formatearPico(g.pico)}</span></li>`).join('');
+    .map((g) => `<li><span>#${g.n} ${GOLPES[g.golpe]}</span><span>${determinarCara(g.golpe, g.ang, g.q) === 'roja' ? '🔴 Roja' : '⚫ Negra'} · ${g.vel ?? '–'} km/h · ${g.ang ?? '–'}° · ${formatearPico(g.pico)}</span></li>`).join('');
 }
 
 // Bluetooth: cada notificación trae un struct de 14 bytes (entra entero en un paquete).
