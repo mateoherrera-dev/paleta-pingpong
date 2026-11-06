@@ -42,7 +42,7 @@ https://www.youtube.com/watch?v=_Bi3vOTH_do
 * Pico de velocidad angular $\omega_{\max}$ alineado con el instante del choque.
 
 #### Reglas Deterministicas de Evaluacion
-* **Rango ideal de angulo ($\theta_{\text{impacto}}$):** $[-50^\circ, -30^\circ]$
+* **Rango ideal de angulo ($\theta_{\text{impacto}}$):** $[-25^\circ, +5^\circ]$ (antes $[-50^\circ, -30^\circ]$; ver la nota de la seccion 3)
 * **Tolerancia de timing ($\Delta t_{\text{pico}}$):** $\ge -25\text{ ms}$
 * **Aceleracion vertical minima previa:** $a_{\text{vertical}} \ge a_{\text{min\_lift}}$
 
@@ -79,7 +79,7 @@ https://www.youtube.com/watch?v=LmQNDC-1Ew0
 * Curva de aceleracion angular pronunciada con pico sostenido durante el *follow-through*.
 
 #### Reglas Deterministicas de Evaluacion
-* **Rango ideal de angulo ($\theta_{\text{impacto}}$):** $[-45^\circ, -25^\circ]$
+* **Rango ideal de angulo ($\theta_{\text{impacto}}$):** $[-30^\circ, 0^\circ]$ (antes $[-45^\circ, -25^\circ]$; ver la nota de la seccion 3)
 * **Tolerancia de timing ($\Delta t_{\text{pico}}$):** $\ge -25\text{ ms}$
 * **Intensidad angular ($\omega_{\max}$):** Debe superar el umbral minimo de aceleracion del swing ($\omega_{\text{min\_tr}}$).
 
@@ -161,7 +161,9 @@ RETORNAR "Empuje de reves solido: buena contencion y angulo adecuado."
 
 | Golpe | Codigo ML | Angulo Optimo ($\theta$) | Condicion Critica de Falla | Consejo Prioritario |
 | :--- | :---: | :---: | :--- | :--- |
-| **Topspin Derecha** | `TD` | $-50^\circ \text{ a } -30^\circ$ | $\theta > -20^\circ$ (Cara muy abierta) | *"Cerra la cara de la paleta; el golpe fue muy plano/abierto."* |
-| **Topspin Reves** | `TR` | $-45^\circ \text{ a } -25^\circ$ | $\theta > -15^\circ$ (Cara muy abierta) | *"Cerra la paleta hacia la mesa para que el topspin baje."* |
+| **Topspin Derecha** | `TD` | $-25^\circ \text{ a } +5^\circ$ | $\theta > +5^\circ$ (Cara muy abierta) | *"Cerra la cara de la paleta; el golpe fue muy plano/abierto."* |
+| **Topspin Reves** | `TR` | $-30^\circ \text{ a } 0^\circ$ | $\theta > 0^\circ$ (Cara muy abierta) | *"Cerra la paleta hacia la mesa para que el topspin baje."* |
 | **Empuje Derecha** | `ED` | $+30^\circ \text{ a } +50^\circ$ | $\theta < +20^\circ$ o desvio lateral | *"Abri la cara y empuja recto hacia la red."* |
 | **Empuje Reves** | `ER` | $+25^\circ \text{ a } +45^\circ$ | $\theta < +15^\circ$ (Entrada recta) | *"Inclina la paleta hacia atras para raspar por abajo."* |
+
+**Ajuste del 6/11 (medido en la mesa con la paleta):** los rangos de topspin de la literatura ($-50^\circ$ a $-30^\circ$) no los alcanzaba nadie del grupo: el topspin de derecha normal dio de $-11^\circ$ a $+10^\circ$, y exagerando la cara cerrada, $-8^\circ$ de derecha y $-17^\circ$ de reves (con cara muy abierta, $+45^\circ$ y $+30^\circ$: el signo esta bien). Con esos rangos la app decia "demasiado abierta" en todos los topspin. Ademas, en muchos golpes buenos el pico de giro llego de $+20$ a $+50$ ms despues del impacto, asi que la app avisa "aceleraste tarde" recien desde $+30$ ms. Hay que revisarlos con mas jugadores.
