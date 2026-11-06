@@ -645,24 +645,24 @@
     flex: 1;
   }
 
-  /* --- Scrollytelling Coreografía de la Pelota & Reveal --- */
-  #intro-scrolly-container {
-    position: relative;
-    height: 380vh; /* Altura de scroll para la coreografía por tramos */
-    background: #ff7700;
-  }
-  #intro-sticky-stage {
-    position: sticky;
-    top: 0;
-    left: 0;
+  /* --- Intro Cinemática Directa (Opción A) --- */
+  #intro-stage {
+    position: fixed;
+    inset: 0;
     width: 100vw;
     height: 100vh;
+    z-index: 1000;
     overflow: hidden;
     background: #ff7700;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: opacity 0.25s ease;
+    transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  #intro-stage.oculto {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
   }
   #canvas-intro {
     position: absolute;
@@ -670,213 +670,69 @@
     width: 100% !important;
     height: 100% !important;
     display: block;
+    cursor: pointer;
   }
-
-  /* Controles flotantes en reposo sobre la Pelota 3D (La pelota ES la landing) */
   #stage-landing {
     position: absolute;
     inset: 0;
     width: 100%;
     height: 100%;
-    background: transparent;
-    z-index: 10;
+    pointer-events: none;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: flex-end;
-    text-align: center;
-    color: #0f172a;
-    pointer-events: none;
-    padding: 32px 24px;
+    padding-bottom: 48px;
     box-sizing: border-box;
-    transition: opacity 0.25s ease;
+    z-index: 10;
   }
-
   #intro-actions-wrap {
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 12px;
     pointer-events: auto;
-    transition: opacity 0.2s ease, transform 0.2s ease;
-  }
-
-  .scrolly-hint {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-    font-size: 0.72rem;
-    font-weight: 800;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: rgba(15, 23, 42, 0.65);
-    margin: 12px 0 10px 0;
-  }
-  .scrolly-arrow {
-    font-size: 1.15rem;
-    animation: bounceHint 1.6s infinite ease-in-out;
-  }
-  @keyframes bounceHint {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(6px); }
-  }
-
-  .stage-direct-actions {
-    display: flex;
-    align-items: center;
-    gap: 12px;
+    transition: opacity 0.1s ease, transform 0.15s ease;
   }
   #btn-comenzar {
     background: #0f172a;
     color: #ffffff;
-    font-size: 0.88rem;
+    font-size: 0.95rem;
     font-weight: 800;
     letter-spacing: 0.08em;
-    padding: 12px 32px;
+    padding: 14px 40px;
     border-radius: var(--radius-pill);
     border: 2px solid rgba(255, 255, 255, 0.25);
-    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.35);
+    box-shadow: 0 10px 32px rgba(15, 23, 42, 0.35);
     cursor: pointer;
-    transition: transform 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+    transition: transform 0.15s ease, background-color 0.15s ease;
   }
   #btn-comenzar:hover {
     background: #1e293b;
     transform: scale(1.04);
   }
-
-  /* Captions tipográficos flotantes sobrios (Tramos 2, 3 y 4) */
-  #stage-captions {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    z-index: 15;
+  #btn-comenzar:active {
+    transform: scale(0.96);
   }
-  .scrolly-caption {
-    position: absolute;
-    max-width: 340px;
-    padding: 18px 22px;
-    background: rgba(15, 23, 42, 0.82);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    border-radius: 16px;
-    color: #ffffff;
-    opacity: 0;
-    transform: translateY(20px);
-    transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
-    pointer-events: none;
-  }
-  .caption-left {
-    left: 8%;
-    top: 38%;
-  }
-  .caption-right {
-    right: 8%;
-    top: 42%;
-  }
-  .caption-center {
-    left: 50%;
-    bottom: 12%;
-    transform: translateX(-50%) translateY(20px);
-    text-align: center;
-    max-width: 460px;
-  }
-  @media (max-width: 768px) {
-    .caption-left, .caption-right {
-      left: 5%;
-      right: 5%;
-      top: auto;
-      bottom: 12%;
-      max-width: 90%;
-    }
-  }
-  .caption-badge {
-    font-size: 0.7rem;
-    font-weight: 800;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    color: #ff7700;
-    margin-bottom: 4px;
-  }
-  .caption-title {
-    font-size: 1.18rem;
-    font-weight: 800;
-    letter-spacing: -0.01em;
-    color: #ffffff;
-    margin-bottom: 4px;
-  }
-  .caption-desc {
-    font-size: 0.82rem;
-    line-height: 1.4;
-    color: rgba(255, 255, 255, 0.82);
-  }
-  .btn-start-action {
-    margin-top: 14px;
-    background: #ff7700;
-    color: #0f172a;
-    font-size: 0.88rem;
-    font-weight: 900;
-    letter-spacing: 0.08em;
-    padding: 12px 28px;
-    border-radius: var(--radius-pill);
-    border: none;
-    cursor: pointer;
-    box-shadow: 0 8px 24px rgba(255, 119, 0, 0.4);
-    transition: transform 0.15s ease, background 0.15s ease;
-    pointer-events: auto;
-  }
-  .btn-start-action:hover {
-    background: #ff8c1a;
-    transform: scale(1.04);
+  .intro-hint {
+    font-size: 0.76rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: rgba(15, 23, 42, 0.70);
+    user-select: none;
   }
 </style>
 </head>
 <body>
 
-<!-- Experiencia Scrollytelling: Coreografía por tramos de Scroll -->
-<div id="intro-scrolly-container">
-  <div id="intro-sticky-stage">
-    <canvas id="canvas-intro"></canvas>
+<!-- Intro Cinemática Directa (Opción A): La Pelota ES la Pantalla -->
+<div id="intro-stage">
+  <canvas id="canvas-intro"></canvas>
 
-    <!-- Controles flotantes en reposo sobre la Pelota 3D (La pelota ES la landing) -->
-    <div id="stage-landing">
-      <div id="intro-actions-wrap">
-        <div class="scrolly-hint">
-          <span>Deslizá o tocá para iniciar</span>
-          <span class="scrolly-arrow">↓</span>
-        </div>
-
-        <div class="stage-direct-actions">
-          <button id="btn-comenzar" type="button">ENTRENAR YA ➔</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Tramos 2, 3 y 4: Textos flotantes tipográficos sobrios -->
-    <div id="stage-captions">
-      <!-- Sentido 1 (Tramo 2: ~25% a 46%) -->
-      <div id="caption-edge" class="scrolly-caption caption-left">
-        <div class="caption-badge">01 · EL BORDE DE LA MESA</div>
-        <div class="caption-title">Precisión milimétrica</div>
-        <div class="caption-desc">La pelota que roza la línea blanca o el fleje: el tiro definitivo que nadie levanta.</div>
-      </div>
-
-      <!-- Sentido 2 (Tramo 2: ~46% a 68%) -->
-      <div id="caption-angle" class="scrolly-caption caption-right">
-        <div class="caption-badge">02 · EL ÁNGULO DE LA CARA</div>
-        <div class="caption-title">Cero desvío en el impacto</div>
-        <div class="caption-desc">Ajuste milimétrico de inclinación para que el topspin no se vaya largo ni muera en la red.</div>
-      </div>
-
-      <!-- Sentido 3 (Tramo 4: ~80% a 100%) -->
-      <div id="caption-advantage" class="scrolly-caption caption-center">
-        <div class="caption-badge">03 · TU VENTAJA</div>
-        <div class="caption-title">Telemetría que expone lo invisible</div>
-        <div class="caption-desc">Mide cara, velocidad y pico de giro en tiempo real con inteligencia artificial en el microcontrolador.</div>
-        <button id="btn-ir-dashboard" type="button" class="btn-start-action">INGRESAR AL DASHBOARD ➔</button>
-      </div>
+  <div id="stage-landing">
+    <div id="intro-actions-wrap">
+      <button id="btn-comenzar" type="button">ENTRENAR YA ➔</button>
+      <div class="intro-hint">Tocá para iniciar o presioná Espacio</div>
     </div>
   </div>
 </div>
@@ -2305,8 +2161,8 @@ function initIntroBall() {
   introScene.add(dir);
   introScene.userData.dirLight = dir;
 
-  // Render inicial y sincronización con scroll
-  onScrollyScroll();
+  // Render inicial en reposo
+  renderIntroFrame();
 
   window.addEventListener('resize', () => {
     if (!introRenderer || !introCamera) return;
@@ -2315,237 +2171,149 @@ function initIntroBall() {
     introCamera.aspect = nw / nh;
     introCamera.updateProjectionMatrix();
     introRenderer.setSize(nw, nh);
-    onScrollyScroll();
+    if (!animandoCinematica && introActiva) {
+      introCamera.position.set(0, 0, getMacroZ());
+      renderIntroFrame();
+    }
   });
-
-  window.addEventListener('scroll', onScrollyScroll, { passive: true });
 }
 
 // =========================================================================
-// COREOGRAFÍA POR TRAMOS DE SCROLL (SCROLLYTELLING)
+// CINEMÁTICA DIRECTA DE LA PELOTA (OPCIÓN A)
 // =========================================================================
-function onScrollyScroll() {
-  const container = $('intro-scrolly-container');
-  if (!container) return;
-
-  const maxScroll = container.offsetHeight - window.innerHeight;
-  if (maxScroll <= 0) return;
-
-  const scrollY = window.scrollY;
-  const p = Math.max(0, Math.min(1, scrollY / maxScroll));
-
-  if (!introScene || !introCamera || !introRenderer || !introBall) return;
-
-  // -------------------------------------------------------------
-  // Tramo 1: 0% a 20% — Reposo Macro / El Sello
-  // -------------------------------------------------------------
-  // Los botones se desvanecen de inmediato con el primer toque de scroll (0.00 -> 0.06)
-  const introActions = $('intro-actions-wrap');
-  if (introActions) {
-    const fadeActions = Math.max(0, Math.min(1, 1 - (p / 0.06)));
-    introActions.style.opacity = String(fadeActions);
-    introActions.style.transform = `translateY(${20 * (1 - fadeActions)}px)`;
-    introActions.style.pointerEvents = p > 0.02 ? 'none' : 'auto';
-  }
-
-  // -------------------------------------------------------------
-  // Tramo 2: 0% a 60% — El Zoom Out & Formación Tridimensional de la Pelota
-  // -------------------------------------------------------------
-  const zMacro = getMacroZ();
-  const zTarget = 0.22;
-  // Curva de retroceso con respuesta inmediata al scroll
-  const pProgress = Math.max(0, Math.min(1, p / 0.52));
-  const pZoom = Math.pow(pProgress, 0.9);
-  introCamera.position.z = zMacro + (zTarget - zMacro) * pZoom;
-
-  // Rotación angular progresiva: revela la curvatura y el volumen tridimensional
-  introBall.rotation.y = 0.46 * pZoom;
-  introBall.rotation.x = 0.14 * pZoom;
-
-  // Encendido gradual de la luz direccional: de 0 (plana en reposo) a 0.75 (3D esculpido)
-  const pLight = Math.max(0, Math.min(1, p / 0.30));
-  const dirLight = introScene.userData && introScene.userData.dirLight;
-  const ambLight = introScene.userData && introScene.userData.ambLight;
-  if (dirLight) dirLight.intensity = 0.75 * pLight;
-  if (ambLight) ambLight.intensity = 1.0 - 0.22 * pLight;
-
-  // Transición del fondo hacia grafito mesa para contrastar y recortar la silueta de la pelota
-  const pBg = Math.max(0, Math.min(1, (p - 0.07) / 0.45));
-  const r = (0xff - (0xff - 0x0c) * pBg) / 255;
-  const g = (0x77 - (0x77 - 0x13) * pBg) / 255;
-  const b = (0x00 + (0x22 - 0x00) * pBg) / 255;
-  introScene.background.setRGB(r, g, b);
-
-  // Captions flotantes: 01. El borde de la mesa
-  const capEdge = $('caption-edge');
-  if (capEdge) {
-    if (p >= 0.24 && p <= 0.46) {
-      const inFade = Math.min(1, (p - 0.24) / 0.06);
-      const outFade = Math.min(1, (0.46 - p) / 0.06);
-      const op = Math.max(0, Math.min(inFade, outFade));
-      capEdge.style.opacity = String(op);
-      capEdge.style.transform = `translateY(${16 * (1 - op)}px)`;
-      capEdge.style.display = 'block';
-    } else {
-      capEdge.style.opacity = '0';
-      capEdge.style.display = 'none';
-    }
-  }
-
-  // Captions flotantes: 02. El ángulo de la cara
-  const capAngle = $('caption-angle');
-  if (capAngle) {
-    if (p >= 0.46 && p <= 0.68) {
-      const inFade = Math.min(1, (p - 0.46) / 0.06);
-      const outFade = Math.min(1, (0.68 - p) / 0.06);
-      const op = Math.max(0, Math.min(inFade, outFade));
-      capAngle.style.opacity = String(op);
-      capAngle.style.transform = `translateY(${16 * (1 - op)}px)`;
-      capAngle.style.display = 'block';
-    } else {
-      capAngle.style.opacity = '0';
-      capAngle.style.display = 'none';
-    }
-  }
-
-  // -------------------------------------------------------------
-  // Tramo 3: 60% a 85% — La Caída y el Pique
-  // -------------------------------------------------------------
-  const capAdvantage = $('caption-advantage');
-  if (p >= 0.60) {
-    const pDrop = Math.max(0, Math.min(1, (p - 0.60) / 0.25));
-
-    // Cámara panea hacia abajo acompañando a la pelota
-    introCamera.position.y = (-0.020) * pDrop;
-    introCamera.lookAt(0, -0.024 * pDrop, 0);
-
-    // Caída y rebote en mesa
-    const yPiso = -0.042;
-    if (pDrop < 0.48) {
-      // Cayendo hacia la mesa
-      const fallT = pDrop / 0.48;
-      introBall.position.y = -(0.042 * (fallT * fallT));
-      introBall.position.x = 0;
-      piqueFired = false;
-    } else {
-      // Rebotando tras el pique
-      const bounceT = (pDrop - 0.48) / 0.52;
-      const freq = 12;
-      const amort = Math.exp(-bounceT * 3.4);
-      const rebote = Math.abs(Math.sin(bounceT * freq)) * amort * 0.046;
-      introBall.position.y = yPiso + rebote;
-      introBall.position.x = 0.015 * bounceT; // Desplazamiento lateral sutil
-
-      // Sonido de pique una vez al cruzar el impacto hacia abajo
-      if (!piqueFired) {
-        sonarPique(0.35);
-        piqueFired = true;
-      }
-    }
-
-    // Rotación continua
-    introBall.rotation.x = 0.12 + pDrop * 0.85;
-    introBall.rotation.y = 0.42 + pDrop * 0.4;
-  } else {
-    introBall.position.y = 0;
-    introBall.position.x = 0;
-    introCamera.position.y = 0;
-    introCamera.lookAt(0, 0, 0);
-    piqueFired = false;
-  }
-
-  // -------------------------------------------------------------
-  // Tramo 4: 85% a 100% — El Menú / Dashboard (Sentido 3)
-  // -------------------------------------------------------------
-  if (capAdvantage) {
-    if (p >= 0.78 && p <= 0.98) {
-      const inFade = Math.min(1, (p - 0.78) / 0.08);
-      const outFade = Math.min(1, (0.98 - p) / 0.06);
-      const op = Math.max(0, Math.min(inFade, outFade));
-      capAdvantage.style.opacity = String(op);
-      capAdvantage.style.transform = `translateX(-50%) translateY(${16 * (1 - op)}px)`;
-      capAdvantage.style.display = 'block';
-    } else {
-      capAdvantage.style.opacity = '0';
-      capAdvantage.style.display = 'none';
-    }
-  }
-
-  // Fade out suave del sticky stage al pasar al 100%
-  const stage = $('intro-sticky-stage');
-  if (stage) {
-    if (p >= 0.95) {
-      const fadeOut = Math.max(0, (1 - p) / 0.05);
-      stage.style.opacity = String(fadeOut);
-      stage.style.pointerEvents = p >= 0.99 ? 'none' : 'auto';
-    } else {
-      stage.style.opacity = '1';
-      stage.style.pointerEvents = 'auto';
-    }
-  }
-
-  introRenderer.render(introScene, introCamera);
-}
-
 let animandoCinematica = false;
-function animarCinematica() {
-  if (animandoCinematica) return;
+let introActiva = true;
+
+function renderIntroFrame() {
+  if (introRenderer && introScene && introCamera) {
+    introRenderer.render(introScene, introCamera);
+  }
+}
+
+function dispararIntroCinematica() {
+  if (animandoCinematica || !introActiva) return;
   animandoCinematica = true;
 
-  // Desvanecer botones inmediatamente al disparar la animación
-  const introActions = $('intro-actions-wrap');
-  if (introActions) {
-    introActions.style.opacity = '0';
-    introActions.style.transform = 'translateY(24px)';
-    introActions.style.pointerEvents = 'none';
+  // 1. Desvanecimiento inmediato del botón y texto (< 80ms)
+  const actionsWrap = $('intro-actions-wrap');
+  if (actionsWrap) {
+    actionsWrap.style.opacity = '0';
+    actionsWrap.style.transform = 'translateY(18px) scale(0.96)';
+    actionsWrap.style.pointerEvents = 'none';
   }
 
-  const container = $('intro-scrolly-container');
-  if (!container) return;
-  const maxScroll = container.offsetHeight - window.innerHeight;
-  const startScroll = window.scrollY;
-  const targetScroll = maxScroll;
   const startTime = performance.now();
-  const dur = 1350; // ms
+  const dur = 1150; // ms: ágil, cinematográfico
+  const zStart = getMacroZ();
+  const zEnd = 0.21;
+  piqueFired = false;
 
-  function frame(now) {
+  function loop(now) {
+    if (!introActiva) return;
     const elapsed = now - startTime;
     const t = Math.min(1, elapsed / dur);
-    // Apple ease-out cuártica suave
+
+    // Curva Apple ease-out cuártica: reactiva al inicio, desaceleración orgánica
     const ease = 1 - Math.pow(1 - t, 4);
-    window.scrollTo(0, startScroll + (targetScroll - startScroll) * ease);
-    if (t < 1) {
-      requestAnimationFrame(frame);
+
+    // Zoom out de la cámara en Z
+    introCamera.position.z = zStart + (zEnd - zStart) * ease;
+
+    // Rotación angular progresiva del celuloide
+    introBall.rotation.y = 0.44 * ease;
+    introBall.rotation.x = 0.12 * ease;
+
+    // Encendido de la luz direccional: despierta el 3D y el brillo especular
+    const pLight = Math.min(1, ease / 0.40);
+    const dirLight = introScene.userData && introScene.userData.dirLight;
+    const ambLight = introScene.userData && introScene.userData.ambLight;
+    if (dirLight) dirLight.intensity = 0.75 * pLight;
+    if (ambLight) ambLight.intensity = 1.0 - 0.22 * pLight;
+
+    // Transición de fondo de naranja torneo al fondo del dashboard (#090d16)
+    const pBg = Math.max(0, (ease - 0.12) / 0.88);
+    const r = (0xff - (0xff - 0x09) * pBg) / 255;
+    const g = (0x77 - (0x77 - 0x0d) * pBg) / 255;
+    const b = (0x00 + (0x16 - 0x00) * pBg) / 255;
+    introScene.background.setRGB(r, g, b);
+
+    // Física de caída y rebote de la pelota hacia la mesa
+    if (ease >= 0.42) {
+      const pDrop = (ease - 0.42) / 0.58;
+      const yPiso = -0.040;
+
+      // Cámara acompaña sutilmente hacia abajo
+      introCamera.position.y = (-0.016) * pDrop;
+      introCamera.lookAt(0, -0.020 * pDrop, 0);
+
+      if (pDrop < 0.45) {
+        // Caída libre acelerada
+        const fallT = pDrop / 0.45;
+        introBall.position.y = -(0.040 * (fallT * fallT));
+      } else {
+        // Rebote con amortiguación física real
+        const bounceT = (pDrop - 0.45) / 0.55;
+        const amort = Math.exp(-bounceT * 3.8);
+        const rebote = Math.abs(Math.sin(bounceT * 12)) * amort * 0.044;
+        introBall.position.y = yPiso + rebote;
+        introBall.position.x = 0.012 * bounceT;
+
+        if (!piqueFired) {
+          sonarPique(0.40);
+          piqueFired = true;
+        }
+      }
     } else {
-      animandoCinematica = false;
-      irAlDashboard(false);
+      introBall.position.set(0, 0, 0);
+      introCamera.position.y = 0;
+      introCamera.lookAt(0, 0, 0);
+    }
+
+    renderIntroFrame();
+
+    if (t < 1) {
+      requestAnimationFrame(loop);
+    } else {
+      cerrarIntro();
     }
   }
-  requestAnimationFrame(frame);
+
+  requestAnimationFrame(loop);
 }
 
-function irAlDashboard(suave = true) {
-  const container = $('intro-scrolly-container');
-  if (!container) return;
-  window.scrollTo({
-    top: container.offsetHeight,
-    behavior: suave ? 'smooth' : 'instant'
+function cerrarIntro() {
+  introActiva = false;
+  animandoCinematica = false;
+  const stage = $('intro-stage');
+  if (stage) {
+    stage.classList.add('oculto');
+    setTimeout(() => {
+      stage.style.display = 'none';
+    }, 320);
+  }
+}
+
+const btnComenzar = $('btn-comenzar');
+if (btnComenzar) {
+  btnComenzar.addEventListener('click', (e) => {
+    e.stopPropagation();
+    dispararIntroCinematica();
   });
 }
 
-$('btn-comenzar').addEventListener('click', animarCinematica);
-const btnDashboard = $('btn-ir-dashboard');
-if (btnDashboard) btnDashboard.addEventListener('click', () => irAlDashboard(true));
-
-const canvasIntro = $('canvas-intro');
-if (canvasIntro) {
-  canvasIntro.addEventListener('click', () => {
-    if (window.scrollY < 120) animarCinematica();
-  });
+const introStage = $('intro-stage');
+if (introStage) {
+  introStage.addEventListener('click', dispararIntroCinematica);
 }
 
 window.addEventListener('keydown', (ev) => {
-  if (ev.key === 'Escape' || ev.key === 'Enter') irAlDashboard(false);
+  if (!introActiva) return;
+  if (ev.key === ' ' || ev.key === 'Enter') {
+    ev.preventDefault();
+    dispararIntroCinematica();
+  } else if (ev.key === 'Escape') {
+    cerrarIntro();
+  }
 });
 
 // Inicializar la pelota apenas Three.js esté listo
