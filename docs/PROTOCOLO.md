@@ -63,3 +63,37 @@ Para que el modelo aprenda a rechazar perturbaciones reales sin confundirlas con
 ### Proporcion y balance en el Dataset
 - **Tamaño relativo:** La clase `ruido` debe representar entre el **20 % y 25 %** del total de muestras del dataset. Para ~200 golpes validos (50 por cada uno de los 4 tipos), se recolectan entre **50 y 60 ventanas deliberadas** de no golpes.
 - **Segmentacion identica:** Estas muestras deben recortarse usando exactamente la misma ventana temporal de 196 muestras (~196 ms, 120 antes del centro + 76 despues) que los golpes validos para que los tensores de entrada a Edge Impulse tengan dimensiones identicas (1176 floats).
+
+## 5. Validacion ciega con jugadores externos (clase 5, 6/11)
+
+Mide si el modelo de la placa reconoce los golpes de gente que nunca vio (hito del PLAN: **80 % o mas**). Estas tandas **son solo para validar**: no se suben a Edge Impulse ni se entrena con ellas, si no el numero deja de valer. Por eso van a `datos/validacion/` y no a `datos/crudos/` (`segmentar.py` lee `datos/crudos/`).
+
+- **Firmware:** la paleta tiene que tener el modelo cargado (el de `main`): por cada impacto la placa imprime `# Golpe N: TD 87 % ...`. `grabar.py` lo guarda en un `_placa.txt` al lado del CSV.
+- **Jugadores:** de 3 a 5 personas ajenas al proyecto. En los archivos van como `e1`, `e2`, ... (sin nombres). En `NOTAS_externos.md` se anota de cada uno solo el nivel (nunca jugo / juega a veces / federado) y si es diestro o zurdo.
+- **Tandas de 12 pelotas por golpe**, mismo orden que la seccion 3 (sin la de ruido): 4 tandas y 48 tiros por persona, unos 10 minutos con la juntada. Mismo autopique y las 3 reglas de oro de la seccion 2.
+- **Antes de cada tanda** se le muestra el golpe una vez (no se le corrige la tecnica: se mide como le pega una persona cualquiera). Si no sabe hacer un golpe (por ejemplo el topspin de reves), se saltea esa tanda y se anota.
+- **No mirar la app mientras tira**, para no corregirlo segun lo que dice el modelo.
+
+```
+python grabar.py --puerto COM7 --jugador e1 --golpe topspin_derecha --carpeta ../datos/validacion
+python grabar.py --puerto COM7 --jugador e1 --golpe empuje_derecha --carpeta ../datos/validacion
+python grabar.py --puerto COM7 --jugador e1 --golpe topspin_reves --carpeta ../datos/validacion
+python grabar.py --puerto COM7 --jugador e1 --golpe empuje_reves --carpeta ../datos/validacion
+```
+
+**Descartes:** se anotan en `datos/validacion/NOTAS_externos.md` con la misma tabla que `crudos/NOTAS.md` (el numero es el contador de impactos de `grabar.py`). Se descarta lo que no fue el golpe pedido (pifia, paleta contra la mesa, un golpe sin querer); **la pelota que va a la red o afuera NO se descarta** si el golpe fue el pedido, porque igual es el golpe que el modelo tiene que reconocer.
+
+```
+| Archivo | Impacto | Segundo | t_us | Motivo |
+| --- | --- | --- | --- | --- |
+| `2026-11-06_150000_e1_topspin_derecha.csv` | 4 | | | Le pego al canto (no es un topspin) |
+```
+
+**Resultado** (desde `herramientas/`, como los otros scripts):
+
+```
+python validar.py
+python validar.py --confianza-min 60
+```
+
+Muestra los aciertos de cada tanda, la matriz de confusion por jugador y la total, y si se llega al 80 %. Un golpe que el modelo llama `ruido` cuenta como error. Con el filtro del PR #29 en la placa, lo que sale como `# Descartado` no le llega a la app: cuenta como `ruido` o como `lento` (giro maximo < 300 °/s), los dos error. Con `--confianza-min` los golpes por debajo de esa certeza cuentan como `dudoso` (tambien error): sirve para elegir el umbral de confianza de la app.
