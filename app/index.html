@@ -665,7 +665,7 @@
     inset: 0;
     width: 100% !important;
     height: 100% !important;
-    display: block;
+    display: none; /* Oculto en reposo (frame 0) para no mezclar capas */
   }
 
   /* Interfaz 2D plana original, nítida y perfectamente proporcionada */
@@ -688,8 +688,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease;
-    transform-origin: center center;
+    user-select: none;
   }
   .stamp-brand {
     font-size: 5.2rem;
@@ -698,14 +697,12 @@
     line-height: 0.95;
     color: #0f172a;
     margin: 0 0 8px 0;
-    user-select: none;
   }
   .stamp-stars {
     font-size: 1.45rem;
     letter-spacing: 0.35em;
     color: #0f172a;
     margin: 0 0 6px 0;
-    user-select: none;
   }
   .stamp-spec {
     font-size: 0.88rem;
@@ -714,10 +711,9 @@
     text-transform: uppercase;
     color: rgba(15, 23, 42, 0.85);
     margin: 0 0 24px 0;
-    user-select: none;
   }
 
-  /* Subtítulo nítido: desaparece en <= 100 ms */
+  /* Subtítulo nítido */
   #intro-sub {
     font-size: 1.15rem;
     font-weight: 700;
@@ -726,16 +722,14 @@
     margin: 0 0 36px 0;
     color: rgba(15, 23, 42, 0.9);
     max-width: 380px;
-    transition: opacity 0.09s ease-out, transform 0.09s ease-out;
   }
 
-  /* Botón y acciones: desaparecen en <= 100 ms */
+  /* Botón y acciones */
   #intro-actions {
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 12px;
-    transition: opacity 0.09s ease-out, transform 0.09s ease-out;
   }
 
   #btn-comenzar {
@@ -771,22 +765,6 @@
   }
   #intro-skip:hover {
     color: #0f172a;
-  }
-
-  /* Al presionar COMENZAR:
-     1. El botón y el subtítulo desaparecen de inmediato (<= 100 ms) sin flotar sobre el 3D
-     2. El cuño se contrae visualmente hacia el centro sincronizado con el retroceso de la cámara
-  */
-  #intro-overlay.intro-iniciada #intro-sub,
-  #intro-overlay.intro-iniciada #intro-actions {
-    opacity: 0;
-    transform: scale(0.95) translateY(12px);
-    pointer-events: none;
-  }
-  #intro-overlay.intro-iniciada #intro-stamp {
-    opacity: 0;
-    transform: scale(0.22);
-    pointer-events: none;
   }
 </style>
 </head>
@@ -2129,6 +2107,9 @@ function initIntroBall() {
   const canvas = $('canvas-intro');
   if (!canvas) return;
 
+  // Frame 0: Canvas 3D completamente oculto para garantizar que la pantalla inicial sea 100% 2D limpia
+  canvas.style.display = 'none';
+
   const w = window.innerWidth;
   const h = window.innerHeight;
 
@@ -2136,7 +2117,7 @@ function initIntroBall() {
   introScene.background = new THREE.Color(0xff7700); // Naranja celuloide torneo
 
   introCamera = new THREE.PerspectiveCamera(35, w / h, 0.001, 10);
-  introCamera.position.set(0, 0, 0.075);
+  introCamera.position.set(0, 0, 0.082);
 
   introRenderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
   introRenderer.setSize(w, h);
@@ -2145,7 +2126,7 @@ function initIntroBall() {
   // Geometría oficial: radio 20 mm (diámetro 40 mm)
   const geometry = new THREE.SphereGeometry(0.02, 64, 32);
 
-  // Cuño compacto real de competición: ÚNICAMENTE DOC ★★★ 40+ (sin subtítulos deformados)
+  // Cuño compacto real de competición: ÚNICAMENTE DOC ★★★ 40+
   const c = document.createElement('canvas');
   c.width = 2048; c.height = 2048;
   const ctx = c.getContext('2d');
@@ -2187,17 +2168,16 @@ function initIntroBall() {
 
   introBall = new THREE.Mesh(geometry, material);
   introBall.rotation.y = -Math.PI / 2; // Cuño frontal hacia la cámara
+  introBall.visible = false; // Pelota invisible en reposo (frame 0)
   introScene.add(introBall);
 
   // Iluminación
   const amb = new THREE.AmbientLight(0xffffff, 1.0);
   introScene.add(amb);
-  const dir = new THREE.DirectionalLight(0xffffff, 0.4);
-  dir.position.set(0.18, 0.28, 0.45);
+  const dir = new THREE.DirectionalLight(0xffffff, 0.45);
+  dir.position.set(0.18, 0.3, 0.45);
   introScene.add(dir);
   introScene.userData.dirLight = dir;
-
-  introRenderer.render(introScene, introCamera);
 
   window.addEventListener('resize', () => {
     if (!introRenderer || !introCamera) return;
@@ -2206,7 +2186,7 @@ function initIntroBall() {
     introCamera.aspect = nw / nh;
     introCamera.updateProjectionMatrix();
     introRenderer.setSize(nw, nh);
-    if (!animandoIntro && introScene) introRenderer.render(introScene, introCamera);
+    if (!animandoIntro && introScene && introBall.visible) introRenderer.render(introScene, introCamera);
   });
 }
 
@@ -2215,19 +2195,32 @@ function arrancarSecuenciaPelota() {
   if (animandoIntro) return;
   animandoIntro = true;
 
-  // 1. Desaparecer botón y subtítulo de inmediato (<= 100 ms) sin dejar botones flotando sobre el 3D
-  // 2. Contraer el cuño hacia el centro sincronizado con el retroceso de cámara
-  const overlay = $('intro-overlay');
-  if (overlay) overlay.classList.add('intro-iniciada');
+  // HAND-OFF INSTANTÁNEO EN EL MISMO FRAME:
+  // 1. Ocultar inmediatamente la interfaz 2D (botón, subtítulo y texto plano)
+  const landing = $('intro-landing');
+  if (landing) landing.style.display = 'none';
+
+  // 2. Mostrar el canvas WebGL en el mismo frame (una capa reemplaza a la otra)
+  const canvas = $('canvas-intro');
+  if (canvas) canvas.style.display = 'block';
 
   if (!introBall || !introCamera || !introRenderer) {
     cerrarIntro();
     return;
   }
 
+  // Activar la pelota 3D centrada
+  introBall.visible = true;
+  introBall.position.set(0, 0, 0);
+  introBall.rotation.y = -Math.PI / 2;
+  introBall.rotation.x = 0;
+
+  introCamera.position.set(0, 0, 0.082);
+  introCamera.lookAt(0, 0, 0);
+
   const dirLight = introScene.userData && introScene.userData.dirLight;
   const startTime = performance.now();
-  const duracionTotal = 1850; // ms
+  const duracionTotal = 1900; // ms
   let ultimoPique = 0;
 
   function easeOutExpo(x) {
@@ -2238,16 +2231,15 @@ function arrancarSecuenciaPelota() {
     const elapsed = now - startTime;
     const progress = Math.min(1, elapsed / duracionTotal);
 
-    // 1. Retroceso de cámara y sincronización de contracción (0 a 1000 ms)
-    const tZoom = Math.min(1, elapsed / 1000);
+    // 1. Cámara retrocediendo en Z y paneando hacia la mesa (0 a 1100 ms)
+    const tZoom = Math.min(1, elapsed / 1100);
     const ease = easeOutExpo(tZoom);
 
-    // Retroceso suave de cámara en eje Z (0.075 -> 0.19)
-    introCamera.position.z = 0.075 + (0.19 - 0.075) * ease;
-
-    // Rotación angular leve en Y (~13°) y en X (~4°) para deslizar el brillo especular
-    introBall.rotation.y = -Math.PI / 2 + 0.22 * ease;
-    introBall.rotation.x = 0.06 * ease;
+    // Retroceso en Z: de 0.082 a 0.20
+    introCamera.position.z = 0.082 + (0.20 - 0.082) * ease;
+    // Paneo suave hacia abajo para encuadrar la mesa
+    introCamera.position.y = 0.005 + (-0.018 - 0.005) * ease;
+    introCamera.lookAt(0, -0.022 * ease, 0);
 
     // Transición de fondo de naranja (#ff7700) a grafito mesa (#0c1322)
     const r = (0xff - (0xff - 0x0c) * ease) / 255;
@@ -2256,28 +2248,33 @@ function arrancarSecuenciaPelota() {
     introScene.background.setRGB(r, g, b);
 
     // Luz direccional sube revelando el volumen esférico 3D
-    if (dirLight) dirLight.intensity = 0.4 + (0.85 - 0.4) * ease;
+    if (dirLight) dirLight.intensity = 0.45 + (0.85 - 0.45) * ease;
 
-    // 2. Física de pique en mesa (850 ms a 1700 ms)
-    if (elapsed > 850) {
-      const tFisica = (elapsed - 850) / 1000;
-      const frecuencia = 12;
-      const amortiguacion = Math.exp(-tFisica * 3.4);
-      const yPiso = -0.040;
-      const rebote = Math.abs(Math.sin(tFisica * frecuencia)) * amortiguacion * 0.048;
+    // 2. La pelota cae y pica en la mesa (elapsed > 200 ms)
+    if (elapsed > 200) {
+      const tFisica = (elapsed - 200) / 1000;
+      const frecuencia = 12.5;
+      const amortiguacion = Math.exp(-tFisica * 3.3);
+      const yPiso = -0.042;
+      const rebote = Math.abs(Math.sin(tFisica * frecuencia)) * amortiguacion * 0.052;
       introBall.position.y = yPiso + rebote;
 
+      // Rotación física en vuelo y pique
+      introBall.rotation.x += 0.028;
+      introBall.rotation.y += 0.014;
+
       if (rebote < 0.004 && amortiguacion > 0.08) {
-        if (now - ultimoPique > 160) {
+        if (now - ultimoPique > 150) {
           sonarPique(Math.min(0.35, amortiguacion * 0.45));
           ultimoPique = now;
         }
       }
     }
 
-    // 3. Disolución suave del overlay hacia el dashboard (1500 ms a 1850 ms)
+    // 3. Disolución suave del overlay hacia el dashboard (1500 ms a 1900 ms)
     if (elapsed > 1500) {
-      const fadeProgress = (elapsed - 1500) / 350;
+      const fadeProgress = (elapsed - 1500) / 400;
+      const overlay = $('intro-overlay');
       if (overlay) overlay.style.opacity = String(Math.max(0, 1 - fadeProgress));
     }
 
