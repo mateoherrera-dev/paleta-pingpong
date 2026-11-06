@@ -8,6 +8,10 @@ Uso:
 
 Cortar con Ctrl+C (o esperar --segundos). El archivo queda en datos/crudos/ con fecha, jugador y
 golpe en el nombre. Si se pierden muestras en el camino (huecos en t_us), lo avisa en vivo y al final.
+Al lado queda un _placa.txt con las líneas "#" de la placa (lo que dijo el modelo en cada golpe).
+
+Para la validación ciega con jugadores externos (no entran al entrenamiento):
+    python grabar.py --puerto COM7 --jugador e1 --golpe topspin_derecha --carpeta ../datos/validacion
 """
 import argparse
 import datetime
@@ -110,14 +114,19 @@ def main():
     args.carpeta.mkdir(parents=True, exist_ok=True)
     marca = datetime.datetime.now().strftime("%Y-%m-%d_%H%M%S")
     ruta = args.carpeta / f"{marca}_{args.jugador}_{args.golpe}.csv"
+    # Lo que dice la placa (las líneas "#", entre ellas "# Golpe N: TD 87 % ...") va aparte, con el
+    # número de impacto del CSV en ese momento: validar.py lo cruza con el golpe de la tanda.
+    ruta_placa = ruta.with_name(ruta.stem + "_placa.txt")
 
     muestras = impactos = perdidas = rotas = 0
     t_anterior = t_rechazado = None
     try:
-        with puerto, open(ruta, "w", newline="") as archivo:
+        with puerto, open(ruta, "w", newline="") as archivo, \
+                open(ruta_placa, "w", encoding="utf-8") as placa:
             if hasattr(puerto, "set_buffer_size"):  # solo existe en Windows
                 puerto.set_buffer_size(rx_size=BUFFER_PUERTO)
             archivo.write(",".join(COLUMNAS) + "\n")
+            placa.write("impacto\tt_us\tlinea\n")
             puerto.reset_input_buffer()
             print(f"Grabando {args.golpe} de {args.jugador}. Ctrl+C para terminar.")
             inicio = ultimo_aviso = time.monotonic()
@@ -125,6 +134,8 @@ def main():
                 for linea in lineas_con_reconexion(puerto):
                     if linea.startswith("#"):
                         print(f"\n{linea}")
+                        placa.write(f"{impactos}\t{t_anterior if t_anterior is not None else ''}\t{linea}\n")
+                        placa.flush()
                         continue
                     if not MUESTRA.fullmatch(linea):
                         # vacía, cortada o pegada; antes de la primera muestra es el arranque de la placa
@@ -160,6 +171,7 @@ def main():
         pass  # un segundo Ctrl+C mientras se cerraba el puerto: el archivo igual queda guardado
 
     print(f"\nGuardado en {ruta} ({muestras} muestras, {impactos} impactos)")
+    print(f"Lo que dijo la placa (modelo de cada golpe) en {ruta_placa.name}")
     if perdidas or rotas:
         print(f"Ojo: se perdieron {perdidas} muestras en el camino y llegaron {rotas} líneas rotas")
 
