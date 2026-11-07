@@ -62,8 +62,8 @@
     gap: 16px;
     opacity: 0;
     pointer-events: none;
-    transform: translateY(36px);
-    transition: opacity 0.58s cubic-bezier(0.22, 1, 0.36, 1), transform 0.58s cubic-bezier(0.22, 1, 0.36, 1);
+    transform: translateY(24px);
+    transition: opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1), transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
     will-change: opacity, transform;
   }
   main#app-main.visible {
@@ -779,7 +779,7 @@
     flex: 1;
   }
 
-  /* --- Intro: Pelota en Fondo Oscuro con Deslizamiento Fluido --- */
+  /* --- Intro: Pelota en Fondo Oscuro (Apple Fluid Motion) --- */
   #intro-stage {
     position: fixed;
     inset: 0;
@@ -789,13 +789,11 @@
     overflow: hidden;
     background: #080c14;
     pointer-events: none;
-    transition: transform 0.58s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.45s cubic-bezier(0.22, 1, 0.36, 1), visibility 0.58s;
-    will-change: transform, opacity;
+    transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: opacity;
   }
   #intro-stage.oculto {
-    transform: translateY(-100vh);
     opacity: 0;
-    visibility: hidden;
   }
   #canvas-intro {
     position: absolute;
@@ -818,13 +816,12 @@
     box-sizing: border-box;
     z-index: 101;
     cursor: pointer;
-    transition: transform 0.58s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.40s cubic-bezier(0.22, 1, 0.36, 1), visibility 0.58s;
-    will-change: transform, opacity;
+    transition: opacity 0.32s cubic-bezier(0.16, 1, 0.3, 1), transform 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: opacity, transform;
   }
   #stage-landing.oculto {
-    transform: translateY(-100vh);
     opacity: 0;
-    visibility: hidden;
+    transform: translateY(16px);
     pointer-events: none;
   }
   #intro-actions-wrap {
@@ -2225,11 +2222,18 @@ async function cargarVisor3D() {
 // =========================================================================
 // INTRO CINEMATOGRÁFICA: LA PELOTA DE PING PONG (THREE.JS PROCEDURAL)
 // =========================================================================
+let sharedAudioCtx = null;
 function sonarPique(vol = 0.25) {
   try {
-    const AudioCtx = window.AudioContext || window.webkitAudioContext;
-    if (!AudioCtx) return;
-    const ctx = new AudioCtx();
+    if (!sharedAudioCtx) {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (AudioCtx) sharedAudioCtx = new AudioCtx();
+    }
+    if (!sharedAudioCtx) return;
+    if (sharedAudioCtx.state === 'suspended') {
+      sharedAudioCtx.resume();
+    }
+    const ctx = sharedAudioCtx;
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.type = 'triangle';
@@ -2454,8 +2458,12 @@ function initIntroBall() {
   headerStampTex.colorSpace = THREE.SRGBColorSpace;
   initHeaderBall(headerStampTex);
 
+  // En reposo la pelota se presenta calma, estática y centrada (Apple Design: cero distracción)
+  if (introBall) {
+    introBall.rotation.set(0, 0, 0);
+    introBall.position.set(0, 0, 0);
+  }
   renderIntroFrame();
-  animarIntroIdle(performance.now());
 
   window.addEventListener('resize', () => {
     if (!introRenderer || !introCamera) return;
@@ -2472,7 +2480,7 @@ function initIntroBall() {
 }
 
 // =========================================================================
-// INTRO: PELOTA EN FONDO OSCURO Y DESLIZAMIENTO FLUIDO AL ENTRENAR
+// INTRO: PELOTA EN FONDO OSCURO Y ELEVACIÓN FLUIDA AL ENTRENAR (APPLE DESIGN)
 // =========================================================================
 let animandoCinematica = false;
 let introActiva = true;
@@ -2483,18 +2491,6 @@ function renderIntroFrame() {
   }
 }
 
-function animarIntroIdle(now) {
-  if (!introActiva) return;
-  introAnimId = requestAnimationFrame(animarIntroIdle);
-  if (introBall && !animandoCinematica) {
-    // Oscilación y balanceo suave en 3D que exhibe la curvatura del sello
-    introBall.rotation.y = Math.sin(now * 0.0008) * 0.14;
-    introBall.rotation.x = Math.sin(now * 0.0011) * 0.04;
-    introBall.position.y = Math.sin(now * 0.0016) * 0.0006;
-  }
-  renderIntroFrame();
-}
-
 function deslizarYComenzar() {
   if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
     cerrarIntro();
@@ -2503,34 +2499,55 @@ function deslizarYComenzar() {
   if (!introActiva || animandoCinematica) return;
   animandoCinematica = true;
 
-  // Feedback auditivo sutil de contacto deportivo (pop/pique)
-  sonarPique(0.32);
+  // Feedback auditivo sutil instantáneo sin bloqueo de hilo
+  sonarPique(0.30);
 
   const stage = $('intro-stage');
   const stageLanding = $('stage-landing');
   const appMain = $('app-main');
 
-  // Deslizar con curva suave y física hacia arriba (580ms)
-  if (stage) stage.classList.add('oculto');
+  // Desvanecer el botón de landing y revelar el dashboard
   if (stageLanding) stageLanding.classList.add('oculto');
   if (appMain) appMain.classList.add('visible');
 
-  // Redimensionar el visor 3D de la paleta durante la entrada
-  setTimeout(() => {
-    if (typeof onResizeVisor === 'function') onResizeVisor();
-  }, 120);
+  // Elevación cinemática continua de la pelota en WebGL puro (sin mover el canvas en CSS para evitar lagazos de GPU)
+  const startTime = performance.now();
+  const dur = 460; // ms: duración natural de resorte Apple (response 0.4s)
+  const yStart = introBall ? introBall.position.y : 0;
+  const yTarget = 0.062; // Sale suavemente por el borde superior
+  const rotXStart = introBall ? introBall.rotation.x : 0;
+  const rotXTarget = rotXStart - 0.72; // Topspin natural hacia adelante
 
-  setTimeout(() => {
-    introActiva = false;
-    animandoCinematica = false;
-    if (stage) stage.style.display = 'none';
-    if (stageLanding) stageLanding.style.display = 'none';
-    if (introAnimId) {
-      cancelAnimationFrame(introAnimId);
-      introAnimId = null;
+  function loopSubida(now) {
+    const elapsed = now - startTime;
+    const p = Math.min(1, elapsed / dur);
+    // Curva cúbica suave (easeOutCubic)
+    const ease = 1 - Math.pow(1 - p, 3);
+
+    if (introBall) {
+      introBall.position.y = yStart + (yTarget - yStart) * ease;
+      introBall.rotation.x = rotXStart + (rotXTarget - rotXStart) * ease;
     }
-    if (typeof onResizeVisor === 'function') onResizeVisor();
-  }, 600);
+
+    // A partir del 30% del vuelo desvanecemos el fondo de forma transparente
+    if (stage && p >= 0.30) {
+      stage.classList.add('oculto');
+    }
+
+    renderIntroFrame();
+
+    if (p < 1) {
+      requestAnimationFrame(loopSubida);
+    } else {
+      introActiva = false;
+      animandoCinematica = false;
+      if (stage) stage.style.display = 'none';
+      if (stageLanding) stageLanding.style.display = 'none';
+      if (typeof onResizeVisor === 'function') onResizeVisor();
+    }
+  }
+
+  requestAnimationFrame(loopSubida);
 }
 
 function cerrarIntro() {
@@ -2549,10 +2566,6 @@ function cerrarIntro() {
   const appMain = $('app-main');
   if (appMain && !appMain.classList.contains('visible')) {
     appMain.classList.add('visible');
-  }
-  if (introAnimId) {
-    cancelAnimationFrame(introAnimId);
-    introAnimId = null;
   }
   if (typeof onResizeVisor === 'function') onResizeVisor();
 }
