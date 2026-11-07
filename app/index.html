@@ -807,8 +807,8 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: flex-end;
-    padding-bottom: 40px;
+    justify-content: space-between;
+    padding: 10vh 20px 44px 20px;
     box-sizing: border-box;
     z-index: 100;
     cursor: pointer;
@@ -819,6 +819,59 @@
     visibility: hidden;
     pointer-events: none;
     transform: scale(0.96);
+  }
+
+  /* --- Sello Oficial en HTML Nativo (Ultra-Nítido / Retina) --- */
+  .landing-stamp-wrap {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  .landing-stamp {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    color: #0f172a;
+    pointer-events: none;
+  }
+  .stamp-stars {
+    font-size: 1.65rem;
+    letter-spacing: 0.32em;
+    color: #0f172a;
+    line-height: 1;
+    margin-bottom: 6px;
+    margin-left: 0.32em;
+  }
+  .stamp-doc {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+    font-size: 5.6rem;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    line-height: 0.92;
+    color: #0f172a;
+  }
+  .stamp-spec {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+    font-size: 2.1rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    line-height: 1;
+    margin-top: 14px;
+    color: #0f172a;
+  }
+  .stamp-tagline {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+    font-size: 1.05rem;
+    font-weight: 900;
+    letter-spacing: 0.22em;
+    margin-top: 14px;
+    color: #0f172a;
+    margin-left: 0.22em;
   }
   #intro-actions-wrap {
     display: flex;
@@ -899,6 +952,15 @@
   <canvas id="canvas-intro"></canvas>
 
   <div id="stage-landing">
+    <div class="landing-stamp-wrap">
+      <div class="landing-stamp">
+        <div class="stamp-stars">★★★</div>
+        <div class="stamp-doc">DOC</div>
+        <div class="stamp-spec">40+</div>
+        <div class="stamp-tagline">FIND YOUR EDGE</div>
+      </div>
+    </div>
+
     <div id="intro-actions-wrap">
       <button id="btn-comenzar" type="button">
         <span>ENTRENAR</span>
@@ -2430,9 +2492,10 @@ function initIntroBall() {
     ctx.fillText(etiquetaModo, cx, cy + 195);
   }
 
-  // Dibujar las 3 caras en ultra alta definición
+  // Dibujar las caras 3 y 2 en ultra alta definición (para el giro 3D en órbita).
+  // La Cara 1 (Frontal / Landing) se mantiene limpia porque su cuño oficial se renderiza
+  // en HTML nativo (.landing-stamp), garantizando definición 100% nítida y vectorial en la pantalla.
   dibujarSelloCara(1024, 960, 'BENCHMARK');
-  dibujarSelloCara(3072, 960, 'MODO LIBRE');
   dibujarSelloCara(5120, 960, 'TUTORIAL');
 
   const stampTex = new THREE.CanvasTexture(c);
