@@ -2326,7 +2326,7 @@ function initIntroBall() {
 
   introRenderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
   introRenderer.setSize(w, h);
-  introRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  introRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2.5));
   introRenderer.outputColorSpace = THREE.SRGBColorSpace;
 
   // Geometría oficial: radio 20 mm (diámetro 40 mm)
@@ -2379,15 +2379,18 @@ function initIntroBall() {
   }
   uvs.needsUpdate = true;
 
-  // Cuño oficial de competición en Canvas 2D con las 3 Caras para los 3 Modos:
-  // Cara 3 (Benchmark, -120°): cx = 512, cy = 480
-  // Cara 1 (Modo Libre, 0°):   cx = 1536, cy = 480
-  // Cara 2 (Tutorial, +120°):  cx = 2560, cy = 480
+  // Cuño oficial de competición en Canvas 2D en Ultra-Alta Definición (6144 x 2048):
+  // Cada cara cuenta con un lienzo completo de 2048 x 2048 px para máxima nitidez en pantallas Retina/4K
+  // Cara 3 (Benchmark, -120°): cx = 1024, cy = 960
+  // Cara 1 (Modo Libre, 0°):   cx = 3072, cy = 960
+  // Cara 2 (Tutorial, +120°):  cx = 5120, cy = 960
   const c = document.createElement('canvas');
-  c.width = 3072; c.height = 1024;
+  c.width = 6144; c.height = 2048;
   const ctx = c.getContext('2d');
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
   ctx.fillStyle = '#ff7700'; // Naranja oficial de competición
-  ctx.fillRect(0, 0, 3072, 1024);
+  ctx.fillRect(0, 0, 6144, 2048);
 
   const inkColor = '#0f172a';
   ctx.fillStyle = inkColor;
@@ -2395,11 +2398,11 @@ function initIntroBall() {
   ctx.textBaseline = 'middle';
 
   function dibujarSelloCara(cx, cy, etiquetaModo) {
-    // 1. Estrellas con arco suave superior (~10° de curvatura)
-    const cyStarCenter = cy + 220;
-    const rStars = 380;
+    // 1. Estrellas con arco suave superior (~10° de curvatura sutil)
+    const cyStarCenter = cy + 440;
+    const rStars = 760;
     const thetaStar = 0.18;
-    ctx.font = '55px sans-serif';
+    ctx.font = '85px sans-serif';
     [-1, 0, 1].forEach((i) => {
       const angle = i * thetaStar;
       const x = cx + rStars * Math.sin(angle);
@@ -2412,28 +2415,32 @@ function initIntroBall() {
     });
 
     // 2. Núcleo de marca: DOC en bloque horizontal
-    ctx.font = '900 150px -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif';
-    ctx.letterSpacing = '10px';
-    ctx.fillText('DOC', cx, cy - 65);
+    ctx.font = '900 230px -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif';
+    ctx.letterSpacing = '14px';
+    ctx.fillText('DOC', cx, cy - 80);
 
     // 3. Especificación técnica: 40+ horizontal
-    ctx.font = '800 62px -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif';
-    ctx.letterSpacing = '5px';
-    ctx.fillText('40+', cx, cy + 24);
+    ctx.font = '800 90px -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif';
+    ctx.letterSpacing = '6px';
+    ctx.fillText('40+', cx, cy + 75);
 
     // 4. Etiqueta del modo: MODO LIBRE / TUTORIAL / BENCHMARK
-    ctx.font = '900 42px -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif';
-    ctx.letterSpacing = '8px';
-    ctx.fillText(etiquetaModo, cx, cy + 96);
+    ctx.font = '900 64px -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif';
+    ctx.letterSpacing = '12px';
+    ctx.fillText(etiquetaModo, cx, cy + 195);
   }
 
-  // Dibujar las 3 caras
-  dibujarSelloCara(512, 480, 'BENCHMARK');
-  dibujarSelloCara(1536, 480, 'MODO LIBRE');
-  dibujarSelloCara(2560, 480, 'TUTORIAL');
+  // Dibujar las 3 caras en ultra alta definición
+  dibujarSelloCara(1024, 960, 'BENCHMARK');
+  dibujarSelloCara(3072, 960, 'MODO LIBRE');
+  dibujarSelloCara(5120, 960, 'TUTORIAL');
 
   const stampTex = new THREE.CanvasTexture(c);
-  stampTex.generateMipmaps = true;
+  // generateMipmaps = false para evitar que la GPU escoja un nivel de mipmap degradado
+  // y asegurar nitidez vector-grade en el primer plano macro
+  stampTex.generateMipmaps = false;
+  stampTex.minFilter = THREE.LinearFilter;
+  stampTex.magFilter = THREE.LinearFilter;
   stampTex.colorSpace = THREE.SRGBColorSpace;
   stampTex.wrapS = THREE.ClampToEdgeWrapping;
   stampTex.wrapT = THREE.ClampToEdgeWrapping;
