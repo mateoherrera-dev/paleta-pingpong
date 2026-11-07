@@ -61,6 +61,7 @@
     flex-direction: column;
     gap: 16px;
     opacity: 0;
+    pointer-events: none;
     transform: translateY(22px) scale(0.985);
     filter: blur(8px);
     transition: opacity 0.45s var(--ease-out), transform 0.45s var(--ease-out), filter 0.45s var(--ease-out);
@@ -68,6 +69,7 @@
   }
   main#app-main.visible {
     opacity: 1;
+    pointer-events: auto;
     transform: translateY(0) scale(1);
     filter: blur(0);
   }
@@ -889,6 +891,49 @@
     color: #0f172a;
     margin-left: 0.22em;
   }
+
+  /* --- Insignia de Cara en el Dashboard (Identidad de cada cara de la pelota) --- */
+  .face-badge-header {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 6px 16px;
+    margin: 0 auto 4px auto;
+    border-radius: var(--radius-pill);
+    background: rgba(15, 23, 42, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    backdrop-filter: blur(14px);
+    width: fit-content;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
+    align-self: center;
+  }
+  .face-badge-stars {
+    color: var(--accent);
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+  }
+  .face-badge-doc {
+    font-weight: 900;
+    font-size: 0.88rem;
+    letter-spacing: 0.05em;
+    color: #fff;
+  }
+  .face-badge-spec {
+    font-weight: 800;
+    font-size: 0.75rem;
+    color: var(--fg-muted);
+  }
+  .face-badge-tag {
+    font-weight: 900;
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    background: var(--accent);
+    color: #fff;
+    padding: 2px 8px;
+    border-radius: var(--radius-pill);
+  }
   #intro-actions-wrap {
     display: flex;
     flex-direction: column;
@@ -963,33 +1008,34 @@
 </head>
 <body>
 
-<!-- Intro Cinemática Directa (Opción A): La Pelota ES la Pantalla -->
+<!-- Entorno 3D de la Pelota -->
 <div id="intro-stage">
   <canvas id="canvas-intro"></canvas>
+</div>
 
-  <div id="stage-landing">
-    <div class="landing-stamp-wrap">
-      <div class="landing-stamp">
-        <div class="stamp-stars" aria-label="3 estrellas oficiales">
-          <span class="star-arc star-l">★</span>
-          <span class="star-arc star-c">★</span>
-          <span class="star-arc star-r">★</span>
-        </div>
-        <div class="stamp-doc">DOC</div>
-        <div class="stamp-spec">40+</div>
-        <div class="stamp-tagline">FIND YOUR EDGE</div>
+<!-- Overlay de Bienvenida / Landing -->
+<div id="stage-landing">
+  <div class="landing-stamp-wrap">
+    <div class="landing-stamp">
+      <div class="stamp-stars" aria-label="3 estrellas oficiales">
+        <span class="star-arc star-l">★</span>
+        <span class="star-arc star-c">★</span>
+        <span class="star-arc star-r">★</span>
       </div>
+      <div class="stamp-doc">DOC</div>
+      <div class="stamp-spec">40+</div>
+      <div class="stamp-tagline">FIND YOUR EDGE</div>
     </div>
+  </div>
 
-    <div id="intro-actions-wrap">
-      <button id="btn-comenzar" type="button">
-        <span>ENTRENAR</span>
-        <svg class="btn-arrow" viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M3 8h10M9 4l4 4-4 4"/>
-        </svg>
-      </button>
-      <div class="intro-hint">Tocá para iniciar o presioná Espacio</div>
-    </div>
+  <div id="intro-actions-wrap">
+    <button id="btn-comenzar" type="button">
+      <span>ENTRENAR</span>
+      <svg class="btn-arrow" viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M3 8h10M9 4l4 4-4 4"/>
+      </svg>
+    </button>
+    <div class="intro-hint">Tocá para iniciar o presioná Espacio</div>
   </div>
 </div>
 
@@ -1029,6 +1075,13 @@
 
   <!-- ==================== VISTA 1: MODO LIBRE ==================== -->
   <div id="vista-libre" class="vista-tab">
+    <div class="face-badge-header">
+      <span class="face-badge-stars">★★★</span>
+      <span class="face-badge-doc">DOC</span>
+      <span class="face-badge-spec">40+</span>
+      <span class="face-badge-tag">MODO LIBRE</span>
+    </div>
+
     <section class="card" id="ultimo">
       <div class="hero-strike-header">
         <div class="strike-title" id="golpe">Esperando golpe…</div>
@@ -1119,6 +1172,13 @@
 
   <!-- ==================== VISTA 2: MODO TUTORIAL ==================== -->
   <div id="vista-tutorial" class="vista-tab oculta">
+    <div class="face-badge-header">
+      <span class="face-badge-stars">★★★</span>
+      <span class="face-badge-doc">DOC</span>
+      <span class="face-badge-spec">40+</span>
+      <span class="face-badge-tag">TUTORIAL</span>
+    </div>
+
     <section class="card">
       <div style="display:flex; justify-content:space-between; align-items:center;">
         <span style="font-size:0.85rem; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:0.06em;">Entrenador Biomecánico</span>
@@ -1191,6 +1251,13 @@
 
   <!-- ==================== VISTA 3: MODO BENCHMARK (TEST) ==================== -->
   <div id="vista-test" class="vista-tab oculta">
+    <div class="face-badge-header">
+      <span class="face-badge-stars">★★★</span>
+      <span class="face-badge-doc">DOC</span>
+      <span class="face-badge-spec">40+</span>
+      <span class="face-badge-tag">BENCHMARK</span>
+    </div>
+
     <section class="card">
       <div style="display:flex; justify-content:space-between; align-items:center;">
         <span style="font-size:0.85rem; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:0.06em;">Validación TinyML</span>
@@ -2385,11 +2452,11 @@ function acelerarSpinPelotaHeader() {
 
 function getMacroZ() {
   const aspect = window.innerWidth / window.innerHeight;
-  // A mayor ancho de pantalla, cámara más cercana para que la superficie
-  // de la esfera cubra el 100% del viewport sin mostrar bordes ni silueta
-  if (aspect >= 1.6) return 0.033;
-  if (aspect >= 1.0) return 0.035;
-  return 0.038; // Móvil vertical
+  // A z = 0.082 el diámetro de 40mm ocupa ~80-85% del alto, mostrando claramente
+  // su contorno esférico tridimensional, el brillo curvo y la silueta física
+  if (aspect >= 1.6) return 0.088;
+  if (aspect >= 1.0) return 0.084;
+  return 0.078; // Móvil vertical
 }
 
 function initIntroBall() {
@@ -2411,152 +2478,54 @@ function initIntroBall() {
   introRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2.5));
   introRenderer.outputColorSpace = THREE.SRGBColorSpace;
 
-  // Geometría oficial: radio 20 mm (diámetro 40 mm)
+  // Geometría oficial: radio 20 mm (diámetro 40 mm) con malla suave
   const R = 0.02;
-  const geometry = new THREE.SphereGeometry(R, 64, 32);
-  const pos = geometry.attributes.position;
-  const uvs = geometry.attributes.uv;
+  const geometry = new THREE.SphereGeometry(R, 64, 48);
 
-  // Proyección UV ortogonal frontal en cada una de las 3 caras:
-  // Cara 1 (0°): normal (0, 0, 1), uCenter = 0.5 (Columna central: Modo Libre)
-  // Cara 2 (+120°): normal (0.866, 0, -0.5), uCenter = 5/6 (Tutorial)
-  // Cara 3 (-120°): normal (-0.866, 0, -0.5), uCenter = 1/6 (Benchmark)
-  const stampSpan = 0.0135;
-  for (let i = 0; i < pos.count; i++) {
-    const x = pos.getX(i);
-    const y = pos.getY(i);
-    const z = pos.getZ(i);
-
-    const d1 = z;
-    const d2 = 0.866025 * x - 0.5 * z;
-    const d3 = -0.866025 * x - 0.5 * z;
-
-    let uCenter, xLoc, zLoc;
-
-    if (d1 >= d2 && d1 >= d3) {
-      // Cara 1 (Modo Libre / Landing)
-      uCenter = 0.5;
-      xLoc = x;
-      zLoc = z;
-    } else if (d2 > d1 && d2 >= d3) {
-      // Cara 2 (Tutorial, orientada a +120°)
-      uCenter = 5 / 6;
-      xLoc = -0.5 * x - 0.866025 * z;
-      zLoc = -0.5 * z + 0.866025 * x;
-    } else {
-      // Cara 3 (Benchmark, orientada a -120°)
-      uCenter = 1 / 6;
-      xLoc = -0.5 * x + 0.866025 * z;
-      zLoc = -0.5 * z - 0.866025 * x;
-    }
-
-    if (zLoc > 0.0055) {
-      const u = (xLoc / stampSpan) * (1 / 3) + uCenter;
-      const v = (y / stampSpan) + 0.5;
-      uvs.setXY(i, u, v);
-    } else {
-      // Zona fuera del cuño: píxel naranja plano seguro
-      uvs.setXY(i, 0.5, 0.02);
-    }
-  }
-  uvs.needsUpdate = true;
-
-  // Cuño oficial de competición en Canvas 2D en Ultra-Alta Definición (6144 x 2048):
-  // Cada cara cuenta con un lienzo completo de 2048 x 2048 px para máxima nitidez en pantallas Retina/4K
-  // Cara 3 (Benchmark, -120°): cx = 1024, cy = 960
-  // Cara 1 (Modo Libre, 0°):   cx = 3072, cy = 960
-  // Cara 2 (Tutorial, +120°):  cx = 5120, cy = 960
-  const c = document.createElement('canvas');
-  c.width = 6144; c.height = 2048;
-  const ctx = c.getContext('2d');
-  ctx.imageSmoothingEnabled = true;
-  ctx.imageSmoothingQuality = 'high';
-  ctx.fillStyle = '#ff7700'; // Naranja oficial de competición
-  ctx.fillRect(0, 0, 6144, 2048);
-
-  const inkColor = '#0f172a';
-  ctx.fillStyle = inkColor;
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-
-  function dibujarSelloCara(cx, cy, etiquetaModo) {
-    // 1. Estrellas con arco suave superior (~10° de curvatura sutil)
-    const cyStarCenter = cy + 440;
-    const rStars = 760;
-    const thetaStar = 0.18;
-    ctx.font = '85px sans-serif';
-    [-1, 0, 1].forEach((i) => {
-      const angle = i * thetaStar;
-      const x = cx + rStars * Math.sin(angle);
-      const y = cyStarCenter - rStars * Math.cos(angle);
-      ctx.save();
-      ctx.translate(x, y);
-      ctx.rotate(angle);
-      ctx.fillText('★', 0, 0);
-      ctx.restore();
-    });
-
-    // 2. Núcleo de marca: DOC en bloque horizontal
-    ctx.font = '900 230px -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif';
-    ctx.letterSpacing = '14px';
-    ctx.fillText('DOC', cx, cy - 80);
-
-    // 3. Especificación técnica: 40+ horizontal
-    ctx.font = '800 90px -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif';
-    ctx.letterSpacing = '6px';
-    ctx.fillText('40+', cx, cy + 75);
-
-    // 4. Etiqueta del modo: MODO LIBRE / TUTORIAL / BENCHMARK
-    ctx.font = '900 64px -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif';
-    ctx.letterSpacing = '12px';
-    ctx.fillText(etiquetaModo, cx, cy + 195);
-  }
-
-  // Dibujar las caras 3 y 2 en ultra alta definición (para el giro 3D en órbita).
-  // La Cara 1 (Frontal / Landing) se mantiene limpia porque su cuño oficial se renderiza
-  // en HTML nativo (.landing-stamp), garantizando definición 100% nítida y vectorial en la pantalla.
-  dibujarSelloCara(1024, 960, 'BENCHMARK');
-  dibujarSelloCara(5120, 960, 'TUTORIAL');
-
-  const stampTex = new THREE.CanvasTexture(c);
-  // generateMipmaps = false para evitar que la GPU escoja un nivel de mipmap degradado
-  // y asegurar nitidez vector-grade en el primer plano macro
-  stampTex.generateMipmaps = false;
-  stampTex.minFilter = THREE.LinearFilter;
-  stampTex.magFilter = THREE.LinearFilter;
-  stampTex.colorSpace = THREE.SRGBColorSpace;
-  stampTex.wrapS = THREE.ClampToEdgeWrapping;
-  stampTex.wrapT = THREE.ClampToEdgeWrapping;
-  if (introRenderer.capabilities) {
-    stampTex.anisotropy = introRenderer.capabilities.getMaxAnisotropy();
-  }
-
-  // Material físico con reflejo sutil que revela el volumen 3D durante el giro
+  // Material físico naranja de competición puro (sin cuños estáticos impresos en la textura
+  // que interfieran con la interfaz de las caras de la app)
   const material = new THREE.MeshStandardMaterial({
-    map: stampTex,
-    roughness: 0.58,
+    color: 0xff7700,
+    roughness: 0.54,
     metalness: 0.04,
   });
 
   introBall = new THREE.Mesh(geometry, material);
-  introBall.rotation.set(0, 0, 0); // Cara frontal hacia la cámara (Modo Libre)
+  introBall.rotation.set(0, 0, 0); // Cara frontal hacia la cámara
   introBall.position.set(0, 0, 0);
   introBall.visible = true;
   introScene.add(introBall);
 
-  // Iluminación
-  const amb = new THREE.AmbientLight(0xffffff, 1.0);
+  // Iluminación deportiva realista que acentúa la curvatura y el volumen 3D
+  const amb = new THREE.AmbientLight(0xffffff, 0.72);
   introScene.add(amb);
   introScene.userData.ambLight = amb;
 
-  const dir = new THREE.DirectionalLight(0xffffff, 0.15);
-  dir.position.set(0.18, 0.3, 0.45);
+  const dir = new THREE.DirectionalLight(0xffffff, 0.68);
+  dir.position.set(0.22, 0.35, 0.45);
   introScene.add(dir);
   introScene.userData.dirLight = dir;
 
-  // Guardar textura y pre-inicializar el logo 3D del Header
-  introStampTex = stampTex;
-  initHeaderBall(stampTex);
+  // Cuño dedicado en ultra resolución para el mini-logo 3D del Header
+  const cHeader = document.createElement('canvas');
+  cHeader.width = 512; cHeader.height = 512;
+  const ctxH = cHeader.getContext('2d');
+  ctxH.fillStyle = '#ff7700';
+  ctxH.fillRect(0, 0, 512, 512);
+  ctxH.fillStyle = '#0f172a';
+  ctxH.textAlign = 'center';
+  ctxH.textBaseline = 'middle';
+  ctxH.font = '900 130px -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif';
+  ctxH.fillText('DOC', 256, 210);
+  ctxH.font = '800 50px -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif';
+  ctxH.fillText('40+', 256, 305);
+  ctxH.font = '45px sans-serif';
+  ctxH.fillText('★★★', 256, 380);
+
+  const headerStampTex = new THREE.CanvasTexture(cHeader);
+  headerStampTex.generateMipmaps = false;
+  headerStampTex.colorSpace = THREE.SRGBColorSpace;
+  initHeaderBall(headerStampTex);
 
   renderIntroFrame();
 
@@ -2649,7 +2618,7 @@ function cambiarModoEsferico(nuevoModo) {
   const endRotY = startRotY + diffRot;
 
   const zMacro = getMacroZ();
-  const zOrbit = 0.165; // Zoom out para ver la pelota completa en 3D suspendida
+  const zOrbit = 0.145; // Zoom out para ver la pelota completa en 3D suspendida
 
   const dur = 520; // ms total
   const startTime = performance.now();
@@ -2687,12 +2656,12 @@ function cambiarModoEsferico(nuevoModo) {
       introCamera.position.z = curZ;
     }
 
-    // Iluminación: cuando se aleja, la luz direccional sube para apreciar el volumen y el brillo de la esfera
+    // Iluminación deportiva que resalta el volumen y el brillo curvo de la esfera
     if (introScene && introScene.userData) {
       const dirLight = introScene.userData.dirLight;
       const ambLight = introScene.userData.ambLight;
-      if (dirLight) dirLight.intensity = 0.15 + 0.60 * zoomProgress;
-      if (ambLight) ambLight.intensity = 1.0 - 0.20 * zoomProgress;
+      if (dirLight) dirLight.intensity = 0.68 + 0.35 * zoomProgress;
+      if (ambLight) ambLight.intensity = 0.72 - 0.15 * zoomProgress;
     }
 
     // En el punto medio (p >= 0.5), alternamos la vista del DOM
@@ -2765,18 +2734,23 @@ function dispararIntroCinematica() {
   }
 
   const startTime = performance.now();
-  const dur = 420;
+  const dur = 550;
   const zStart = getMacroZ();
-  const zDip = zStart + 0.030;
+  const zPeak = zStart + 0.040;
 
   function loopEntrada(now) {
     const elapsed = now - startTime;
     const p = Math.min(1, elapsed / dur);
     const dip = Math.sin(p * Math.PI);
-    if (introCamera) introCamera.position.z = zStart + (zDip - zStart) * dip;
+    if (introCamera) introCamera.position.z = zStart + (zPeak - zStart) * dip;
+
+    if (introBall) {
+      introBall.rotation.y = -0.14 * Math.sin(p * Math.PI);
+      introBall.rotation.x = 0.04 * Math.sin(p * Math.PI);
+    }
 
     if (introScene && introScene.userData && introScene.userData.dirLight) {
-      introScene.userData.dirLight.intensity = 0.15 + 0.35 * dip;
+      introScene.userData.dirLight.intensity = 0.68 + 0.25 * dip;
     }
 
     renderIntroFrame();
@@ -2786,6 +2760,12 @@ function dispararIntroCinematica() {
     } else {
       introActiva = false;
       animandoCinematica = false;
+      if (introBall) {
+        introBall.rotation.set(0, 0, 0);
+      }
+      if (introCamera) {
+        introCamera.position.set(0, 0, zStart);
+      }
       if (stageLanding) {
         stageLanding.style.display = 'none';
       }
