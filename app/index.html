@@ -779,7 +779,7 @@
     flex: 1;
   }
 
-  /* --- Intro: Pelota en Fondo Oscuro (Apple Fluid Motion) --- */
+  /* --- Intro Cinemática: Plano Macro Naranja ITTF --- */
   #intro-stage {
     position: fixed;
     inset: 0;
@@ -787,9 +787,9 @@
     height: 100vh;
     z-index: 100;
     overflow: hidden;
-    background: #080c14;
+    background: #ff7700; /* Naranja de competición ITTF que inunda el plano macro inicial */
     pointer-events: none;
-    transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: opacity 0.4s ease;
     will-change: opacity;
   }
   #intro-stage.oculto {
@@ -811,18 +811,88 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: flex-end;
-    padding: 0 20px 52px 20px;
+    justify-content: space-between;
+    padding: 12vh 20px 48px 20px;
     box-sizing: border-box;
     z-index: 101;
     cursor: pointer;
-    transition: opacity 0.32s cubic-bezier(0.16, 1, 0.3, 1), transform 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
     will-change: opacity, transform;
   }
   #stage-landing.oculto {
     opacity: 0;
-    transform: translateY(16px);
     pointer-events: none;
+  }
+
+  /* --- Sello Oficial en HTML Nativo (Estilo Póster Suizo / Máxima Nitidez Retina) --- */
+  .landing-stamp-wrap {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    user-select: none;
+    -webkit-user-select: none;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+    will-change: opacity, transform;
+  }
+  .landing-stamp {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    color: #0f172a;
+    pointer-events: none;
+  }
+  .stamp-stars {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: #0f172a;
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+  .stamp-stars .star-arc {
+    font-size: 1.72rem;
+    display: inline-block;
+    color: #0f172a;
+    transform-origin: center bottom;
+  }
+  .stamp-stars .star-l {
+    transform: translateY(3.6px) rotate(-10.5deg);
+  }
+  .stamp-stars .star-c {
+    transform: translateY(0) rotate(0deg);
+  }
+  .stamp-stars .star-r {
+    transform: translateY(3.6px) rotate(10.5deg);
+  }
+  .stamp-doc {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+    font-size: clamp(4.2rem, 11vw, 6.2rem);
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    line-height: 0.92;
+    color: #0f172a;
+  }
+  .stamp-spec {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+    font-size: clamp(1.6rem, 4vw, 2.3rem);
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    line-height: 1;
+    margin-top: 14px;
+    color: #0f172a;
+  }
+  .stamp-tagline {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+    font-size: clamp(0.78rem, 1.8vw, 1.05rem);
+    font-weight: 900;
+    letter-spacing: 0.22em;
+    margin-top: 14px;
+    color: #0f172a;
+    margin-left: 0.22em;
   }
   #intro-actions-wrap {
     display: flex;
@@ -905,6 +975,19 @@
 
 <!-- Overlay de Bienvenida / Landing -->
 <div id="stage-landing">
+  <div class="landing-stamp-wrap" id="landing-stamp-wrap">
+    <div class="landing-stamp">
+      <div class="stamp-stars" aria-label="3 estrellas oficiales ITTF">
+        <span class="star-arc star-l">★</span>
+        <span class="star-arc star-c">★</span>
+        <span class="star-arc star-r">★</span>
+      </div>
+      <div class="stamp-doc">DOC</div>
+      <div class="stamp-spec">40+</div>
+      <div class="stamp-tagline">FIND YOUR EDGE</div>
+    </div>
+  </div>
+
   <div id="intro-actions-wrap">
     <button id="btn-comenzar" type="button">
       <span>ENTRENAR</span>
@@ -2327,11 +2410,10 @@ function acelerarSpinPelotaHeader() {
 
 function getMacroZ() {
   const aspect = window.innerWidth / window.innerHeight;
-  // A z = 0.082 el diámetro de 40mm ocupa ~80-85% del alto, mostrando claramente
-  // su contorno esférico tridimensional, el brillo curvo y la silueta física
-  if (aspect >= 1.6) return 0.088;
-  if (aspect >= 1.0) return 0.084;
-  return 0.078; // Móvil vertical
+  // Plano macro cinematográfico: la superficie naranja de la pelota llena el 100% del encuadre
+  if (aspect >= 1.6) return 0.033;
+  if (aspect >= 1.0) return 0.035;
+  return 0.038; // Móvil vertical
 }
 
 function initIntroBall() {
@@ -2499,45 +2581,73 @@ function deslizarYComenzar() {
   if (!introActiva || animandoCinematica) return;
   animandoCinematica = true;
 
-  // Feedback auditivo sutil instantáneo sin bloqueo de hilo
+  // Feedback auditivo sutil instantáneo sin bloqueo
   sonarPique(0.30);
 
   const stage = $('intro-stage');
   const stageLanding = $('stage-landing');
+  const stampWrap = $('landing-stamp-wrap');
+  const actionsWrap = $('intro-actions-wrap');
   const appMain = $('app-main');
 
-  // Desvanecer el botón de landing y revelar el dashboard
-  if (stageLanding) stageLanding.classList.add('oculto');
-  if (appMain) appMain.classList.add('visible');
+  // 1. Ocultar inmediatamente el botón para despejar la escena
+  if (actionsWrap) {
+    actionsWrap.style.transition = 'opacity 140ms ease, transform 140ms ease';
+    actionsWrap.style.opacity = '0';
+    actionsWrap.style.transform = 'translateY(16px)';
+  }
 
-  // Elevación cinemática continua de la pelota en WebGL puro (sin mover el canvas en CSS para evitar lagazos de GPU)
+  // 2. Hacer visible el dashboard subyacente para que emerja suavemente
+  if (appMain && !appMain.classList.contains('visible')) {
+    appMain.classList.add('visible');
+  }
+
+  // 3. Cinemática del retroceso de cámara y revelación 3D
   const startTime = performance.now();
-  const dur = 460; // ms: duración natural de resorte Apple (response 0.4s)
-  const yStart = introBall ? introBall.position.y : 0;
-  const yTarget = 0.062; // Sale suavemente por el borde superior
-  const rotXStart = introBall ? introBall.rotation.x : 0;
-  const rotXTarget = rotXStart - 0.72; // Topspin natural hacia adelante
+  const dur = 760; // ms: duración cinematográfica natural según Apple HIG
+  const zMacro = getMacroZ();
+  const zFinal = 0.138; // Distancia donde se contempla la esfera 3D completa
 
-  function loopSubida(now) {
+  function loopPullback(now) {
     const elapsed = now - startTime;
     const p = Math.min(1, elapsed / dur);
     // Curva cúbica suave (easeOutCubic)
     const ease = 1 - Math.pow(1 - p, 3);
 
-    if (introBall) {
-      introBall.position.y = yStart + (yTarget - yStart) * ease;
-      introBall.rotation.x = rotXStart + (rotXTarget - rotXStart) * ease;
+    // Retroceso de cámara: el plano macro naranja revela la esfera 3D suspendida
+    if (introCamera) {
+      introCamera.position.z = zMacro + (zFinal - zMacro) * ease;
     }
 
-    // A partir del 30% del vuelo desvanecemos el fondo de forma transparente
-    if (stage && p >= 0.30) {
-      stage.classList.add('oculto');
+    if (introBall) {
+      // Inclinación sutil que atrapa la luz sobre el cuño
+      introBall.rotation.y = -0.16 * Math.sin(ease * Math.PI * 0.5);
+      introBall.rotation.x = 0.04 * Math.sin(ease * Math.PI * 0.5);
+      // Elevación final suave hacia la parte superior
+      if (p >= 0.52) {
+        const pExit = (p - 0.52) / 0.48;
+        const easeExit = pExit * pExit;
+        introBall.position.y = easeExit * 0.045;
+      }
+    }
+
+    // El cuño vectorial se escala y desvanece fundiéndose con la textura 3D de la pelota
+    if (stampWrap) {
+      const pStamp = Math.min(1, p / 0.36);
+      stampWrap.style.opacity = `${Math.max(0, 1 - pStamp)}`;
+      stampWrap.style.transform = `scale(${1 - pStamp * 0.22})`;
+    }
+
+    // El fondo naranja sólido se disuelve hacia la atmósfera oscura del dashboard (#080c14)
+    if (stage) {
+      const pStage = Math.min(1, p / 0.55);
+      stage.style.background = `rgba(255, 119, 0, ${Math.max(0, 1 - pStage)})`;
     }
 
     renderIntroFrame();
 
     if (p < 1) {
-      requestAnimationFrame(loopSubida);
+      requestAnimationFrame(loopPullback);
     } else {
       introActiva = false;
       animandoCinematica = false;
@@ -2547,7 +2657,7 @@ function deslizarYComenzar() {
     }
   }
 
-  requestAnimationFrame(loopSubida);
+  requestAnimationFrame(loopPullback);
 }
 
 function cerrarIntro() {
