@@ -62,8 +62,8 @@
     gap: 16px;
     opacity: 0;
     pointer-events: none;
-    transform: translateY(28px);
-    transition: opacity 0.32s cubic-bezier(0.16, 1, 0.3, 1), transform 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+    transform: translateY(36px);
+    transition: opacity 0.58s cubic-bezier(0.22, 1, 0.36, 1), transform 0.58s cubic-bezier(0.22, 1, 0.36, 1);
     will-change: opacity, transform;
   }
   main#app-main.visible {
@@ -779,7 +779,7 @@
     flex: 1;
   }
 
-  /* --- Intro: Pelota en Fondo Oscuro con Deslizamiento Rápido --- */
+  /* --- Intro: Pelota en Fondo Oscuro con Deslizamiento Fluido --- */
   #intro-stage {
     position: fixed;
     inset: 0;
@@ -789,7 +789,7 @@
     overflow: hidden;
     background: #080c14;
     pointer-events: none;
-    transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.24s ease, visibility 0.32s;
+    transition: transform 0.58s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.45s cubic-bezier(0.22, 1, 0.36, 1), visibility 0.58s;
     will-change: transform, opacity;
   }
   #intro-stage.oculto {
@@ -813,12 +813,12 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: space-between;
-    padding: 10vh 20px 44px 20px;
+    justify-content: flex-end;
+    padding: 0 20px 52px 20px;
     box-sizing: border-box;
     z-index: 101;
     cursor: pointer;
-    transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.22s ease, visibility 0.32s;
+    transition: transform 0.58s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.40s cubic-bezier(0.22, 1, 0.36, 1), visibility 0.58s;
     will-change: transform, opacity;
   }
   #stage-landing.oculto {
@@ -827,82 +827,13 @@
     visibility: hidden;
     pointer-events: none;
   }
-
-  /* --- Sello Oficial en HTML Nativo (Ultra-Nítido / Retina) --- */
-  .landing-stamp-wrap {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    pointer-events: none;
-    user-select: none;
-    -webkit-user-select: none;
-  }
-  .landing-stamp {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    color: #0f172a;
-    pointer-events: none;
-  }
-  .stamp-stars {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    color: #0f172a;
-    line-height: 1;
-    margin-bottom: 8px;
-  }
-  .stamp-stars .star-arc {
-    font-size: 1.72rem;
-    display: inline-block;
-    color: #0f172a;
-    transform-origin: center bottom;
-  }
-  .stamp-stars .star-l {
-    transform: translateY(3.6px) rotate(-10.5deg);
-  }
-  .stamp-stars .star-c {
-    transform: translateY(0) rotate(0deg);
-  }
-  .stamp-stars .star-r {
-    transform: translateY(3.6px) rotate(10.5deg);
-  }
-  .stamp-doc {
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
-    font-size: 5.6rem;
-    font-weight: 900;
-    letter-spacing: 0.08em;
-    line-height: 0.92;
-    color: #0f172a;
-  }
-  .stamp-spec {
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
-    font-size: 2.1rem;
-    font-weight: 800;
-    letter-spacing: 0.06em;
-    line-height: 1;
-    margin-top: 14px;
-    color: #0f172a;
-  }
-  .stamp-tagline {
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
-    font-size: 1.05rem;
-    font-weight: 900;
-    letter-spacing: 0.22em;
-    margin-top: 14px;
-    color: #0f172a;
-    margin-left: 0.22em;
-  }
   #intro-actions-wrap {
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 8px;
     pointer-events: auto;
-    transition: opacity 0.1s ease, transform 0.15s ease;
+    transition: opacity 0.2s ease, transform 0.2s ease;
   }
   #btn-comenzar {
     display: inline-flex;
@@ -977,19 +908,6 @@
 
 <!-- Overlay de Bienvenida / Landing -->
 <div id="stage-landing">
-  <div class="landing-stamp-wrap">
-    <div class="landing-stamp">
-      <div class="stamp-stars" aria-label="3 estrellas oficiales">
-        <span class="star-arc star-l">★</span>
-        <span class="star-arc star-c">★</span>
-        <span class="star-arc star-r">★</span>
-      </div>
-      <div class="stamp-doc">DOC</div>
-      <div class="stamp-spec">40+</div>
-      <div class="stamp-tagline">FIND YOUR EDGE</div>
-    </div>
-  </div>
-
   <div id="intro-actions-wrap">
     <button id="btn-comenzar" type="button">
       <span>ENTRENAR</span>
@@ -2435,11 +2353,67 @@ function initIntroBall() {
   const R = 0.02;
   const geometry = new THREE.SphereGeometry(R, 64, 48);
 
-  // Material físico naranja de competición puro (sin cuños estáticos impresos en la textura
-  // que interfieran con la interfaz de las caras de la app)
+  // Cuño oficial ITTF en ultra alta definición impreso en la textura 3D de la esfera
+  const cStamp = document.createElement('canvas');
+  cStamp.width = 2048;
+  cStamp.height = 1024;
+  const ctx = cStamp.getContext('2d');
+
+  // Base naranja mate ITTF competición
+  ctx.fillStyle = '#ff7700';
+  ctx.fillRect(0, 0, 2048, 1024);
+
+  // Centro frontal de la esfera en proyección equirectangular (u = 0.25, v = 0.5)
+  const cx = 512;
+  const cy = 512;
+
+  ctx.fillStyle = '#0f172a'; // Tinta oscura oficial
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  // 1. Tres estrellas en arco suave oficial ITTF (10.5 grados)
+  ctx.font = '54px sans-serif';
+  // Estrella central
+  ctx.fillText('★', cx, cy - 138);
+  // Estrella izquierda (rotación suave -10.5°)
+  ctx.save();
+  ctx.translate(cx - 52, cy - 130);
+  ctx.rotate(-10.5 * Math.PI / 180);
+  ctx.fillText('★', 0, 0);
+  ctx.restore();
+  // Estrella derecha (rotación suave +10.5°)
+  ctx.save();
+  ctx.translate(cx + 52, cy - 130);
+  ctx.rotate(10.5 * Math.PI / 180);
+  ctx.fillText('★', 0, 0);
+  ctx.restore();
+
+  // 2. Logotipo principal "DOC"
+  ctx.font = '900 136px -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif';
+  ctx.fillText('DOC', cx, cy - 38);
+
+  // 3. Calibre oficial "40+"
+  ctx.font = '800 52px -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif';
+  ctx.fillText('40+', cx, cy + 44);
+
+  // 4. Lema oficial "FIND YOUR EDGE"
+  ctx.font = '900 24px -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif';
+  ctx.letterSpacing = '5px';
+  ctx.fillText('FIND YOUR EDGE', cx, cy + 98);
+
+  const stampTex = new THREE.CanvasTexture(cStamp);
+  stampTex.generateMipmaps = true;
+  stampTex.minFilter = THREE.LinearMipmapLinearFilter;
+  stampTex.magFilter = THREE.LinearFilter;
+  stampTex.colorSpace = THREE.SRGBColorSpace;
+  if (introRenderer.capabilities) {
+    stampTex.anisotropy = introRenderer.capabilities.getMaxAnisotropy();
+  }
+
+  // Material físico con el sello impreso directamente en la superficie 3D
   const material = new THREE.MeshStandardMaterial({
-    color: 0xff7700,
-    roughness: 0.54,
+    map: stampTex,
+    roughness: 0.52,
     metalness: 0.04,
   });
 
@@ -2498,7 +2472,7 @@ function initIntroBall() {
 }
 
 // =========================================================================
-// INTRO: PELOTA EN FONDO OSCURO Y DESLIZAMIENTO RÁPIDO AL ENTRENAR
+// INTRO: PELOTA EN FONDO OSCURO Y DESLIZAMIENTO FLUIDO AL ENTRENAR
 // =========================================================================
 let animandoCinematica = false;
 let introActiva = true;
@@ -2513,8 +2487,10 @@ function animarIntroIdle(now) {
   if (!introActiva) return;
   introAnimId = requestAnimationFrame(animarIntroIdle);
   if (introBall && !animandoCinematica) {
-    introBall.rotation.y = Math.sin(now * 0.0008) * 0.07;
-    introBall.position.y = Math.sin(now * 0.0016) * 0.0005;
+    // Oscilación y balanceo suave en 3D que exhibe la curvatura del sello
+    introBall.rotation.y = Math.sin(now * 0.0008) * 0.14;
+    introBall.rotation.x = Math.sin(now * 0.0011) * 0.04;
+    introBall.position.y = Math.sin(now * 0.0016) * 0.0006;
   }
   renderIntroFrame();
 }
@@ -2528,21 +2504,21 @@ function deslizarYComenzar() {
   animandoCinematica = true;
 
   // Feedback auditivo sutil de contacto deportivo (pop/pique)
-  sonarPique(0.35);
+  sonarPique(0.32);
 
   const stage = $('intro-stage');
   const stageLanding = $('stage-landing');
   const appMain = $('app-main');
 
-  // Deslizar velozmente hacia arriba la landing
+  // Deslizar con curva suave y física hacia arriba (580ms)
   if (stage) stage.classList.add('oculto');
   if (stageLanding) stageLanding.classList.add('oculto');
   if (appMain) appMain.classList.add('visible');
 
-  // Asegurar renderizado correcto del visor de la paleta en Modo Libre
+  // Redimensionar el visor 3D de la paleta durante la entrada
   setTimeout(() => {
     if (typeof onResizeVisor === 'function') onResizeVisor();
-  }, 80);
+  }, 120);
 
   setTimeout(() => {
     introActiva = false;
@@ -2554,7 +2530,7 @@ function deslizarYComenzar() {
       introAnimId = null;
     }
     if (typeof onResizeVisor === 'function') onResizeVisor();
-  }, 340);
+  }, 600);
 }
 
 function cerrarIntro() {
