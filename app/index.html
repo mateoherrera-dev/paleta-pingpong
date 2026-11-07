@@ -840,12 +840,28 @@
     pointer-events: none;
   }
   .stamp-stars {
-    font-size: 1.65rem;
-    letter-spacing: 0.32em;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
     color: #0f172a;
     line-height: 1;
-    margin-bottom: 6px;
-    margin-left: 0.32em;
+    margin-bottom: 8px;
+  }
+  .stamp-stars .star-arc {
+    font-size: 1.72rem;
+    display: inline-block;
+    color: #0f172a;
+    transform-origin: center bottom;
+  }
+  .stamp-stars .star-l {
+    transform: translateY(3.6px) rotate(-10.5deg);
+  }
+  .stamp-stars .star-c {
+    transform: translateY(0) rotate(0deg);
+  }
+  .stamp-stars .star-r {
+    transform: translateY(3.6px) rotate(10.5deg);
   }
   .stamp-doc {
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
@@ -954,7 +970,11 @@
   <div id="stage-landing">
     <div class="landing-stamp-wrap">
       <div class="landing-stamp">
-        <div class="stamp-stars">★★★</div>
+        <div class="stamp-stars" aria-label="3 estrellas oficiales">
+          <span class="star-arc star-l">★</span>
+          <span class="star-arc star-c">★</span>
+          <span class="star-arc star-r">★</span>
+        </div>
         <div class="stamp-doc">DOC</div>
         <div class="stamp-spec">40+</div>
         <div class="stamp-tagline">FIND YOUR EDGE</div>
