@@ -824,7 +824,7 @@
     pointer-events: none;
   }
 
-  /* --- Sello Oficial en HTML Nativo (Estilo Póster Suizo / Máxima Nitidez Retina) --- */
+  /* --- Sello Oficial en HTML Nativo (Bloque Recto / Máxima Nitidez) --- */
   .landing-stamp-wrap {
     flex: 1;
     display: flex;
@@ -851,48 +851,37 @@
     gap: 8px;
     color: #0f172a;
     line-height: 1;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
   }
-  .stamp-stars .star-arc {
-    font-size: 1.72rem;
-    display: inline-block;
+  .stamp-stars .star-straight {
+    font-size: 1.65rem;
     color: #0f172a;
-    transform-origin: center bottom;
-  }
-  .stamp-stars .star-l {
-    transform: translateY(3.6px) rotate(-10.5deg);
-  }
-  .stamp-stars .star-c {
-    transform: translateY(0) rotate(0deg);
-  }
-  .stamp-stars .star-r {
-    transform: translateY(3.6px) rotate(10.5deg);
+    line-height: 1;
   }
   .stamp-doc {
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
-    font-size: clamp(4.2rem, 11vw, 6.2rem);
+    font-size: clamp(4.4rem, 12vw, 6.5rem);
     font-weight: 900;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.06em;
     line-height: 0.92;
     color: #0f172a;
   }
   .stamp-spec {
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
-    font-size: clamp(1.6rem, 4vw, 2.3rem);
+    font-size: clamp(1.6rem, 4.2vw, 2.3rem);
     font-weight: 800;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.08em;
     line-height: 1;
-    margin-top: 14px;
+    margin-top: 12px;
     color: #0f172a;
   }
   .stamp-tagline {
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
-    font-size: clamp(0.78rem, 1.8vw, 1.05rem);
+    font-size: clamp(0.78rem, 1.8vw, 1.02rem);
     font-weight: 900;
     letter-spacing: 0.22em;
-    margin-top: 14px;
+    margin-top: 12px;
     color: #0f172a;
-    margin-left: 0.22em;
   }
   #intro-actions-wrap {
     display: flex;
@@ -978,9 +967,9 @@
   <div class="landing-stamp-wrap" id="landing-stamp-wrap">
     <div class="landing-stamp">
       <div class="stamp-stars" aria-label="3 estrellas oficiales ITTF">
-        <span class="star-arc star-l">★</span>
-        <span class="star-arc star-c">★</span>
-        <span class="star-arc star-r">★</span>
+        <span class="star-straight">★</span>
+        <span class="star-straight">★</span>
+        <span class="star-straight">★</span>
       </div>
       <div class="stamp-doc">DOC</div>
       <div class="stamp-spec">40+</div>
@@ -2439,68 +2428,11 @@ function initIntroBall() {
   const R = 0.02;
   const geometry = new THREE.SphereGeometry(R, 64, 48);
 
-  // Cuño oficial ITTF en ultra alta definición impreso en la textura 3D de la esfera
-  const cStamp = document.createElement('canvas');
-  cStamp.width = 2048;
-  cStamp.height = 1024;
-  const ctx = cStamp.getContext('2d');
-
-  // Base naranja mate ITTF competición
-  ctx.fillStyle = '#ff7700';
-  ctx.fillRect(0, 0, 2048, 1024);
-
-  // Centro frontal de la esfera en proyección equirectangular (u = 0.25, v = 0.5)
-  const cx = 512;
-  const cy = 512;
-
-  ctx.fillStyle = '#0f172a'; // Tinta oscura oficial
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-
-  // 1. Tres estrellas en arco suave oficial ITTF (10.5 grados)
-  ctx.font = '54px sans-serif';
-  // Estrella central
-  ctx.fillText('★', cx, cy - 138);
-  // Estrella izquierda (rotación suave -10.5°)
-  ctx.save();
-  ctx.translate(cx - 52, cy - 130);
-  ctx.rotate(-10.5 * Math.PI / 180);
-  ctx.fillText('★', 0, 0);
-  ctx.restore();
-  // Estrella derecha (rotación suave +10.5°)
-  ctx.save();
-  ctx.translate(cx + 52, cy - 130);
-  ctx.rotate(10.5 * Math.PI / 180);
-  ctx.fillText('★', 0, 0);
-  ctx.restore();
-
-  // 2. Logotipo principal "DOC"
-  ctx.font = '900 136px -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif';
-  ctx.fillText('DOC', cx, cy - 38);
-
-  // 3. Calibre oficial "40+"
-  ctx.font = '800 52px -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif';
-  ctx.fillText('40+', cx, cy + 44);
-
-  // 4. Lema oficial "FIND YOUR EDGE"
-  ctx.font = '900 24px -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif';
-  ctx.letterSpacing = '5px';
-  ctx.fillText('FIND YOUR EDGE', cx, cy + 98);
-
-  const stampTex = new THREE.CanvasTexture(cStamp);
-  stampTex.generateMipmaps = true;
-  stampTex.minFilter = THREE.LinearMipmapLinearFilter;
-  stampTex.magFilter = THREE.LinearFilter;
-  stampTex.colorSpace = THREE.SRGBColorSpace;
-  if (introRenderer.capabilities) {
-    stampTex.anisotropy = introRenderer.capabilities.getMaxAnisotropy();
-  }
-
-  // Material físico con el sello impreso directamente en la superficie 3D
+  // Material físico naranja de competición puro (sin cuño texturado que cree doble imagen en macro)
   const material = new THREE.MeshStandardMaterial({
-    map: stampTex,
-    roughness: 0.52,
-    metalness: 0.04,
+    color: 0xff7700,
+    roughness: 0.50,
+    metalness: 0.02,
   });
 
   introBall = new THREE.Mesh(geometry, material);
@@ -2581,74 +2513,92 @@ function deslizarYComenzar() {
   if (!introActiva || animandoCinematica) return;
   animandoCinematica = true;
 
-  // Feedback auditivo sutil instantáneo sin bloqueo
-  sonarPique(0.30);
-
   const stage = $('intro-stage');
   const stageLanding = $('stage-landing');
   const stampWrap = $('landing-stamp-wrap');
   const actionsWrap = $('intro-actions-wrap');
   const appMain = $('app-main');
 
-  // 1. Ocultar inmediatamente el botón para despejar la escena
+  // Paso 2: Desvanecimiento instantáneo de botón y textos (< 80 ms)
   if (actionsWrap) {
-    actionsWrap.style.transition = 'opacity 140ms ease, transform 140ms ease';
+    actionsWrap.style.transition = 'opacity 80ms ease, transform 80ms ease';
     actionsWrap.style.opacity = '0';
-    actionsWrap.style.transform = 'translateY(16px)';
+    actionsWrap.style.transform = 'translateY(12px) scale(0.96)';
+    actionsWrap.style.pointerEvents = 'none';
   }
 
-  // 2. Hacer visible el dashboard subyacente para que emerja suavemente
+  // Revelar el Dashboard HUD subyacente
   if (appMain && !appMain.classList.contains('visible')) {
     appMain.classList.add('visible');
   }
 
-  // 3. Cinemática del retroceso de cámara y revelación 3D
+  // Coreografía exacta: Zoom Out (~260 ms) + Impacto seco y eyección hacia fondo/arriba (~240 ms) = ~500 ms
   const startTime = performance.now();
-  const dur = 760; // ms: duración cinematográfica natural según Apple HIG
+  const durZoom = 260; // ms: revelación rápida en Z
+  const durTotal = 500; // ms: duración total exacta de la coreografía
   const zMacro = getMacroZ();
-  const zFinal = 0.138; // Distancia donde se contempla la esfera 3D completa
+  const zReveal = 0.125; // Distancia donde se comprende la escala real del objeto
+  let impactoFired = false;
 
-  function loopPullback(now) {
+  function loopCoreografia(now) {
     const elapsed = now - startTime;
-    const p = Math.min(1, elapsed / dur);
-    // Curva cúbica suave (easeOutCubic)
-    const ease = 1 - Math.pow(1 - p, 3);
 
-    // Retroceso de cámara: el plano macro naranja revela la esfera 3D suspendida
-    if (introCamera) {
-      introCamera.position.z = zMacro + (zFinal - zMacro) * ease;
-    }
+    if (elapsed <= durZoom) {
+      // PASO 3 (0 a 260 ms): Zoom out rápido en eje Z
+      const p1 = Math.min(1, elapsed / durZoom);
+      const ease1 = 1 - Math.pow(1 - p1, 2.5);
 
-    if (introBall) {
-      // Inclinación sutil que atrapa la luz sobre el cuño
-      introBall.rotation.y = -0.16 * Math.sin(ease * Math.PI * 0.5);
-      introBall.rotation.x = 0.04 * Math.sin(ease * Math.PI * 0.5);
-      // Elevación final suave hacia la parte superior
-      if (p >= 0.52) {
-        const pExit = (p - 0.52) / 0.48;
-        const easeExit = pExit * pExit;
-        introBall.position.y = easeExit * 0.045;
+      if (introCamera) {
+        introCamera.position.z = zMacro + (zReveal - zMacro) * ease1;
       }
-    }
+      if (introBall) {
+        introBall.rotation.y = -0.10 * Math.sin(ease1 * Math.PI * 0.5);
+      }
 
-    // El cuño vectorial se escala y desvanece fundiéndose con la textura 3D de la pelota
-    if (stampWrap) {
-      const pStamp = Math.min(1, p / 0.36);
-      stampWrap.style.opacity = `${Math.max(0, 1 - pStamp)}`;
-      stampWrap.style.transform = `scale(${1 - pStamp * 0.22})`;
-    }
+      // Desvanecer el sello en bloque conforme se descubre la esfera 3D
+      if (stampWrap) {
+        const pStamp = Math.min(1, p1 * 1.8);
+        stampWrap.style.opacity = `${Math.max(0, 1 - pStamp)}`;
+        stampWrap.style.transform = `scale(${1 - p1 * 0.15})`;
+      }
 
-    // El fondo naranja sólido se disuelve hacia la atmósfera oscura del dashboard (#080c14)
-    if (stage) {
-      const pStage = Math.min(1, p / 0.55);
-      stage.style.background = `rgba(255, 119, 0, ${Math.max(0, 1 - pStage)})`;
+      // El fondo naranja sólido se disuelve hacia el fondo oscuro del estadio (#080c14)
+      if (stage) {
+        const pOrange = Math.min(1, p1 * 1.4);
+        stage.style.background = `rgba(255, 119, 0, ${Math.max(0, 1 - pOrange)})`;
+      }
+    } else {
+      // PASO 4 (260 a 500 ms): ¡Impacto seco del celuloide ('toc') y eyección hacia el fondo/arriba!
+      if (!impactoFired) {
+        impactoFired = true;
+        sonarPique(0.38); // Impacto seco 'toc'
+      }
+
+      const p2 = Math.min(1, (elapsed - durZoom) / (durTotal - durZoom));
+      const ease2 = p2 * p2 * 1.25; // Aceleración de despegue dinámico hacia fondo/arriba
+
+      if (introBall) {
+        // La pelota sale eyectada hacia arriba (+Y) y hacia el fondo de la mesa (-Z)
+        introBall.position.y = ease2 * 0.082;
+        introBall.position.z = -ease2 * 0.11;
+        introBall.rotation.x = -ease2 * 2.4; // Topspin dinámico hacia adelante
+      }
+
+      // Desvanecer el telón por completo
+      if (stage) {
+        stage.style.opacity = `${Math.max(0, 1 - p2 * 1.6)}`;
+      }
+      if (stampWrap) {
+        stampWrap.style.opacity = '0';
+      }
     }
 
     renderIntroFrame();
 
-    if (p < 1) {
-      requestAnimationFrame(loopPullback);
+    if (elapsed < durTotal) {
+      requestAnimationFrame(loopCoreografia);
     } else {
+      // PASO 5: Aterrizaje final en el Dashboard HUD
       introActiva = false;
       animandoCinematica = false;
       if (stage) stage.style.display = 'none';
@@ -2657,7 +2607,7 @@ function deslizarYComenzar() {
     }
   }
 
-  requestAnimationFrame(loopPullback);
+  requestAnimationFrame(loopCoreografia);
 }
 
 function cerrarIntro() {
