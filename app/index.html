@@ -765,13 +765,31 @@
     z-index: 100;
     overflow: hidden;
     background:
-      /* Halo de iluminacion deportiva suave sobre la pelota */
-      radial-gradient(ellipse 700px 440px at 50% 38%, var(--hub-glow-color, rgba(0, 229, 255, 0.10)), transparent 65%),
+      /* Halo cenital suave de iluminacion sobre la pelota */
+      radial-gradient(ellipse 760px 480px at 50% 38%, rgba(255, 119, 0, 0.08), transparent 65%),
+      /* Penumbra de mesa deportiva en la base */
+      radial-gradient(ellipse 960px 220px at 50% 92%, rgba(15, 23, 42, 0.65), transparent 70%),
       /* Degrade profundo de estadio deportivo */
       linear-gradient(180deg, #070a12 0%, #0a0f1c 55%, #050811 100%);
     pointer-events: none;
     transition: opacity 0.3s ease;
     will-change: opacity;
+  }
+  .intro-bg-watermark {
+    position: absolute;
+    top: 38%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: var(--font-sans);
+    font-size: clamp(120px, 22vw, 340px);
+    font-weight: 900;
+    letter-spacing: -0.04em;
+    color: rgba(255, 255, 255, 0.024);
+    white-space: nowrap;
+    user-select: none;
+    pointer-events: none;
+    z-index: 0;
+    line-height: 1;
   }
   #intro-stage.oculto {
     opacity: 0;
@@ -854,119 +872,17 @@
     user-select: none;
   }
 
-  /* --- HUD Superior de Estilo Juego (Aparece en Menú de Modos) --- */
-  .intro-top-hud {
-    position: absolute;
-    top: clamp(18px, 3.5vh, 32px);
-    left: 50%;
-    transform: translateX(-50%) translateY(-10px);
-    width: min(860px, calc(100vw - 32px));
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    z-index: 10;
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-  }
-  .intro-top-hud.visible {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-    pointer-events: auto;
-  }
-  .hud-brand {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: rgba(13, 19, 32, 0.72);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: var(--radius-pill);
-    padding: 6px 14px;
-    user-select: none;
-  }
-  .hud-status-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--briefing-accent, #00e5ff);
-    box-shadow: 0 0 8px var(--briefing-accent, #00e5ff);
-    animation: hudPulse 2.2s ease infinite;
-    transition: background-color 0.25s ease, box-shadow 0.25s ease;
-  }
-  @keyframes hudPulse {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.45; transform: scale(0.85); }
-  }
-  .hud-brand-title {
-    font-size: 0.66rem;
-    font-weight: 800;
-    letter-spacing: 0.10em;
-    color: #f8fafc;
-    text-transform: uppercase;
-  }
-  .hud-brand-sub {
-    font-family: var(--font-mono);
-    font-size: 0.58rem;
-    font-weight: 700;
-    letter-spacing: 0.12em;
-    color: rgba(248, 250, 252, 0.45);
-    padding-left: 6px;
-    border-left: 1px solid rgba(255, 255, 255, 0.12);
-  }
-  .hud-controls-hint {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    background: rgba(13, 19, 32, 0.72);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: var(--radius-pill);
-    padding: 6px 14px;
-    font-size: 0.60rem;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    color: rgba(248, 250, 252, 0.75);
-    user-select: none;
-  }
-  .hud-key {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-family: var(--font-mono);
-    font-size: 0.56rem;
-    font-weight: 700;
-    background: rgba(255, 255, 255, 0.12);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 4px;
-    padding: 1px 5px;
-    min-width: 16px;
-    color: #ffffff;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
-  }
-  .hud-hint-txt {
-    font-size: 0.56rem;
-    letter-spacing: 0.08em;
-    color: rgba(248, 250, 252, 0.5);
-  }
-  .hud-sep {
-    color: rgba(255, 255, 255, 0.2);
-    margin: 0 2px;
-  }
-
-  /* --- Hub de Selección de Modo (Fila Horizontal Inferior) --- */
+  /* --- Dock Unificado de Selección de Modo (Pie de Página) --- */
   .intro-menu-hub {
     position: absolute;
-    bottom: clamp(18px, 3.5vh, 32px);
+    bottom: clamp(24px, 4.5vh, 44px);
     left: 50%;
     transform: translateX(-50%) translateY(16px);
-    width: min(860px, calc(100vw - 32px));
+    width: min(840px, calc(100vw - 32px));
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
     z-index: 10;
     pointer-events: none;
     opacity: 0;
@@ -977,206 +893,110 @@
     transform: translateX(-50%) translateY(0);
     pointer-events: auto;
   }
-  .menu-hub-title {
-    font-size: 0.68rem;
-    font-weight: 800;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: rgba(248, 250, 252, 0.45);
-    user-select: none;
-  }
-  .menu-hub-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
-    width: 100%;
-  }
-  .menu-card-btn {
+  .dock-container {
     display: flex;
-    flex-direction: column;
-    gap: 8px;
-    background: rgba(13, 19, 32, 0.75);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-top: 2px solid rgba(255, 255, 255, 0.16);
-    border-radius: 12px;
-    padding: 14px 16px;
-    color: #ffffff;
-    cursor: pointer;
+    flex-direction: row;
+    align-items: stretch;
+    width: 100%;
+    background: rgba(11, 17, 30, 0.82);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    border-top: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 16px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 1px 0 rgba(255, 255, 255, 0.08) inset;
+    padding: 6px;
+    gap: 4px;
+  }
+  .dock-segment {
+    flex: 1;
+    min-width: 0;
+    background: transparent;
+    border: none;
+    border-radius: 11px;
+    padding: 14px 18px;
     text-align: left;
-    transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1),
-                background 0.18s ease,
-                border-color 0.18s ease,
-                box-shadow 0.18s ease;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
-    position: relative;
-    overflow: hidden;
-  }
-  .menu-card-btn:active {
-    transform: translateY(0) scale(0.98);
-  }
-
-  /* --- Colores distintivos de juego por tarjeta --- */
-  .menu-card-btn[data-modo="libre"] {
-    --card-accent: #00e5ff;
-    border-top-color: rgba(0, 229, 255, 0.45);
-  }
-  .menu-card-btn[data-modo="libre"] .card-num {
-    color: #00e5ff;
-  }
-  .menu-card-btn[data-modo="libre"] .card-icon {
-    color: rgba(0, 229, 255, 0.7);
-  }
-  .menu-card-btn[data-modo="libre"]:hover,
-  .menu-card-btn[data-modo="libre"].active {
-    background: linear-gradient(180deg, rgba(0, 229, 255, 0.12) 0%, rgba(13, 19, 32, 0.90) 100%);
-    border-color: rgba(0, 229, 255, 0.5);
-    border-top-color: #00e5ff;
-    transform: translateY(-3px);
-    box-shadow: 0 14px 32px rgba(0, 0, 0, 0.55), 0 0 22px rgba(0, 229, 255, 0.22);
-  }
-  .menu-card-btn[data-modo="libre"]:hover .card-icon,
-  .menu-card-btn[data-modo="libre"].active .card-icon {
-    color: #00e5ff;
-    transform: scale(1.12);
-  }
-
-  .menu-card-btn[data-modo="tutorial"] {
-    --card-accent: #ff7700;
-    border-top-color: rgba(255, 119, 0, 0.45);
-  }
-  .menu-card-btn[data-modo="tutorial"] .card-num {
-    color: #ff7700;
-  }
-  .menu-card-btn[data-modo="tutorial"] .card-icon {
-    color: rgba(255, 119, 0, 0.7);
-  }
-  .menu-card-btn[data-modo="tutorial"]:hover,
-  .menu-card-btn[data-modo="tutorial"].active {
-    background: linear-gradient(180deg, rgba(255, 119, 0, 0.12) 0%, rgba(13, 19, 32, 0.90) 100%);
-    border-color: rgba(255, 119, 0, 0.5);
-    border-top-color: #ff7700;
-    transform: translateY(-3px);
-    box-shadow: 0 14px 32px rgba(0, 0, 0, 0.55), 0 0 22px rgba(255, 119, 0, 0.22);
-  }
-  .menu-card-btn[data-modo="tutorial"]:hover .card-icon,
-  .menu-card-btn[data-modo="tutorial"].active .card-icon {
-    color: #ff7700;
-    transform: scale(1.12);
-  }
-
-  .menu-card-btn[data-modo="test"] {
-    --card-accent: #a855f7;
-    border-top-color: rgba(168, 85, 247, 0.45);
-  }
-  .menu-card-btn[data-modo="test"] .card-num {
-    color: #a855f7;
-  }
-  .menu-card-btn[data-modo="test"] .card-icon {
-    color: rgba(168, 85, 247, 0.7);
-  }
-  .menu-card-btn[data-modo="test"]:hover,
-  .menu-card-btn[data-modo="test"].active {
-    background: linear-gradient(180deg, rgba(168, 85, 247, 0.12) 0%, rgba(13, 19, 32, 0.90) 100%);
-    border-color: rgba(168, 85, 247, 0.5);
-    border-top-color: #a855f7;
-    transform: translateY(-3px);
-    box-shadow: 0 14px 32px rgba(0, 0, 0, 0.55), 0 0 22px rgba(168, 85, 247, 0.22);
-  }
-  .menu-card-btn[data-modo="test"]:hover .card-icon,
-  .menu-card-btn[data-modo="test"].active .card-icon {
-    color: #a855f7;
-    transform: scale(1.12);
-  }
-
-  .card-top {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-  }
-  .card-num {
-    font-family: var(--font-mono);
-    font-size: 0.70rem;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-  }
-  .card-icon {
-    transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), color 0.18s ease;
-  }
-  .card-name {
-    font-size: 0.94rem;
-    font-weight: 700;
-    letter-spacing: -0.01em;
-    color: #f8fafc;
-  }
-  .card-desc {
-    font-size: 0.72rem;
-    color: rgba(248, 250, 252, 0.6);
-    line-height: 1.35;
-  }
-
-  /* --- Panel de Información Desplegable / Briefing Táctico --- */
-  .hub-briefing-wrap {
-    width: 100%;
-    background: rgba(10, 15, 26, 0.76);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-left: 3px solid var(--briefing-accent, #00e5ff);
-    border-radius: 10px;
-    padding: 8px 14px;
+    cursor: pointer;
+    color: #ffffff;
     display: flex;
     flex-direction: column;
-    gap: 3px;
-    transition: border-color 0.22s ease, background-color 0.22s ease;
-    user-select: none;
+    gap: 4px;
+    transition: background 0.16s ease, transform 0.16s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.16s ease;
+    position: relative;
   }
-  .hub-briefing-header {
+  .dock-segment:hover,
+  .dock-segment.active {
+    background: rgba(255, 255, 255, 0.06);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+    transform: translateY(-2px);
+  }
+  .dock-segment:active {
+    transform: translateY(0) scale(0.985);
+  }
+  .segment-meta {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    margin-bottom: 2px;
   }
-  .hub-briefing-badge {
+  .segment-idx {
     font-family: var(--font-mono);
-    font-size: 0.62rem;
-    font-weight: 800;
-    letter-spacing: 0.10em;
-    color: var(--briefing-accent, #00e5ff);
-    text-transform: uppercase;
-    transition: color 0.22s ease;
-  }
-  .hub-briefing-hint {
-    font-size: 0.56rem;
+    font-size: 0.68rem;
     font-weight: 700;
     letter-spacing: 0.08em;
-    color: rgba(248, 250, 252, 0.35);
-    text-transform: uppercase;
+    color: var(--accent, #ff7700);
   }
-  .hub-briefing-desc {
-    font-size: 0.70rem;
-    color: rgba(248, 250, 252, 0.75);
+  .segment-tag {
+    font-size: 0.58rem;
+    font-weight: 700;
+    letter-spacing: 0.10em;
+    color: rgba(255, 255, 255, 0.35);
+    text-transform: uppercase;
+    transition: color 0.16s ease;
+  }
+  .dock-segment:hover .segment-tag,
+  .dock-segment.active .segment-tag {
+    color: rgba(255, 255, 255, 0.7);
+  }
+  .segment-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    letter-spacing: -0.015em;
+    color: rgba(248, 250, 252, 0.92);
+    transition: color 0.16s ease;
+  }
+  .dock-segment:hover .segment-title,
+  .dock-segment.active .segment-title {
+    color: #ffffff;
+  }
+  .segment-desc {
+    font-size: 0.72rem;
+    color: rgba(248, 250, 252, 0.55);
     line-height: 1.35;
-    transition: opacity 0.15s ease;
+    transition: color 0.16s ease;
+  }
+  .dock-segment:hover .segment-desc,
+  .dock-segment.active .segment-desc {
+    color: rgba(248, 250, 252, 0.85);
+  }
+  .dock-divider {
+    width: 1px;
+    align-self: stretch;
+    margin: 10px 0;
+    background: rgba(255, 255, 255, 0.08);
   }
 
   @media (max-width: 680px) {
-    .intro-top-hud {
-      top: 10px;
+    .dock-container {
+      flex-direction: column;
+      gap: 4px;
+      padding: 6px;
     }
-    .hud-controls-hint {
+    .dock-divider {
       display: none;
     }
-    .menu-hub-grid {
-      grid-template-columns: 1fr;
-      gap: 6px;
-    }
-    .menu-card-btn {
-      padding: 10px 12px;
-    }
-    .hub-briefing-wrap {
-      display: none;
+    .dock-segment {
+      padding: 12px 14px;
     }
   }
 
@@ -1203,28 +1023,12 @@
 
 <!-- Entorno 3D de la Pelota y Landing -->
 <div id="intro-stage">
+  <div class="intro-bg-watermark" aria-hidden="true">DOC 40+</div>
   <canvas id="canvas-intro"></canvas>
 </div>
 
 <!-- Overlay de Controles de Usuario -->
 <div id="stage-landing">
-  <!-- HUD Superior de Estilo Juego (Visible durante la selección de modo) -->
-  <div id="intro-top-hud" class="intro-top-hud">
-    <div class="hud-brand">
-      <span class="hud-status-dot"></span>
-      <span class="hud-brand-title">DOC TRAINING SYSTEM</span>
-      <span class="hud-brand-sub">SISTEMA ACTIVO</span>
-    </div>
-    <div class="hud-controls-hint">
-      <span class="hud-key">←</span>
-      <span class="hud-key">→</span>
-      <span class="hud-hint-txt">ELEGIR</span>
-      <span class="hud-sep">·</span>
-      <span class="hud-key">ENTER</span>
-      <span class="hud-hint-txt">INICIAR</span>
-    </div>
-  </div>
-
   <div id="intro-actions-wrap">
     <button id="btn-comenzar" type="button">
       <span>ENTRENAR</span>
@@ -1235,58 +1039,39 @@
     <div class="intro-hint">Tocá para iniciar o presioná Espacio</div>
   </div>
 
-  <!-- Hub de Selección de Modo (Aparece bajo la esfera al terminar el Zoom Out) -->
+  <!-- Dock Unificado de Selección de Modo -->
   <div id="intro-menu-hub" class="intro-menu-hub">
-    <div class="menu-hub-title">Elegí tu modo de entrenamiento</div>
-    <div class="menu-hub-grid">
-      <button type="button" class="menu-card-btn active" data-modo="libre">
-        <div class="card-top">
-          <span class="card-num">01</span>
-          <svg class="card-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
-            <circle cx="12" cy="12" r="3"/>
-          </svg>
+    <div class="dock-container">
+      <button type="button" class="dock-segment active" data-modo="libre">
+        <div class="segment-meta">
+          <span class="segment-idx">01</span>
+          <span class="segment-tag">EN VIVO</span>
         </div>
-        <div class="card-name">Modo Libre</div>
-        <div class="card-desc">Telemetría y visor 3D en tiempo real</div>
+        <div class="segment-title">Modo Libre</div>
+        <div class="segment-desc">Telemetría biomecánica y visor 3D en tiempo real</div>
       </button>
 
-      <button type="button" class="menu-card-btn" data-modo="tutorial">
-        <div class="card-top">
-          <span class="card-num">02</span>
-          <svg class="card-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <circle cx="12" cy="12" r="10"/>
-            <circle cx="12" cy="12" r="4"/>
-            <path d="M12 2v4M12 18v4M2 12h4M18 12h4"/>
-          </svg>
+      <div class="dock-divider" aria-hidden="true"></div>
+
+      <button type="button" class="dock-segment" data-modo="tutorial">
+        <div class="segment-meta">
+          <span class="segment-idx">02</span>
+          <span class="segment-tag">GUIADO</span>
         </div>
-        <div class="card-name">Tutorial</div>
-        <div class="card-desc">Entrenador biomecánico paso a paso</div>
+        <div class="segment-title">Tutorial</div>
+        <div class="segment-desc">Entrenador de ángulo de cara y brushing paso a paso</div>
       </button>
 
-      <button type="button" class="menu-card-btn" data-modo="test">
-        <div class="card-top">
-          <span class="card-num">03</span>
-          <svg class="card-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <rect x="4" y="4" width="16" height="16" rx="2"/>
-            <rect x="9" y="9" width="6" height="6"/>
-            <path d="M9 1v3M15 1v3M9 20v3M15 20v3M1 9h3M1 15h3M20 9h3M20 15h3"/>
-          </svg>
-        </div>
-        <div class="card-name">Benchmark</div>
-        <div class="card-desc">Validación de aciertos del predictor en placa</div>
-      </button>
-    </div>
+      <div class="dock-divider" aria-hidden="true"></div>
 
-    <!-- Briefing táctico dinámico / estilo videojuego -->
-    <div class="hub-briefing-wrap" id="hub-briefing-wrap">
-      <div class="hub-briefing-header">
-        <span class="hub-briefing-badge" id="hub-briefing-badge">MODO LIBRE · TELEMETRÍA CONTINUA</span>
-        <span class="hub-briefing-hint">PRESIÓN EN TIEMPO REAL</span>
-      </div>
-      <div class="hub-briefing-desc" id="hub-briefing-desc">
-        Transmisión biomecánica en vivo a 100 Hz con visor 3D de la paleta. Sin pausas ni rutinas obligatorias.
-      </div>
+      <button type="button" class="dock-segment" data-modo="test">
+        <div class="segment-meta">
+          <span class="segment-idx">03</span>
+          <span class="segment-tag">MODELO</span>
+        </div>
+        <div class="segment-title">Benchmark</div>
+        <div class="segment-desc">Validación de aciertos del predictor en placa</div>
+      </button>
     </div>
   </div>
 </div>
@@ -2690,7 +2475,7 @@ let introActiva = true;
 
 // Dimensiones físicas y de cámara calculadas para cobertura total sin distorsión
 const R_BALL_CLOSE = 0.0784; // Radio en reposo/curvado (subtiende 36.9° > esquina 28.7° para cubrir 100% la pantalla)
-const R_BALL_FAR = 0.0200;   // Radio oficial ITTF (40 mm de diámetro físico)
+const R_BALL_FAR = 0.0245;   // Radio heroico calibrado (~45% alto de pantalla en reposo)
 const Z_CAM_CLOSE = 0.1306;  // Distancia cercana a la superficie (sin efecto micro-lupa ni pixelación)
 const Z_CAM_FAR = 0.2200;    // Distancia lejana (pelota en el centro de la pantalla)
 
@@ -3015,7 +2800,6 @@ function ejecutarEtapa(etapa) {
   const stageLanding = $('stage-landing');
   const actionsWrap = $('intro-actions-wrap');
   const menuHub = $('intro-menu-hub');
-  const topHud = $('intro-top-hud');
   const stage = $('intro-stage');
 
   if (stage) {
@@ -3045,9 +2829,6 @@ function ejecutarEtapa(etapa) {
     if (menuHub) {
       menuHub.classList.remove('visible');
     }
-    if (topHud) {
-      topHud.classList.remove('visible');
-    }
     renderIntroFrame();
   } else if (etapa === 1) {
     // -----------------------------------------------------------------
@@ -3059,9 +2840,6 @@ function ejecutarEtapa(etapa) {
     }
     if (menuHub) {
       menuHub.classList.remove('visible');
-    }
-    if (topHud) {
-      topHud.classList.remove('visible');
     }
     if (introBallGroup) {
       introBallGroup.position.set(0, 0, 0);
@@ -3105,7 +2883,6 @@ function ejecutarEtapa(etapa) {
       } else {
         introAnimId = null;
         if (menuHub) menuHub.classList.add('visible');
-        if (topHud) topHud.classList.add('visible');
         activarModoHub(0, false);
         iniciarIdleSpin();
       }
@@ -3126,9 +2903,6 @@ function ejecutarEtapa(etapa) {
     }
     if (menuHub) {
       menuHub.classList.remove('visible');
-    }
-    if (topHud) {
-      topHud.classList.remove('visible');
     }
 
     const durCurva = 240;
@@ -3162,7 +2936,6 @@ function ejecutarEtapa(etapa) {
         setCurvatura(1.0);
         setZoom(1.0);
         if (menuHub) menuHub.classList.add('visible');
-        if (topHud) topHud.classList.add('visible');
         activarModoHub(0, false);
         iniciarIdleSpin();
       }
@@ -3172,30 +2945,9 @@ function ejecutarEtapa(etapa) {
 }
 
 const MODOS_HUB_DATA = [
-  {
-    modo: 'libre',
-    tag: 'MODO LIBRE · TELEMETRÍA CONTINUA',
-    hint: 'TRANSMISIÓN EN TIEMPO REAL',
-    color: '#00e5ff',
-    glow: 'rgba(0, 229, 255, 0.12)',
-    desc: 'Transmisión biomecánica en vivo a 100 Hz con visor 3D de la paleta. Sin pausas ni rutinas obligatorias.'
-  },
-  {
-    modo: 'tutorial',
-    tag: 'TUTORIAL · ENTRENAMIENTO GUIADO',
-    hint: '3 NIVELES ESTRUCTURADOS',
-    color: '#ff7700',
-    glow: 'rgba(255, 119, 0, 0.12)',
-    desc: '3 niveles estructurados para dominar ángulo de cara, velocidad de ataque y brushing con corrección por audio.'
-  },
-  {
-    modo: 'test',
-    tag: 'BENCHMARK · EVALUACIÓN DEL PREDICTOR',
-    hint: 'INFERENCIA EN TIEMPO REAL',
-    color: '#a855f7',
-    glow: 'rgba(168, 85, 247, 0.12)',
-    desc: 'Validación en vivo de los aciertos del modelo en placa comparando los 4 golpes con la predicción del chip.'
-  }
+  { modo: 'libre' },
+  { modo: 'tutorial' },
+  { modo: 'test' }
 ];
 
 let modoHubActivoIdx = 0;
@@ -3203,55 +2955,25 @@ let modoHubActivoIdx = 0;
 function activarModoHub(idx, conSonido = true) {
   if (idx < 0 || idx >= MODOS_HUB_DATA.length) return;
   modoHubActivoIdx = idx;
-  const data = MODOS_HUB_DATA[idx];
-  const cards = document.querySelectorAll('.menu-card-btn');
-  cards.forEach((btn, i) => {
+  const segments = document.querySelectorAll('.dock-segment');
+  segments.forEach((btn, i) => {
     if (i === idx) btn.classList.add('active');
     else btn.classList.remove('active');
   });
-
-  const briefingWrap = $('hub-briefing-wrap');
-  const briefingBadge = $('hub-briefing-badge');
-  const briefingDesc = $('hub-briefing-desc');
-  const topStatusDot = document.querySelector('.hud-status-dot');
-  const stage = $('intro-stage');
-
-  if (briefingWrap) {
-    briefingWrap.style.setProperty('--briefing-accent', data.color);
-  }
-  if (briefingBadge) {
-    briefingBadge.textContent = data.tag;
-    briefingBadge.style.color = data.color;
-  }
-  if (topStatusDot) {
-    topStatusDot.style.background = data.color;
-    topStatusDot.style.boxShadow = `0 0 8px ${data.color}`;
-  }
-  if (briefingDesc) {
-    briefingDesc.style.opacity = '0';
-    setTimeout(() => {
-      briefingDesc.textContent = data.desc;
-      briefingDesc.style.opacity = '1';
-    }, 60);
-  }
-  if (stage) {
-    stage.style.setProperty('--hub-glow-color', data.glow);
-  }
   if (conSonido && typeof sonarPique === 'function') {
-    sonarPique(0.08);
+    sonarPique(0.06);
   }
 }
 
 function initIntroMenu() {
   const menuHub = $('intro-menu-hub');
   if (menuHub) {
-    // Evita que clics en el título, espacios o bordes del menú se propaguen a stageLanding
     menuHub.addEventListener('click', (e) => {
       e.stopPropagation();
     });
   }
 
-  document.querySelectorAll('.menu-card-btn').forEach((btn, idx) => {
+  document.querySelectorAll('.dock-segment').forEach((btn, idx) => {
     btn.addEventListener('mouseenter', () => {
       activarModoHub(idx, false);
     });
@@ -3288,8 +3010,6 @@ function cerrarIntro() {
   cancelarAnimacionActual();
   const stage = $('intro-stage');
   const stageLanding = $('stage-landing');
-  const topHud = $('intro-top-hud');
-  if (topHud) topHud.classList.remove('visible');
   if (stage) stage.style.display = 'none';
   if (stageLanding) stageLanding.style.display = 'none';
   const appMain = $('app-main');
