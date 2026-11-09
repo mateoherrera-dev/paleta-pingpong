@@ -286,10 +286,13 @@
     background: rgba(0, 0, 0, 0.03);
   }
   .tab-pill.activo {
-    background: #ffffff;
-    color: #0f172a;
-    border: 1px solid rgba(234, 88, 12, 0.45);
-    box-shadow: 0 3px 12px rgba(45, 35, 20, 0.08), inset 0 1px 0 #ffffff;
+    background: #0f172a;
+    color: #ffffff;
+    border: 1px solid #0f172a;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.20);
+  }
+  .tab-pill.activo .tab-idx {
+    color: #ff7700;
   }
   .tab-idx {
     font-family: var(--font-mono);
@@ -836,13 +839,7 @@
     height: 100vh;
     z-index: 100;
     overflow: hidden;
-    background:
-      /* Halo cenital suave de iluminacion sobre la pelota */
-      radial-gradient(ellipse 760px 480px at 50% 38%, rgba(255, 119, 0, 0.08), transparent 65%),
-      /* Penumbra de mesa deportiva en la base */
-      radial-gradient(ellipse 960px 220px at 50% 92%, rgba(15, 23, 42, 0.65), transparent 70%),
-      /* Degrade profundo de estadio deportivo */
-      linear-gradient(180deg, #070a12 0%, #0a0f1c 55%, #050811 100%);
+    background: transparent;
     pointer-events: none;
     transition: opacity 0.3s ease;
     will-change: opacity;
@@ -968,7 +965,7 @@
     flex: 1;
     min-width: 0;
     background: transparent;
-    border: none;
+    border: 1px solid transparent;
     border-radius: 11px;
     padding: 14px 18px;
     text-align: left;
@@ -977,13 +974,18 @@
     display: flex;
     flex-direction: column;
     gap: 4px;
-    transition: background 0.16s ease, transform 0.16s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.16s ease;
+    transition: background 0.16s ease, transform 0.16s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.16s ease, border-color 0.16s ease;
     position: relative;
   }
-  .dock-segment:hover,
+  .dock-segment:hover:not(.active) {
+    background: rgba(15, 23, 42, 0.04);
+    transform: translateY(-1px);
+  }
   .dock-segment.active {
-    background: #ffffff;
-    box-shadow: 0 4px 18px rgba(45, 35, 20, 0.10);
+    background: #0f172a;
+    color: #ffffff;
+    border: 1px solid #0f172a;
+    box-shadow: 0 6px 20px rgba(15, 23, 42, 0.20);
     transform: translateY(-2px);
   }
   .dock-segment:active {
@@ -997,6 +999,9 @@
     color: var(--accent);
     margin-bottom: 2px;
   }
+  .dock-segment.active .segment-idx {
+    color: #ff7700;
+  }
   .segment-title {
     font-size: 0.95rem;
     font-weight: 700;
@@ -1004,9 +1009,8 @@
     color: #0f172a;
     transition: color 0.16s ease;
   }
-  .dock-segment:hover .segment-title,
   .dock-segment.active .segment-title {
-    color: #000000;
+    color: #ffffff;
     font-weight: 800;
   }
   .segment-desc {
@@ -1015,9 +1019,8 @@
     line-height: 1.35;
     transition: color 0.16s ease;
   }
-  .dock-segment:hover .segment-desc,
   .dock-segment.active .segment-desc {
-    color: #334155;
+    color: #cbd5e1;
   }
   .dock-divider {
     width: 1px;
