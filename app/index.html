@@ -90,29 +90,6 @@
     align-items: center;
     gap: 12px;
   }
-  .brand-ball-slot {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    position: relative;
-    flex-shrink: 0;
-    cursor: pointer;
-    box-shadow: 0 4px 14px rgba(255, 119, 0, 0.28), 0 0 0 1px rgba(255, 119, 0, 0.2);
-    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease;
-  }
-  .brand-ball-slot:hover {
-    transform: scale(1.1);
-    box-shadow: 0 6px 18px rgba(255, 119, 0, 0.45), 0 0 0 1.5px rgba(255, 119, 0, 0.4);
-  }
-  .brand-ball-slot:active {
-    transform: scale(0.95);
-  }
-  .brand-ball-slot canvas {
-    width: 36px !important;
-    height: 36px !important;
-    display: block;
-    border-radius: 50%;
-  }
   .brand-meta {
     display: flex;
     flex-direction: column;
@@ -992,6 +969,94 @@
     user-select: none;
   }
 
+  /* --- Hub de Selección de Modo (Post Zoom Out) --- */
+  .intro-menu-hub {
+    position: absolute;
+    bottom: clamp(24px, 5.5vh, 52px);
+    left: 50%;
+    transform: translateX(-50%) translateY(24px);
+    width: min(500px, calc(100vw - 32px));
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    z-index: 10;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.38s cubic-bezier(0.16, 1, 0.3, 1), transform 0.38s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .intro-menu-hub.visible {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+    pointer-events: auto;
+  }
+  .menu-hub-title {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.55);
+  }
+  .menu-hub-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+  }
+  .menu-card-btn {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: rgba(15, 23, 42, 0.88);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 12px;
+    padding: 11px 16px;
+    color: #ffffff;
+    cursor: pointer;
+    text-align: left;
+    transition: transform 0.16s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  }
+  .menu-card-btn:hover {
+    background: rgba(30, 41, 59, 0.95);
+    border-color: rgba(255, 119, 0, 0.55);
+    transform: translateY(-2px) scale(1.01);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45), 0 0 14px rgba(255, 119, 0, 0.25);
+  }
+  .menu-card-btn:active {
+    transform: translateY(0) scale(0.98);
+  }
+  .menu-card-icon {
+    font-size: 1.45rem;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+  .menu-card-info {
+    flex: 1;
+  }
+  .menu-card-name {
+    font-size: 0.90rem;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    color: #f8fafc;
+  }
+  .menu-card-desc {
+    font-size: 0.72rem;
+    color: #94a3b8;
+    margin-top: 2px;
+  }
+  .menu-card-arrow {
+    color: rgba(255, 255, 255, 0.35);
+    font-size: 0.9rem;
+    transition: transform 0.16s ease, color 0.16s ease;
+  }
+  .menu-card-btn:hover .menu-card-arrow {
+    color: #ff7700;
+    transform: translateX(4px);
+  }
+
   /* --- Accesibilidad: Reducción de Movimiento (Apple HIG / WCAG) --- */
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
@@ -1029,6 +1094,37 @@
     </button>
     <div class="intro-hint">Tocá para iniciar o presioná Espacio</div>
   </div>
+
+  <!-- Hub de Selección de Modo (Aparece bajo la esfera al terminar el Zoom Out) -->
+  <div id="intro-menu-hub" class="intro-menu-hub">
+    <div class="menu-hub-title">Elegí tu modo de entrenamiento</div>
+    <div class="menu-hub-grid">
+      <button type="button" class="menu-card-btn" data-modo="libre">
+        <div class="menu-card-icon">🎯</div>
+        <div class="menu-card-info">
+          <div class="menu-card-name">Modo Libre</div>
+          <div class="menu-card-desc">Telemetría biomecánica y visor 3D en tiempo real</div>
+        </div>
+        <div class="menu-card-arrow">➔</div>
+      </button>
+      <button type="button" class="menu-card-btn" data-modo="tutorial">
+        <div class="menu-card-icon">🎓</div>
+        <div class="menu-card-info">
+          <div class="menu-card-name">Tutorial</div>
+          <div class="menu-card-desc">Entrenador guiado: ángulo, brushing y timing</div>
+        </div>
+        <div class="menu-card-arrow">➔</div>
+      </button>
+      <button type="button" class="menu-card-btn" data-modo="test">
+        <div class="menu-card-icon">📊</div>
+        <div class="menu-card-info">
+          <div class="menu-card-name">Benchmark</div>
+          <div class="menu-card-desc">Validación de aciertos TinyML por tandas</div>
+        </div>
+        <div class="menu-card-arrow">➔</div>
+      </button>
+    </div>
+  </div>
 </div>
 
 <!-- Barra Flotante de Depuración / Testeo de Animación -->
@@ -1041,8 +1137,7 @@
     <div class="debug-dock-buttons">
       <button type="button" class="btn-dock" id="btn-dock-0">0. Landing 2D</button>
       <button type="button" class="btn-dock" id="btn-dock-1">1. Curvar</button>
-      <button type="button" class="btn-dock" id="btn-dock-2">2. Zoom Out</button>
-      <button type="button" class="btn-dock" id="btn-dock-3">3. Lanzar</button>
+      <button type="button" class="btn-dock" id="btn-dock-2">2. Zoom / Menú</button>
       <button type="button" class="btn-dock btn-dock-play" id="btn-dock-play">▶ Play Todo</button>
     </div>
     <div class="debug-dock-sliders">
@@ -1065,9 +1160,6 @@
   <header class="app-bar">
     <div class="brand">
       <div class="brand-row">
-        <div class="brand-ball-slot" id="header-ball-slot" title="Pelota oficial DOC 40+">
-          <canvas id="canvas-header-ball" width="72" height="72"></canvas>
-        </div>
         <div class="brand-meta">
           <div class="brand-title">
             <span class="brand-doc">DOC</span>
@@ -2448,103 +2540,7 @@ function sonarTensionAire(vol = 0.24) {
 }
 
 // =========================================================================
-// MINI PELOTA 3D INTERACTIVA EN EL HEADER (THREE.JS)
-// =========================================================================
-let headerBallRenderer, headerBallScene, headerBallCamera, headerBallMesh;
-let headerBallSpinVel = 0.65;
-let headerBallIniciado = false;
-
-function initHeaderBall(stampTex) {
-  if (headerBallIniciado) return;
-  const canvas = $('canvas-header-ball');
-  if (!canvas || !window.THREE) return;
-  headerBallIniciado = true;
-
-  try {
-    const size = 36;
-    headerBallRenderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
-    headerBallRenderer.setSize(size, size);
-    headerBallRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    headerBallRenderer.outputColorSpace = THREE.SRGBColorSpace;
-
-    headerBallScene = new THREE.Scene();
-    headerBallCamera = new THREE.PerspectiveCamera(36, 1, 0.01, 10);
-    headerBallCamera.position.set(0, 0, 0.08);
-
-    const amb = new THREE.AmbientLight(0xffffff, 0.95);
-    headerBallScene.add(amb);
-    const dir = new THREE.DirectionalLight(0xffffff, 0.75);
-    dir.position.set(0.2, 0.3, 0.4);
-    headerBallScene.add(dir);
-
-    const geo = new THREE.SphereGeometry(0.02, 32, 24);
-    const mat = new THREE.MeshStandardMaterial({
-      map: stampTex,
-      roughness: 0.58,
-      metalness: 0.04,
-    });
-    headerBallMesh = new THREE.Mesh(geo, mat);
-    headerBallScene.add(headerBallMesh);
-
-    let lastT = performance.now();
-    function animateHeaderBall(now) {
-      requestAnimationFrame(animateHeaderBall);
-      const dt = Math.min(0.05, (now - lastT) / 1000);
-      lastT = now;
-      if (headerBallMesh) {
-        headerBallMesh.rotation.y -= headerBallSpinVel * dt;
-        headerBallMesh.rotation.x = 0.06 * Math.sin(now * 0.001);
-        if (headerBallSpinVel > 0.65) {
-          headerBallSpinVel = Math.max(0.65, headerBallSpinVel - 4.0 * dt);
-        }
-      }
-      headerBallRenderer.render(headerBallScene, headerBallCamera);
-    }
-    requestAnimationFrame(animateHeaderBall);
-
-    const slot = $('header-ball-slot');
-    if (slot) {
-      slot.addEventListener('click', () => {
-        headerBallSpinVel = 9.0;
-        sonarPique(0.18);
-        slot.style.transform = 'scale(1.18)';
-        setTimeout(() => { slot.style.transform = ''; }, 160);
-      });
-    }
-  } catch (err) {
-    console.warn('Mini pelota header:', err.message);
-  }
-}
-
-function setupHeaderBall() {
-  if (!window.THREE || headerBallIniciado) return;
-  const cHeader = document.createElement('canvas');
-  cHeader.width = 512; cHeader.height = 512;
-  const ctxH = cHeader.getContext('2d');
-  ctxH.fillStyle = '#ff7700';
-  ctxH.fillRect(0, 0, 512, 512);
-  ctxH.fillStyle = '#0f172a';
-  ctxH.textAlign = 'center';
-  ctxH.textBaseline = 'middle';
-  ctxH.font = '900 130px -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif';
-  ctxH.fillText('DOC', 256, 210);
-  ctxH.font = '800 50px -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif';
-  ctxH.fillText('40+', 256, 305);
-  ctxH.font = '45px sans-serif';
-  ctxH.fillText('★★★', 256, 380);
-
-  const headerStampTex = new THREE.CanvasTexture(cHeader);
-  headerStampTex.generateMipmaps = false;
-  headerStampTex.colorSpace = THREE.SRGBColorSpace;
-  initHeaderBall(headerStampTex);
-}
-
-function acelerarSpinPelotaHeader() {
-  headerBallSpinVel = 8.5;
-}
-
-// =========================================================================
-// INTRO CINEMATOGRÁFICA 3D: LANDING PLANA -> CURVADO DE LETRAS -> ZOOM OUT -> TOP SPIN
+// INTRO CINEMATOGRÁFICA 3D: LANDING PLANA -> CURVADO -> ZOOM OUT Y MENÚ DE MODOS
 // =========================================================================
 let introScene, introCamera, introRenderer, introMesh, introBallGroup;
 let uvsFlat = null;
@@ -2775,14 +2771,45 @@ function setCurvatura(t) {
   renderIntroFrame();
 }
 
+let idleSpinActivo = false;
+let lastSpinTime = performance.now();
+
+function iniciarIdleSpin() {
+  if (idleSpinActivo) return;
+  idleSpinActivo = true;
+  lastSpinTime = performance.now();
+
+  function loopSpin(now) {
+    if (!idleSpinActivo || !introActiva) return;
+    const dt = Math.min(0.05, (now - lastSpinTime) / 1000);
+    lastSpinTime = now;
+    if (introBallGroup) {
+      // Giro sutil y continuo hacia el costado con leve inclinación 3D
+      introBallGroup.rotation.y -= 0.55 * dt;
+      introBallGroup.rotation.x = 0.08;
+      introBallGroup.rotation.z = 0.04;
+    }
+    renderIntroFrame();
+    introAnimId = requestAnimationFrame(loopSpin);
+  }
+  introAnimId = requestAnimationFrame(loopSpin);
+}
+
+function detenerIdleSpin() {
+  idleSpinActivo = false;
+}
+
 function setZoom(t) {
   currentZoom = Math.max(0, Math.min(1, t));
   if (!introCamera || !introBallGroup) return;
 
   const R = R_BALL_CLOSE + (R_BALL_FAR - R_BALL_CLOSE) * currentZoom;
   const zCam = Z_CAM_CLOSE + (Z_CAM_FAR - Z_CAM_CLOSE) * currentZoom;
+  // Elevar la pelota suavemente para encuadrar las tarjetas del menú abajo
+  const posY = 0.022 * currentZoom;
 
   introBallGroup.scale.set(R, R, R);
+  introBallGroup.position.y = posY;
   introCamera.position.z = zCam;
 
   const slider = $('slider-zoom');
@@ -2809,16 +2836,21 @@ function actualizarBotonesActivos(activoId) {
 
 function ejecutarEtapa(etapa) {
   cancelarAnimacionActual();
+  detenerIdleSpin();
   introActiva = true;
 
   const stageLanding = $('stage-landing');
   const actionsWrap = $('intro-actions-wrap');
-  const appMain = $('app-main');
+  const menuHub = $('intro-menu-hub');
   const stage = $('intro-stage');
 
   if (stage) {
     stage.style.display = 'block';
     stage.style.opacity = '1';
+  }
+  if (stageLanding) {
+    stageLanding.style.display = 'block';
+    stageLanding.style.opacity = '1';
   }
 
   if (etapa === 0) {
@@ -2832,24 +2864,26 @@ function ejecutarEtapa(etapa) {
       introBallGroup.position.set(0, 0, 0);
       introBallGroup.rotation.set(0, 0, 0);
     }
-    if (stageLanding) {
-      stageLanding.style.display = 'block';
-      stageLanding.style.opacity = '1';
-    }
     if (actionsWrap) {
       actionsWrap.style.opacity = '1';
       actionsWrap.style.transform = '';
       actionsWrap.style.pointerEvents = 'auto';
     }
+    if (menuHub) {
+      menuHub.classList.remove('visible');
+    }
     renderIntroFrame();
   } else if (etapa === 1) {
     // -----------------------------------------------------------------
-    // ESTADO 1: Curvado de la tipografía e iluminación 3D (Pantalla sigue 100% naranja)
+    // ESTADO 1: Curvado de tipografía e iluminación 3D
     // -----------------------------------------------------------------
     actualizarBotonesActivos('btn-dock-1');
     if (actionsWrap) {
       actionsWrap.style.opacity = '0';
       actionsWrap.style.pointerEvents = 'none';
+    }
+    if (menuHub) {
+      menuHub.classList.remove('visible');
     }
     if (introBallGroup) {
       introBallGroup.position.set(0, 0, 0);
@@ -2857,7 +2891,7 @@ function ejecutarEtapa(etapa) {
     }
     setZoom(0.0);
     const startC = currentCurvatura;
-    const dur = 420;
+    const dur = 380;
     const startTime = performance.now();
 
     function loopCurvar(now) {
@@ -2873,7 +2907,7 @@ function ejecutarEtapa(etapa) {
     introAnimId = requestAnimationFrame(loopCurvar);
   } else if (etapa === 2) {
     // -----------------------------------------------------------------
-    // ESTADO 2: Zoom Out (La silueta circular de la esfera entra al cuadro y revela el estadio)
+    // ESTADO 2: Zoom Out hacia el Menú de Modos (Pelota girando)
     // -----------------------------------------------------------------
     actualizarBotonesActivos('btn-dock-2');
     setCurvatura(1.0);
@@ -2881,15 +2915,8 @@ function ejecutarEtapa(etapa) {
       actionsWrap.style.opacity = '0';
       actionsWrap.style.pointerEvents = 'none';
     }
-    if (introBallGroup) {
-      introBallGroup.position.set(0, 0, 0);
-      introBallGroup.rotation.set(0, 0, 0);
-    }
-    if (appMain && !appMain.classList.contains('visible')) {
-      appMain.classList.add('visible');
-    }
     const startZ = currentZoom;
-    const dur = 480;
+    const dur = 420;
     const startTime = performance.now();
 
     function loopZoom(now) {
@@ -2900,124 +2927,88 @@ function ejecutarEtapa(etapa) {
         introAnimId = requestAnimationFrame(loopZoom);
       } else {
         introAnimId = null;
+        if (menuHub) menuHub.classList.add('visible');
+        iniciarIdleSpin();
       }
     }
     introAnimId = requestAnimationFrame(loopZoom);
-  } else if (etapa === 3) {
-    // -----------------------------------------------------------------
-    // ESTADO 3: Impacto "TOC!", Topspin y Despegue hacia el Header
-    // -----------------------------------------------------------------
-    actualizarBotonesActivos('btn-dock-3');
-    setCurvatura(1.0);
-    setZoom(1.0);
-    sonarPique(0.42);
-
-    const dur = 320;
-    const startTime = performance.now();
-
-    function loopLanzar(now) {
-      const p = Math.min(1, (now - startTime) / dur);
-      const ease = p * p * 1.35;
-      if (introBallGroup) {
-        introBallGroup.position.y = ease * 0.088;
-        introBallGroup.position.z = -ease * 0.12;
-        introBallGroup.rotation.x = -ease * 2.8;
-      }
-      renderIntroFrame();
-      if (p < 1) {
-        introAnimId = requestAnimationFrame(loopLanzar);
-      } else {
-        introAnimId = null;
-        acelerarSpinPelotaHeader();
-      }
-    }
-    introAnimId = requestAnimationFrame(loopLanzar);
   } else if (etapa === 'play') {
     // -----------------------------------------------------------------
-    // PLAY TODO: La coreografía completa continuada
+    // PLAY: Curvado -> Zoom Out fluido -> Menú de Modos interactivo
     // -----------------------------------------------------------------
     actualizarBotonesActivos('btn-dock-play');
     animandoCinematica = true;
-    sonarTensionAire(0.20);
+    sonarTensionAire(0.18);
 
     if (actionsWrap) {
       actionsWrap.style.transition = 'opacity 70ms ease, transform 70ms ease';
       actionsWrap.style.opacity = '0';
-      actionsWrap.style.transform = 'translateY(14px) scale(0.96)';
+      actionsWrap.style.transform = 'translateY(12px) scale(0.97)';
       actionsWrap.style.pointerEvents = 'none';
     }
-    if (appMain && !appMain.classList.contains('visible')) {
-      appMain.classList.add('visible');
+    if (menuHub) {
+      menuHub.classList.remove('visible');
     }
 
-    const durCurva = 280;
-    const durZoom = 380;
-    const durLanzar = 220;
-    const durTotal = durCurva + durZoom + durLanzar;
+    const durCurva = 260;
+    const durZoom = 420;
+    const overlap = 60; // El zoom arranca 60ms antes de terminar la curva para que no se sienta rígido
+    const durTotal = durCurva + durZoom - overlap;
     const startTime = performance.now();
-    let impactoFired = false;
 
     function loopPlay(now) {
       const elapsed = now - startTime;
 
-      if (elapsed < durCurva) {
-        // Fase 1: Curvado
-        const p1 = Math.min(1, elapsed / durCurva);
-        const ease1 = Math.sin(p1 * Math.PI / 2);
-        setCurvatura(ease1);
-        setZoom(0.0);
-      } else if (elapsed < durCurva + durZoom) {
-        // Fase 2: Zoom Out
-        setCurvatura(1.0);
-        const p2 = Math.min(1, (elapsed - durCurva) / durZoom);
-        const ease2 = 1 - Math.pow(1 - p2, 3);
-        setZoom(ease2);
-      } else {
-        // Fase 3: Impacto y lanzamiento
-        setCurvatura(1.0);
-        setZoom(1.0);
-        if (!impactoFired) {
-          impactoFired = true;
-          sonarPique(0.42);
-        }
-        const p3 = Math.min(1, (elapsed - durCurva - durZoom) / durLanzar);
-        const ease3 = p3 * p3 * 1.35;
-        if (introBallGroup) {
-          introBallGroup.position.y = ease3 * 0.088;
-          introBallGroup.position.z = -ease3 * 0.12;
-          introBallGroup.rotation.x = -ease3 * 2.8;
-        }
+      // Fase 1: Curvatura
+      const pCurva = Math.min(1, elapsed / durCurva);
+      const easeCurva = Math.sin(pCurva * Math.PI / 2);
+      setCurvatura(easeCurva);
 
-        const pFade = (elapsed - (durTotal - 90)) / 90;
-        const stage = $('intro-stage');
-        if (pFade > 0 && stage) {
-          stage.style.opacity = `${Math.max(0, 1 - pFade)}`;
-        }
-        renderIntroFrame();
+      // Fase 2: Zoom
+      const zoomStart = durCurva - overlap;
+      if (elapsed >= zoomStart) {
+        const pZoom = Math.min(1, (elapsed - zoomStart) / durZoom);
+        const easeZoom = 1 - Math.pow(1 - pZoom, 3);
+        setZoom(easeZoom);
+      } else {
+        setZoom(0.0);
       }
 
       if (elapsed < durTotal) {
         introAnimId = requestAnimationFrame(loopPlay);
       } else {
         introAnimId = null;
-        introActiva = false;
         animandoCinematica = false;
-        const stage = $('intro-stage');
-        if (stage) stage.style.display = 'none';
-        if (stageLanding) stageLanding.style.display = 'none';
-        acelerarSpinPelotaHeader();
-        if (typeof onResizeVisor === 'function') onResizeVisor();
+        setCurvatura(1.0);
+        setZoom(1.0);
+        if (menuHub) menuHub.classList.add('visible');
+        iniciarIdleSpin();
       }
     }
     introAnimId = requestAnimationFrame(loopPlay);
   }
 }
 
+function initIntroMenu() {
+  document.querySelectorAll('.menu-card-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const modo = btn.dataset.modo;
+      seleccionarModoDesdeIntro(modo);
+    });
+  });
+}
+
+function seleccionarModoDesdeIntro(modo) {
+  sonarPique(0.22);
+  cambiarTab(modo);
+  cerrarIntro();
+}
+
 function initDebugDock() {
   const b0 = $('btn-dock-0');
   const b1 = $('btn-dock-1');
   const b2 = $('btn-dock-2');
-  const b3 = $('btn-dock-3');
   const bPlay = $('btn-dock-play');
   const bMin = $('btn-dock-min');
   const sCurv = $('slider-curvatura');
@@ -3027,7 +3018,6 @@ function initDebugDock() {
   if (b0) b0.addEventListener('click', () => ejecutarEtapa(0));
   if (b1) b1.addEventListener('click', () => ejecutarEtapa(1));
   if (b2) b2.addEventListener('click', () => ejecutarEtapa(2));
-  if (b3) b3.addEventListener('click', () => ejecutarEtapa(3));
   if (bPlay) bPlay.addEventListener('click', () => ejecutarEtapa('play'));
 
   if (bMin && dock) {
@@ -3040,6 +3030,7 @@ function initDebugDock() {
   if (sCurv) {
     sCurv.addEventListener('input', (e) => {
       cancelarAnimacionActual();
+      detenerIdleSpin();
       setCurvatura(parseFloat(e.target.value));
     });
   }
@@ -3047,6 +3038,7 @@ function initDebugDock() {
   if (sZoom) {
     sZoom.addEventListener('input', (e) => {
       cancelarAnimacionActual();
+      detenerIdleSpin();
       setZoom(parseFloat(e.target.value));
     });
   }
@@ -3064,6 +3056,7 @@ function deslizarYComenzar() {
 function cerrarIntro() {
   introActiva = false;
   animandoCinematica = false;
+  detenerIdleSpin();
   cancelarAnimacionActual();
   const stage = $('intro-stage');
   const stageLanding = $('stage-landing');
@@ -3126,8 +3119,8 @@ window.addEventListener('keydown', (ev) => {
 
 function iniciarTodoThree() {
   if (window.THREE) {
-    setupHeaderBall();
     initIntroBall();
+    initIntroMenu();
     initDebugDock();
   }
 }
