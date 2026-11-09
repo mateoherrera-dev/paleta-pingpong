@@ -764,7 +764,15 @@
     height: 100vh;
     z-index: 100;
     overflow: hidden;
-    background: #080c14; /* Fondo oscuro del estadio */
+    background:
+      /* Halo de reflector cenital de estadio sobre la pelota */
+      radial-gradient(ellipse 680px 420px at 50% 36%, rgba(255, 119, 0, 0.12), transparent 65%),
+      /* Sombra de contacto / superficie de mesa bajo la esfera */
+      radial-gradient(ellipse 320px 42px at 50% 56%, rgba(0, 0, 0, 0.72), transparent 70%),
+      /* Línea reglamentaria sutil de cancha ITTF que ancla la escena */
+      linear-gradient(90deg, transparent 5%, rgba(255, 255, 255, 0.04) 20%, rgba(255, 119, 0, 0.18) 50%, rgba(255, 255, 255, 0.04) 80%, transparent 95%) 50% 56% / 90% 1px no-repeat,
+      /* Degradé de estadio deportivo profundo */
+      linear-gradient(180deg, #070a12 0%, #0a0f1c 55%, #050811 100%);
     pointer-events: none;
     transition: opacity 0.3s ease;
     will-change: opacity;
@@ -853,14 +861,14 @@
   /* --- Hub de Selección de Modo (Fila Horizontal Inferior) --- */
   .intro-menu-hub {
     position: absolute;
-    bottom: clamp(20px, 4vh, 40px);
+    bottom: clamp(24px, 5vh, 48px);
     left: 50%;
     transform: translateX(-50%) translateY(20px);
-    width: min(860px, calc(100vw - 32px));
+    width: min(920px, calc(100vw - 32px));
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
+    gap: 12px;
     z-index: 10;
     pointer-events: none;
     opacity: 0;
@@ -871,17 +879,32 @@
     transform: translateX(-50%) translateY(0);
     pointer-events: auto;
   }
-  .menu-hub-title {
-    font-size: 0.70rem;
+  .menu-hub-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    user-select: none;
+  }
+  .hub-tag {
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
     font-weight: 700;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.16em;
+    color: var(--accent);
     text-transform: uppercase;
-    color: rgba(255, 255, 255, 0.50);
+  }
+  .menu-hub-title {
+    font-size: 0.82rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: rgba(248, 250, 252, 0.85);
   }
   .menu-hub-grid {
     display: flex;
     flex-direction: row;
-    gap: 12px;
+    gap: 14px;
     width: 100%;
     justify-content: center;
   }
@@ -889,70 +912,101 @@
     flex: 1;
     min-width: 0;
     display: flex;
-    align-items: center;
+    flex-direction: column;
+    justify-content: space-between;
     gap: 10px;
-    background: rgba(15, 23, 42, 0.88);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 12px;
-    padding: 11px 14px;
+    background: rgba(13, 19, 32, 0.78);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-top: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 14px;
+    padding: 14px 16px;
     color: #ffffff;
     cursor: pointer;
     text-align: left;
-    transition: transform 0.16s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+    transition: transform 0.18s cubic-bezier(0.23, 1, 0.32, 1), background-color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+    position: relative;
+    overflow: hidden;
   }
   .menu-card-btn:hover {
-    background: rgba(30, 41, 59, 0.95);
-    border-color: rgba(255, 119, 0, 0.55);
-    transform: translateY(-2px) scale(1.02);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45), 0 0 14px rgba(255, 119, 0, 0.25);
+    background: rgba(20, 29, 48, 0.94);
+    border-color: rgba(255, 119, 0, 0.45);
+    border-top-color: #ff7700;
+    transform: translateY(-2px);
+    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.55), 0 0 20px rgba(255, 119, 0, 0.18);
   }
   .menu-card-btn:active {
     transform: translateY(0) scale(0.97);
   }
-  .menu-card-icon {
-    font-size: 1.35rem;
-    line-height: 1;
-    flex-shrink: 0;
+  .card-meta-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+  }
+  .card-idx {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.10em;
+    color: var(--accent);
+  }
+  .card-svg {
+    color: rgba(255, 255, 255, 0.45);
+    transition: color 0.18s ease, transform 0.18s ease;
+  }
+  .menu-card-btn:hover .card-svg {
+    color: #ffffff;
+    transform: scale(1.08);
   }
   .menu-card-info {
     flex: 1;
     min-width: 0;
   }
   .menu-card-name {
-    font-size: 0.88rem;
+    font-size: 0.94rem;
     font-weight: 800;
-    letter-spacing: -0.01em;
+    letter-spacing: -0.015em;
     color: #f8fafc;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    margin-top: 2px;
   }
   .menu-card-desc {
-    font-size: 0.68rem;
-    color: #94a3b8;
-    margin-top: 2px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    font-size: 0.72rem;
+    color: var(--muted);
+    line-height: 1.35;
+    margin-top: 3px;
   }
-  .menu-card-arrow {
+  .card-meta-bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    margin-top: 2px;
+  }
+  .card-sub-tag {
+    font-size: 0.66rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.45);
+    letter-spacing: 0.02em;
+  }
+  .card-chevron {
     color: rgba(255, 255, 255, 0.35);
     font-size: 0.85rem;
-    transition: transform 0.16s ease, color 0.16s ease;
-    flex-shrink: 0;
+    font-weight: 700;
+    transition: transform 0.18s ease, color 0.18s ease;
   }
-  .menu-card-btn:hover .menu-card-arrow {
-    color: #ff7700;
+  .menu-card-btn:hover .card-chevron {
+    color: var(--accent);
     transform: translateX(3px);
   }
 
   @media (max-width: 680px) {
     .menu-hub-grid {
       flex-direction: column;
-      gap: 8px;
+      gap: 10px;
     }
   }
 
@@ -996,31 +1050,65 @@
 
   <!-- Hub de Selección de Modo (Aparece bajo la esfera al terminar el Zoom Out) -->
   <div id="intro-menu-hub" class="intro-menu-hub">
-    <div class="menu-hub-title">Elegí tu modo de entrenamiento</div>
+    <div class="menu-hub-header">
+      <span class="hub-tag">DOC · SISTEMA DE ENTRENAMIENTO</span>
+      <div class="menu-hub-title">Elegí el modo de sesión</div>
+    </div>
     <div class="menu-hub-grid">
       <button type="button" class="menu-card-btn" data-modo="libre">
-        <div class="menu-card-icon">🎯</div>
+        <div class="card-meta-top">
+          <span class="card-idx">01 // EN VIVO</span>
+          <svg class="card-svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+        </div>
         <div class="menu-card-info">
           <div class="menu-card-name">Modo Libre</div>
           <div class="menu-card-desc">Telemetría biomecánica y visor 3D en tiempo real</div>
         </div>
-        <div class="menu-card-arrow">➔</div>
+        <div class="card-meta-bottom">
+          <span class="card-sub-tag">Sesión abierta</span>
+          <span class="card-chevron">→</span>
+        </div>
       </button>
+
       <button type="button" class="menu-card-btn" data-modo="tutorial">
-        <div class="menu-card-icon">🎓</div>
+        <div class="card-meta-top">
+          <span class="card-idx">02 // GUIADO</span>
+          <svg class="card-svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <circle cx="12" cy="12" r="4"/>
+            <path d="M12 2v4M12 18v4M2 12h4M18 12h4"/>
+          </svg>
+        </div>
         <div class="menu-card-info">
           <div class="menu-card-name">Tutorial</div>
-          <div class="menu-card-desc">Entrenador guiado: ángulo, brushing y timing</div>
+          <div class="menu-card-desc">Entrenador de ángulo, brushing y timing paso a paso</div>
         </div>
-        <div class="menu-card-arrow">➔</div>
+        <div class="card-meta-bottom">
+          <span class="card-sub-tag">3 niveles guiados</span>
+          <span class="card-chevron">→</span>
+        </div>
       </button>
+
       <button type="button" class="menu-card-btn" data-modo="test">
-        <div class="menu-card-icon">📊</div>
+        <div class="card-meta-top">
+          <span class="card-idx">03 // TINYML</span>
+          <svg class="card-svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="4" y="4" width="16" height="16" rx="2"/>
+            <rect x="9" y="9" width="6" height="6"/>
+            <path d="M9 1v3M15 1v3M9 20v3M15 20v3M1 9h3M1 15h3M20 9h3M20 15h3"/>
+          </svg>
+        </div>
         <div class="menu-card-info">
           <div class="menu-card-name">Benchmark</div>
-          <div class="menu-card-desc">Validación de aciertos TinyML por tandas</div>
+          <div class="menu-card-desc">Validación de aciertos del modelo IA en placa</div>
         </div>
-        <div class="menu-card-arrow">➔</div>
+        <div class="card-meta-bottom">
+          <span class="card-sub-tag">Inferencia en chip</span>
+          <span class="card-chevron">→</span>
+        </div>
       </button>
     </div>
   </div>
@@ -2530,6 +2618,12 @@ function initIntroBall() {
   introScene.add(dir);
   introScene.userData.dirLight = dir;
 
+  // Luz de contra (rim light) naranja que separa la pelota del estadio al hacer zoom out
+  const rim = new THREE.DirectionalLight(0xff7700, 0.0);
+  rim.position.set(-0.35, -0.45, -0.25);
+  introScene.add(rim);
+  introScene.userData.rimLight = rim;
+
   // Esfera 3D 100% CERRADA (polos curvos y continuos, sin cortes planos)
   const sphereGeo = new THREE.SphereGeometry(1.0, 64, 48);
   const pos = sphereGeo.attributes.position;
@@ -2718,6 +2812,10 @@ function setZoom(t) {
   introBallGroup.scale.set(R, R, R);
   introBallGroup.position.set(0, 0, 0); // La pelota permanece 100% en el centro (sin subir ni marear)
   introCamera.position.z = zCam;
+
+  if (introScene && introScene.userData.rimLight) {
+    introScene.userData.rimLight.intensity = currentZoom * 0.55;
+  }
 
   actualizarUVs();
 
