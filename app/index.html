@@ -2689,15 +2689,15 @@ function initIntroBall() {
   uvsSphLanding = new Float32Array(count * 2);
   uvsSphBall = new Float32Array(count * 2);
 
-  // Calibración unificada de curvatura y escala:
-  // - En Landing (scaleLanding = 0.82): la tipografía plana 2D ocupa el ~33% del alto de pantalla,
-  //   con aire naranja elegante y respirable.
-  // - En la esfera 3D (scaleBall = 0.14): el sello ITTF abarca el ~52% del ancho y ~34% del alto
-  //   de la pelota con 39.7° de curvatura esférica real.
-  // - Al unificar la escala esférica (uvsSphLanding == uvsSphBall), la curvatura desde el inicio
-  //   es 100% idéntica a la final, y se ELIMINA totalmente el efecto de agrandar las letras en el zoom out.
+  // Calibración de curvatura armónica en dos fases ('curvado a medias' y completado con zoom out):
+  // - En Landing (scaleLanding = 0.82): tipografía plana 2D al ~33% de la pantalla, limpia y espaciosa.
+  // - Estado 1 (scaleCurva1 = 0.55): curvado intermedio a medias (~10.1° de arco, ~49% de alto en pantalla),
+  //   muestra volumen y luz 3D visible sin agrandarse de golpe ni salirse de cuadro.
+  // - Estado 2 / Menú (scaleBall = 0.16): curvatura completa (~34.7° de arco, sello oficial ITTF ~30% de la esfera),
+  //   completándose de forma sincronizada con el alejamiento de la cámara para que en pantalla el tamaño sea siempre suave.
   const scaleLanding = 0.82;
-  const scaleBall = 0.14;
+  const scaleCurva1 = 0.55;
+  const scaleBall = 0.16;
 
   for (let i = 0; i < count; i++) {
     const x = pos.getX(i);
@@ -2715,34 +2715,39 @@ function initIntroBall() {
     uvsFlat[i * 2] = Math.max(0.02, Math.min(0.98, uF));
     uvsFlat[i * 2 + 1] = Math.max(0.02, Math.min(0.98, vF));
 
-    // 2. uvSphLanding & 3. uvSphBall: Mapeo esférico único y consistente.
-    // Curva la tipografía con su auténtica profundidad 3D desde el primer instante
-    // sin deformaciones ni inflación de tamaño durante el zoom out.
-    let uS = 0.5, vS = 0.5;
+    // 2. uvSphLanding: Curvado intermedio 'a medias' (volumen visible sin agrandarse desproporcionadamente)
+    // 3. uvSphBall: Esfera completa en zoom out con proporción oficial ITTF
+    let uSL = 0.5, vSL = 0.5;
+    let uSB = 0.5, vSB = 0.5;
     if (rxy < 1e-6) {
       if (zc > 0) {
-        uS = 0.5; vS = 0.5;
+        uSL = 0.5; vSL = 0.5;
+        uSB = 0.5; vSB = 0.5;
       } else {
-        uS = 0.04; vS = 0.04;
+        uSL = 0.04; vSL = 0.04;
+        uSB = 0.04; vSB = 0.04;
       }
     } else {
       const theta = Math.acos(zc);
-      let r_uv_S;
+      let r_uv_L, r_uv_B;
       if (theta <= thetaMax) {
-        r_uv_S = (theta / thetaMax) * scaleBall;
+        r_uv_L = (theta / thetaMax) * scaleCurva1;
+        r_uv_B = (theta / thetaMax) * scaleBall;
       } else {
-        // Fuera del sello, se extiende suavemente hacia los márgenes naranjas sin cortes
         const frac = Math.min(1.0, (theta - thetaMax) / (Math.PI / 2 - thetaMax));
-        r_uv_S = scaleBall + frac * (0.45 - scaleBall);
+        r_uv_L = scaleCurva1 + frac * (0.45 - scaleCurva1);
+        r_uv_B = scaleBall + frac * (0.45 - scaleBall);
       }
 
-      uS = Math.max(0.02, Math.min(0.98, 0.5 + (x / rxy) * r_uv_S));
-      vS = Math.max(0.02, Math.min(0.98, 0.5 + (y / rxy) * r_uv_S));
+      uSL = Math.max(0.02, Math.min(0.98, 0.5 + (x / rxy) * r_uv_L));
+      vSL = Math.max(0.02, Math.min(0.98, 0.5 + (y / rxy) * r_uv_L));
+      uSB = Math.max(0.02, Math.min(0.98, 0.5 + (x / rxy) * r_uv_B));
+      vSB = Math.max(0.02, Math.min(0.98, 0.5 + (y / rxy) * r_uv_B));
     }
-    uvsSphLanding[i * 2] = uS;
-    uvsSphLanding[i * 2 + 1] = vS;
-    uvsSphBall[i * 2] = uS;
-    uvsSphBall[i * 2 + 1] = vS;
+    uvsSphLanding[i * 2] = uSL;
+    uvsSphLanding[i * 2 + 1] = vSL;
+    uvsSphBall[i * 2] = uSB;
+    uvsSphBall[i * 2 + 1] = vSB;
   }
 
   introCanvasTex = crearTexturaPelotaIntro();
@@ -3004,22 +3009,21 @@ function ejecutarEtapa(etapa) {
       menuHub.classList.remove('visible');
     }
 
-    const durCurva = 260;
-    const durZoom = 420;
-    const overlap = 60; // El zoom arranca 60ms antes de terminar la curva para que no se sienta rígido
-    const durTotal = durCurva + durZoom - overlap;
+    const durCurva = 320;
+    const durZoom = 460;
+    const zoomStart = 140; // El zoom arranca 'a medias' del curvado (~44%), fundiendo el resto de la curva con el alejamiento
+    const durTotal = zoomStart + durZoom;
     const startTime = performance.now();
 
     function loopPlay(now) {
       const elapsed = now - startTime;
 
-      // Fase 1: Curvatura
+      // Fase 1: Curvatura (inicia primero curvando a medias con luz 3D suave)
       const pCurva = Math.min(1, elapsed / durCurva);
       const easeCurva = Math.sin(pCurva * Math.PI / 2);
       setCurvatura(easeCurva);
 
-      // Fase 2: Zoom
-      const zoomStart = durCurva - overlap;
+      // Fase 2: Zoom (arranca a medias y acompaña el resto de la curvatura en un solo movimiento fluido)
       if (elapsed >= zoomStart) {
         const pZoom = Math.min(1, (elapsed - zoomStart) / durZoom);
         const easeZoom = 1 - Math.pow(1 - pZoom, 3);
