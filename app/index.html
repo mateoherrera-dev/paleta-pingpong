@@ -792,125 +792,6 @@
     opacity: 0;
   }
 
-  /* --- Barra Flotante de Testeo / Debug de Animación --- */
-  .debug-dock {
-    position: fixed;
-    bottom: 24px;
-    right: 24px;
-    z-index: 200;
-    background: rgba(15, 23, 42, 0.94);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    border-radius: 12px;
-    padding: 12px 14px;
-    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.55), 0 2px 6px rgba(0, 0, 0, 0.3);
-    color: #e2e8f0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    font-size: 0.75rem;
-    pointer-events: auto;
-    user-select: none;
-    -webkit-user-select: none;
-    width: 310px;
-    box-sizing: border-box;
-    transition: transform 0.2s ease, opacity 0.2s ease;
-  }
-  .debug-dock-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    margin-bottom: 8px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    padding-bottom: 6px;
-  }
-  .debug-dock-title {
-    font-weight: 800;
-    letter-spacing: 0.08em;
-    font-size: 0.72rem;
-    color: #38bdf8;
-  }
-  .btn-dock-toggle {
-    background: transparent;
-    border: none;
-    color: #94a3b8;
-    cursor: pointer;
-    font-size: 0.85rem;
-    padding: 0 4px;
-    line-height: 1;
-  }
-  .btn-dock-toggle:hover {
-    color: #ffffff;
-  }
-  .debug-dock-buttons {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 5px;
-    margin-bottom: 10px;
-  }
-  .btn-dock {
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    color: #f1f5f9;
-    border-radius: 6px;
-    padding: 5px 8px;
-    font-size: 0.71rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.12s ease, transform 0.1s ease;
-  }
-  .btn-dock:hover {
-    background: rgba(255, 255, 255, 0.18);
-    transform: translateY(-1px);
-  }
-  .btn-dock:active {
-    transform: translateY(0) scale(0.97);
-  }
-  .btn-dock.activo {
-    background: #0284c7;
-    border-color: #38bdf8;
-    color: #ffffff;
-  }
-  .btn-dock-play {
-    background: #ea580c;
-    border-color: #f97316;
-    font-weight: 700;
-  }
-  .btn-dock-play:hover {
-    background: #c2410c;
-  }
-  .debug-dock-sliders {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-  .dock-slider-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 0.69rem;
-    color: #cbd5e1;
-  }
-  .dock-slider-row span:first-child {
-    width: 65px;
-    font-weight: 600;
-  }
-  .dock-slider-row input[type="range"] {
-    flex: 1;
-    accent-color: #38bdf8;
-    cursor: pointer;
-    height: 4px;
-  }
-  .dock-val {
-    width: 36px;
-    text-align: right;
-    font-family: monospace;
-    color: #38bdf8;
-    font-weight: 700;
-  }
-  .debug-dock.minimizado #debug-dock-body {
-    display: none;
-  }
   #intro-actions-wrap {
     position: absolute;
     bottom: clamp(32px, 7vh, 64px);
@@ -1141,34 +1022,6 @@
         </div>
         <div class="menu-card-arrow">➔</div>
       </button>
-    </div>
-  </div>
-</div>
-
-<!-- Barra Flotante de Depuración / Testeo de Animación -->
-<div id="debug-dock" class="debug-dock">
-  <div class="debug-dock-header">
-    <span class="debug-dock-title">🧪 TEST DE ANIMACIÓN</span>
-    <button type="button" class="btn-dock-toggle" id="btn-dock-min" title="Minimizar / Expandir">—</button>
-  </div>
-  <div class="debug-dock-body" id="debug-dock-body">
-    <div class="debug-dock-buttons">
-      <button type="button" class="btn-dock" id="btn-dock-0">0. Landing 2D</button>
-      <button type="button" class="btn-dock" id="btn-dock-1">1. Curvar</button>
-      <button type="button" class="btn-dock" id="btn-dock-2">2. Zoom / Menú</button>
-      <button type="button" class="btn-dock btn-dock-play" id="btn-dock-play">▶ Play Todo</button>
-    </div>
-    <div class="debug-dock-sliders">
-      <label class="dock-slider-row">
-        <span>Curvatura:</span>
-        <input type="range" id="slider-curvatura" min="0" max="1" step="0.01" value="0">
-        <span class="dock-val" id="val-curvatura">0.00</span>
-      </label>
-      <label class="dock-slider-row">
-        <span>Zoom 3D:</span>
-        <input type="range" id="slider-zoom" min="0" max="1" step="0.01" value="0">
-        <span class="dock-val" id="val-zoom">Cerca</span>
-      </label>
     </div>
   </div>
 </div>
@@ -2822,11 +2675,6 @@ function setCurvatura(t) {
     introScene.userData.ambLight.intensity = 1.0 - currentCurvatura * 0.20;
   }
 
-  const slider = $('slider-curvatura');
-  if (slider && document.activeElement !== slider) slider.value = currentCurvatura;
-  const valSpan = $('val-curvatura');
-  if (valSpan) valSpan.textContent = currentCurvatura.toFixed(2);
-
   renderIntroFrame();
 }
 
@@ -2873,11 +2721,6 @@ function setZoom(t) {
 
   actualizarUVs();
 
-  const slider = $('slider-zoom');
-  if (slider && document.activeElement !== slider) slider.value = currentZoom;
-  const valSpan = $('val-zoom');
-  if (valSpan) valSpan.textContent = currentZoom === 0 ? 'Cerca' : (currentZoom === 1 ? 'Lejos' : currentZoom.toFixed(2));
-
   renderIntroFrame();
 }
 
@@ -2887,12 +2730,6 @@ function cancelarAnimacionActual() {
     introAnimId = null;
   }
   animandoCinematica = false;
-}
-
-function actualizarBotonesActivos(activoId) {
-  document.querySelectorAll('.btn-dock').forEach(b => b.classList.remove('activo'));
-  const b = $(activoId);
-  if (b) b.classList.add('activo');
 }
 
 function ejecutarEtapa(etapa) {
@@ -2918,7 +2755,6 @@ function ejecutarEtapa(etapa) {
     // -----------------------------------------------------------------
     // ESTADO 0: Landing 2D Plana en reposo
     // -----------------------------------------------------------------
-    actualizarBotonesActivos('btn-dock-0');
     setCurvatura(0.0);
     setZoom(0.0);
     if (introBallGroup) {
@@ -2938,7 +2774,6 @@ function ejecutarEtapa(etapa) {
     // -----------------------------------------------------------------
     // ESTADO 1: Curvado de tipografía e iluminación 3D
     // -----------------------------------------------------------------
-    actualizarBotonesActivos('btn-dock-1');
     if (actionsWrap) {
       actionsWrap.style.opacity = '0';
       actionsWrap.style.pointerEvents = 'none';
@@ -2970,7 +2805,6 @@ function ejecutarEtapa(etapa) {
     // -----------------------------------------------------------------
     // ESTADO 2: Zoom Out hacia el Menú de Modos (Pelota girando)
     // -----------------------------------------------------------------
-    actualizarBotonesActivos('btn-dock-2');
     setCurvatura(1.0);
     if (actionsWrap) {
       actionsWrap.style.opacity = '0';
@@ -2997,7 +2831,6 @@ function ejecutarEtapa(etapa) {
     // -----------------------------------------------------------------
     // PLAY: Curvado -> Zoom Out fluido -> Menú de Modos interactivo
     // -----------------------------------------------------------------
-    actualizarBotonesActivos('btn-dock-play');
     animandoCinematica = true;
     sonarTensionAire(0.18);
 
@@ -3063,45 +2896,6 @@ function seleccionarModoDesdeIntro(modo) {
   sonarPique(0.22);
   cambiarTab(modo);
   cerrarIntro();
-}
-
-function initDebugDock() {
-  const b0 = $('btn-dock-0');
-  const b1 = $('btn-dock-1');
-  const b2 = $('btn-dock-2');
-  const bPlay = $('btn-dock-play');
-  const bMin = $('btn-dock-min');
-  const sCurv = $('slider-curvatura');
-  const sZoom = $('slider-zoom');
-  const dock = $('debug-dock');
-
-  if (b0) b0.addEventListener('click', () => ejecutarEtapa(0));
-  if (b1) b1.addEventListener('click', () => ejecutarEtapa(1));
-  if (b2) b2.addEventListener('click', () => ejecutarEtapa(2));
-  if (bPlay) bPlay.addEventListener('click', () => ejecutarEtapa('play'));
-
-  if (bMin && dock) {
-    bMin.addEventListener('click', () => {
-      dock.classList.toggle('minimizado');
-      bMin.textContent = dock.classList.contains('minimizado') ? '+' : '—';
-    });
-  }
-
-  if (sCurv) {
-    sCurv.addEventListener('input', (e) => {
-      cancelarAnimacionActual();
-      detenerIdleSpin();
-      setCurvatura(parseFloat(e.target.value));
-    });
-  }
-
-  if (sZoom) {
-    sZoom.addEventListener('input', (e) => {
-      cancelarAnimacionActual();
-      detenerIdleSpin();
-      setZoom(parseFloat(e.target.value));
-    });
-  }
 }
 
 function deslizarYComenzar() {
@@ -3181,7 +2975,6 @@ function iniciarTodoThree() {
   if (window.THREE) {
     initIntroBall();
     initIntroMenu();
-    initDebugDock();
   }
 }
 
