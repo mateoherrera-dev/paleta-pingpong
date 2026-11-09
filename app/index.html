@@ -1330,11 +1330,7 @@
       <!-- Columna Izquierda: Visor 3D Libre y Consejo de Doc -->
       <section class="studio-stage">
         <div class="hero-strike-header">
-          <div>
-            <span class="sub-heading">Golpe detectado</span>
-            <div class="strike-title" id="golpe">Esperando golpe…</div>
-          </div>
-          <div class="strike-conf-badge" id="certeza">Certeza: –</div>
+          <div class="strike-title" id="golpe">Esperando golpe…</div>
         </div>
 
         <!-- Visor 3D Libre y Expansivo (Limpio y sin marcas de agua) -->
@@ -1420,6 +1416,7 @@
       <span id="dbg-cara"></span><span id="dbg-vel"></span><span id="dbg-ang"></span>
       <span id="dbg-pico"></span><span id="dbg-score"></span><span id="dbg-q"></span>
       <span id="visor-cara"></span>
+      <span id="certeza"></span>
       <pre id="dbg-log"></pre>
     </div>
   </div>
@@ -2087,7 +2084,8 @@ function mostrar(e, registrarSesion = true) {
   actualizarVisor3D(e.ang, e.golpe, e.q);
   if (typeof acelerarSpinPelotaHeader === 'function') acelerarSpinPelotaHeader();
   if (typeof reaccionarImpactoPelota === 'function') reaccionarImpactoPelota();
-  $('certeza').textContent = e.conf !== null ? `Certeza del modelo: ${e.conf} %` : '';
+  const elCerteza = $('certeza');
+  if (elCerteza) elCerteza.textContent = e.conf !== null ? `${e.conf} %` : '';
   $('consejo').textContent = c.texto;
   $('consejo').classList.toggle('ok', c.ok);
   if (registrarSesion) decir(c.texto);
