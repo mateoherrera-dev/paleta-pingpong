@@ -273,7 +273,7 @@
   .studio-panel {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 14px;
     background: rgba(11, 17, 30, 0.82);
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
@@ -285,7 +285,7 @@
     height: 100%;
     min-height: 0;
     box-sizing: border-box;
-    justify-content: space-between;
+    justify-content: flex-start;
   }
 
   /* --- Secciones y Superficies Unificadas --- */
@@ -375,6 +375,7 @@
     width: 100%;
     flex: 1;
     min-height: 230px;
+    max-height: 480px;
     border-radius: 14px;
     background: radial-gradient(circle at 50% 50%, rgba(22, 36, 60, 0.55) 0%, rgba(6, 10, 18, 0.95) 100%);
     overflow: hidden;
@@ -577,16 +578,14 @@
 
   /* --- Tarjeta del Coach DOC --- */
   .doc-card {
-    background: rgba(255, 119, 0, 0.05);
-    border: 1px solid rgba(255, 119, 0, 0.22);
+    background: rgba(255, 255, 255, 0.035);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: var(--radius-md);
     padding: 12px 14px;
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    gap: 6px;
-    flex: 1;
-    min-height: 75px;
+    gap: 8px;
+    flex: none;
   }
   .doc-header {
     display: flex;
@@ -602,12 +601,12 @@
     width: 22px;
     height: 22px;
     border-radius: 50%;
-    background: rgba(255, 119, 0, 0.2);
+    background: rgba(255, 255, 255, 0.06);
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 0.74rem;
-    border: 1px solid rgba(255, 119, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.12);
   }
   .doc-name {
     font-weight: 800;
@@ -635,13 +634,13 @@
     height: 14px;
   }
   .doc-bubble {
-    font-size: 0.84rem;
-    line-height: 1.4;
-    color: #f8fafc;
+    font-size: 0.86rem;
+    line-height: 1.45;
+    color: rgba(248, 250, 252, 0.95);
     transition: color 0.15s ease;
   }
   .doc-bubble.ok {
-    color: #a7f3d0;
+    color: #34d399;
   }
 
   /* --- Indicadores de Estado y Metadatos (Texto Normal) --- */
@@ -720,13 +719,12 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 18px 22px;
+    padding: 16px 20px;
     background: rgba(6, 10, 18, 0.65);
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: var(--radius-md);
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
-    flex: 1;
-    min-height: 120px;
+    flex: none;
   }
   .benchmark-hud .hud-title {
     font-size: 0.68rem;
@@ -787,13 +785,11 @@
     background: rgba(255, 255, 255, 0.025);
     border: 1px solid rgba(255, 255, 255, 0.07);
     border-radius: var(--radius-md);
-    padding: 16px 18px;
+    padding: 14px 18px;
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    gap: 10px;
-    flex: 1;
-    min-height: 120px;
+    gap: 8px;
+    flex: none;
   }
   .challenge-top {
     display: flex;
@@ -1450,7 +1446,7 @@
           </div>
         </div>
 
-        <!-- Navegador de Impactos y Sesión -->
+        <!-- Navegador de Impactos -->
         <div class="feed-wrap">
           <div class="impacto-nav-card">
             <div class="impacto-nav-header">
@@ -1465,19 +1461,13 @@
               <span class="vacio-inline">Todavía no hay golpes registrados.</span>
             </div>
           </div>
-
-          <div class="session-feed-header" style="margin-top:6px;">
-            <span class="sub-heading">Distribución de la sesión</span>
-            <div class="conteo-inline" id="conteo">
-              <span class="vacio-inline">Esperando primeros golpes…</span>
-            </div>
-          </div>
         </div>
       </aside>
     </div>
 
     <!-- Contenedor técnico oculto para telemetría cruda en memoria -->
     <div id="panel-debug" style="display:none;" aria-hidden="true">
+      <span id="conteo"></span>
       <span id="dbg-tam"></span><span id="dbg-tipo"></span><span id="dbg-conf"></span>
       <span id="dbg-cara"></span><span id="dbg-vel"></span><span id="dbg-ang"></span>
       <span id="dbg-pico"></span><span id="dbg-score"></span><span id="dbg-q"></span>
