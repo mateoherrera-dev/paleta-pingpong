@@ -47,8 +47,11 @@
   }
   body {
     margin: 0;
-    background: var(--bg);
-    background-image: radial-gradient(ellipse 90% 50% at 50% -10%, rgba(255, 119, 0, 0.07), transparent 70%);
+    background: #060911;
+    background-image:
+      radial-gradient(circle at 15% 10%, rgba(2, 132, 199, 0.12) 0%, transparent 45%),
+      radial-gradient(circle at 85% 8%, rgba(255, 119, 0, 0.10) 0%, transparent 40%),
+      radial-gradient(circle at 50% 90%, rgba(16, 185, 129, 0.05) 0%, transparent 50%);
     background-attachment: fixed;
     color: var(--fg);
     font: 15px/1.5 var(--font);
@@ -473,12 +476,16 @@
     min-height: 230px;
     max-height: 480px;
     border-radius: 14px;
-    background: radial-gradient(circle at 50% 50%, rgba(22, 36, 60, 0.55) 0%, rgba(6, 10, 18, 0.95) 100%);
+    background:
+      radial-gradient(circle at 50% 25%, rgba(2, 132, 199, 0.18) 0%, transparent 60%),
+      radial-gradient(circle at 50% 75%, rgba(255, 119, 0, 0.12) 0%, transparent 60%),
+      linear-gradient(180deg, rgba(15, 23, 42, 0.6) 0%, rgba(6, 10, 18, 0.95) 100%);
     overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 8px 24px rgba(0, 0, 0, 0.4);
   }
   @media (max-width: 600px) {
     .visor-stage {
@@ -611,15 +618,32 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
+    gap: 10px;
     font-size: 0.74rem;
     color: var(--fg-muted);
-    padding: 2px 4px;
-    background: transparent;
-    border: none;
+    padding: 6px 14px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: var(--radius-pill);
     text-align: center;
   }
-  .agarre-banner b { color: var(--fg); font-weight: 600; }
+  .agarre-tag-negra {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    color: #f1f5f9;
+    font-weight: 700;
+  }
+  .agarre-tag-roja {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    color: #f87171;
+    font-weight: 700;
+  }
+  .agarre-sep {
+    color: rgba(255, 255, 255, 0.22);
+  }
 
   /* --- Instrumental de Métricas Consolidado (Grid 2x2 para Panel Lateral) --- */
   .telemetry-grid {
@@ -641,10 +665,12 @@
     border: 1px solid rgba(255, 255, 255, 0.06);
     border-radius: var(--radius-sm);
     transition: background-color var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out);
+    position: relative;
+    overflow: hidden;
   }
   .telemetry-cell:hover {
     background: rgba(255, 255, 255, 0.045);
-    border-color: rgba(255, 255, 255, 0.10);
+    border-color: rgba(255, 255, 255, 0.12);
   }
   .telemetry-label {
     font-size: 0.66rem;
@@ -672,16 +698,70 @@
     font-family: var(--font);
   }
 
+  /* Modificadores Cromáticos de Telemetría Deportiva */
+  .cell-speed {
+    border-top: 2px solid rgba(56, 189, 248, 0.85);
+    background: linear-gradient(180deg, rgba(56, 189, 248, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+  }
+  .cell-speed .telemetry-label { color: #38bdf8; }
+  .cell-speed .telemetry-val { color: #38bdf8; }
+  .cell-speed .telemetry-unit { color: rgba(56, 189, 248, 0.7); }
+
+  .cell-angle {
+    border-top: 2px solid rgba(251, 146, 60, 0.85);
+    background: linear-gradient(180deg, rgba(251, 146, 60, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+  }
+  .cell-angle .telemetry-label { color: #fb923c; }
+  .cell-angle .telemetry-val { color: #fb923c; }
+  .cell-angle .telemetry-unit { color: rgba(251, 146, 60, 0.7); }
+
+  .cell-timing {
+    border-top: 2px solid rgba(192, 132, 252, 0.85);
+    background: linear-gradient(180deg, rgba(192, 132, 252, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+  }
+  .cell-timing .telemetry-label { color: #c084fc; }
+  .cell-timing .telemetry-val { color: #c084fc; }
+
+  .cell-score {
+    border-top: 2px solid rgba(52, 211, 153, 0.85);
+    background: linear-gradient(180deg, rgba(52, 211, 153, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+  }
+  .cell-score .telemetry-label { color: #34d399; }
+  .cell-score .telemetry-val { color: #34d399; }
+  .cell-score .telemetry-unit { color: rgba(52, 211, 153, 0.7); }
+
+  /* Celdas de Benchmark */
+  .cell-ok {
+    border-top: 2px solid var(--ok);
+    background: linear-gradient(180deg, rgba(16, 185, 129, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%);
+  }
+  .cell-conf {
+    border-top: 2px solid var(--bad);
+    background: linear-gradient(180deg, rgba(244, 63, 94, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%);
+  }
+  .cell-ruido {
+    border-top: 2px solid var(--warn);
+    background: linear-gradient(180deg, rgba(245, 158, 11, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%);
+  }
+  .cell-ia {
+    border-top: 2px solid var(--cyan);
+    background: linear-gradient(180deg, rgba(56, 189, 248, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%);
+  }
+  .cell-ia .telemetry-label { color: #38bdf8; }
+  .cell-ia .telemetry-val { color: #38bdf8; }
+
   /* --- Tarjeta del Coach DOC --- */
   .doc-card {
-    background: rgba(255, 255, 255, 0.035);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.02) 100%);
     border: 1px solid rgba(255, 255, 255, 0.08);
+    border-left: 3px solid #38bdf8;
     border-radius: var(--radius-md);
     padding: 12px 14px;
     display: flex;
     flex-direction: column;
     gap: 8px;
     flex: none;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
   }
   .doc-header {
     display: flex;
@@ -694,25 +774,27 @@
     gap: 8px;
   }
   .doc-avatar {
-    width: 22px;
-    height: 22px;
+    width: 24px;
+    height: 24px;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.06);
+    background: linear-gradient(135deg, rgba(56, 189, 248, 0.25), rgba(255, 119, 0, 0.2));
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.74rem;
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    font-size: 0.78rem;
+    border: 1px solid rgba(56, 189, 248, 0.4);
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.15);
   }
   .doc-name {
     font-weight: 800;
-    font-size: 0.84rem;
+    font-size: 0.86rem;
     color: #fff;
     line-height: 1.1;
   }
   .doc-role {
     font-size: 0.68rem;
-    color: var(--fg-muted);
+    color: #38bdf8;
+    font-weight: 600;
   }
   .doc-voice-toggle {
     display: flex;
@@ -739,22 +821,37 @@
     color: #34d399;
   }
 
-  /* --- Indicadores de Estado y Metadatos (Texto Normal) --- */
+  /* --- Badges Semánticos con Contraste Deportivo --- */
   .badge {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    font-size: 0.78rem;
-    font-weight: 600;
-    padding: 0;
-    background: transparent;
-    border: none;
+    font-size: 0.76rem;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: var(--radius-pill);
     letter-spacing: normal;
   }
-  .badge-ok { color: var(--ok); }
-  .badge-bad { color: var(--bad); }
-  .badge-warn { color: var(--warn); }
-  .badge-neutral { color: var(--fg-muted); }
+  .badge-ok {
+    color: #34d399;
+    background: rgba(16, 185, 129, 0.14);
+    border: 1px solid rgba(16, 185, 129, 0.35);
+  }
+  .badge-bad {
+    color: #fb7185;
+    background: rgba(244, 63, 94, 0.14);
+    border: 1px solid rgba(244, 63, 94, 0.35);
+  }
+  .badge-warn {
+    color: #fbbf24;
+    background: rgba(245, 158, 11, 0.14);
+    border: 1px solid rgba(245, 158, 11, 0.35);
+  }
+  .badge-neutral {
+    color: var(--fg-muted);
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
 
   .chip-group {
     display: flex;
@@ -1089,9 +1186,9 @@
   }
   .hist-num {
     font-family: var(--font-mono);
-    font-size: 0.72rem;
-    color: var(--fg-muted);
-    font-weight: 700;
+    font-size: 0.74rem;
+    color: #38bdf8;
+    font-weight: 800;
   }
   .hist-golpe {
     font-weight: 700;
@@ -1104,18 +1201,22 @@
   .hist-metrics {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
     font-family: var(--font-mono);
-    font-size: 0.76rem;
+    font-size: 0.78rem;
     color: var(--fg-muted);
     white-space: nowrap;
   }
+  .hist-metrics span:nth-child(1) { color: #38bdf8; font-weight: 700; }
+  .hist-metrics span:nth-child(2) { color: #fb923c; font-weight: 700; }
+  .hist-metrics span:nth-child(3) { color: #c084fc; font-weight: 700; }
   .hist-score {
-    background: rgba(255, 119, 0, 0.15);
-    color: var(--accent);
+    background: rgba(16, 185, 129, 0.16);
+    border: 1px solid rgba(16, 185, 129, 0.4);
+    color: #34d399;
     padding: 2px 7px;
     border-radius: var(--radius-pill);
-    font-weight: 700;
+    font-weight: 800;
   }
   .hud-counter {
     display: block;
@@ -1505,7 +1606,10 @@
         </div>
 
         <div class="agarre-banner">
-          <span>Agarre de referencia:</span> <b>⚫ Negra en Derecha · 🔴 Roja en Revés</b>
+          <span>Agarre de referencia:</span>
+          <span class="agarre-tag-negra">⚫ Negra (Derecha)</span>
+          <span class="agarre-sep">·</span>
+          <span class="agarre-tag-roja">🔴 Roja (Revés)</span>
         </div>
       </section>
 
@@ -1514,21 +1618,21 @@
         <div>
           <span class="sub-heading" style="margin-bottom:8px;">Métricas del impacto</span>
           <div class="telemetry-grid">
-            <div class="telemetry-cell">
+            <div class="telemetry-cell cell-speed">
               <div class="telemetry-label">Velocidad</div>
               <div class="telemetry-val"><span id="vel">–</span> <small class="telemetry-unit">km/h</small></div>
             </div>
-            <div class="telemetry-cell">
+            <div class="telemetry-cell cell-angle">
               <div class="telemetry-label">Ángulo</div>
               <div class="telemetry-val"><span id="ang">–</span> <small class="telemetry-unit">°</small></div>
             </div>
-            <div class="telemetry-cell">
+            <div class="telemetry-cell cell-timing">
               <div class="telemetry-label">Timing</div>
               <div class="telemetry-val"><span id="pico">–</span></div>
             </div>
-            <div class="telemetry-cell">
+            <div class="telemetry-cell cell-score">
               <div class="telemetry-label">Score Técnico</div>
-              <div class="telemetry-val"><span id="score-pts" style="color:var(--accent)">–</span> <small class="telemetry-unit">/100</small></div>
+              <div class="telemetry-val"><span id="score-pts">–</span> <small class="telemetry-unit">/100</small></div>
             </div>
           </div>
         </div>
@@ -1659,19 +1763,19 @@
         <div>
           <span class="sub-heading" style="margin-bottom:8px;">Telemetría del último intento</span>
           <div class="telemetry-grid">
-            <div class="telemetry-cell">
+            <div class="telemetry-cell cell-angle">
               <div class="telemetry-label">Ángulo</div>
               <div class="telemetry-val"><span id="tut-stat-ang">–</span></div>
             </div>
-            <div class="telemetry-cell">
+            <div class="telemetry-cell cell-speed">
               <div class="telemetry-label">Velocidad</div>
               <div class="telemetry-val"><span id="tut-stat-vel">–</span></div>
             </div>
-            <div class="telemetry-cell">
+            <div class="telemetry-cell cell-timing">
               <div class="telemetry-label">Timing</div>
               <div class="telemetry-val"><span id="tut-stat-pico">–</span></div>
             </div>
-            <div class="telemetry-cell">
+            <div class="telemetry-cell cell-score">
               <div class="telemetry-label">Score</div>
               <div class="telemetry-val"><span id="tut-stat-score">–</span></div>
             </div>
@@ -1752,19 +1856,19 @@
         <div>
           <span class="sub-heading" style="margin-bottom:8px;">Matriz de clasificación</span>
           <div class="telemetry-grid">
-            <div class="telemetry-cell">
+            <div class="telemetry-cell cell-ok">
               <div class="telemetry-label">Aciertos</div>
               <div class="telemetry-val" style="color:var(--ok)"><span id="test-cant-ok">0</span></div>
             </div>
-            <div class="telemetry-cell">
+            <div class="telemetry-cell cell-conf">
               <div class="telemetry-label">Confusión</div>
               <div class="telemetry-val" style="color:var(--bad)"><span id="test-cant-conf">0</span></div>
             </div>
-            <div class="telemetry-cell">
+            <div class="telemetry-cell cell-ruido">
               <div class="telemetry-label">Ruido/Desc.</div>
               <div class="telemetry-val" style="color:var(--warn)"><span id="test-cant-ruido">0</span></div>
             </div>
-            <div class="telemetry-cell">
+            <div class="telemetry-cell cell-ia">
               <div class="telemetry-label">Certeza IA</div>
               <div class="telemetry-val"><span id="test-conf-prom">–</span></div>
             </div>
