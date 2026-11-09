@@ -779,7 +779,7 @@
     flex: 1;
   }
 
-  /* --- Intro Cinemática: Plano Macro Naranja ITTF --- */
+  /* --- Escena 3D: Plano que se curva en Pelota --- */
   #intro-stage {
     position: fixed;
     inset: 0;
@@ -787,9 +787,9 @@
     height: 100vh;
     z-index: 100;
     overflow: hidden;
-    background: #ff7700; /* Naranja de competición ITTF que inunda el plano macro inicial */
+    background: #080c14; /* Fondo oscuro del estadio */
     pointer-events: none;
-    transition: opacity 0.4s ease;
+    transition: opacity 0.3s ease;
     will-change: opacity;
   }
   #intro-stage.oculto {
@@ -807,89 +807,145 @@
     inset: 0;
     width: 100vw;
     height: 100vh;
-    pointer-events: auto;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: space-between;
-    padding: 12vh 20px 48px 20px;
-    box-sizing: border-box;
+    pointer-events: none;
     z-index: 101;
-    cursor: pointer;
-    transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-    will-change: opacity, transform;
+    overflow: hidden;
   }
   #stage-landing.oculto {
     opacity: 0;
-    pointer-events: none;
   }
 
-  /* --- Sello Oficial en HTML Nativo (Bloque Recto / Máxima Nitidez) --- */
-  .landing-stamp-wrap {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    pointer-events: none;
+  /* --- Barra Flotante de Testeo / Debug de Animación --- */
+  .debug-dock {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 200;
+    background: rgba(15, 23, 42, 0.94);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 12px;
+    padding: 12px 14px;
+    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.55), 0 2px 6px rgba(0, 0, 0, 0.3);
+    color: #e2e8f0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 0.75rem;
+    pointer-events: auto;
     user-select: none;
     -webkit-user-select: none;
-    transition: opacity 0.25s ease, transform 0.25s ease;
-    will-change: opacity, transform;
+    width: 310px;
+    box-sizing: border-box;
+    transition: transform 0.2s ease, opacity 0.2s ease;
   }
-  .landing-stamp {
+  .debug-dock-header {
     display: flex;
-    flex-direction: column;
     align-items: center;
-    text-align: center;
-    color: #0f172a;
-    pointer-events: none;
-  }
-  .stamp-stars {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+    justify-content: space-between;
     gap: 8px;
-    color: #0f172a;
-    line-height: 1;
-    margin-bottom: 6px;
+    margin-bottom: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 6px;
   }
-  .stamp-stars .star-straight {
-    font-size: 1.65rem;
-    color: #0f172a;
-    line-height: 1;
-  }
-  .stamp-doc {
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
-    font-size: clamp(4.4rem, 12vw, 6.5rem);
-    font-weight: 900;
-    letter-spacing: 0.06em;
-    line-height: 0.92;
-    color: #0f172a;
-  }
-  .stamp-spec {
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
-    font-size: clamp(1.6rem, 4.2vw, 2.3rem);
+  .debug-dock-title {
     font-weight: 800;
     letter-spacing: 0.08em;
-    line-height: 1;
-    margin-top: 12px;
-    color: #0f172a;
+    font-size: 0.72rem;
+    color: #38bdf8;
   }
-  .stamp-tagline {
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
-    font-size: clamp(0.78rem, 1.8vw, 1.02rem);
-    font-weight: 900;
-    letter-spacing: 0.22em;
-    margin-top: 12px;
-    color: #0f172a;
+  .btn-dock-toggle {
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    cursor: pointer;
+    font-size: 0.85rem;
+    padding: 0 4px;
+    line-height: 1;
+  }
+  .btn-dock-toggle:hover {
+    color: #ffffff;
+  }
+  .debug-dock-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-bottom: 10px;
+  }
+  .btn-dock {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    color: #f1f5f9;
+    border-radius: 6px;
+    padding: 5px 8px;
+    font-size: 0.71rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.12s ease, transform 0.1s ease;
+  }
+  .btn-dock:hover {
+    background: rgba(255, 255, 255, 0.18);
+    transform: translateY(-1px);
+  }
+  .btn-dock:active {
+    transform: translateY(0) scale(0.97);
+  }
+  .btn-dock.activo {
+    background: #0284c7;
+    border-color: #38bdf8;
+    color: #ffffff;
+  }
+  .btn-dock-play {
+    background: #ea580c;
+    border-color: #f97316;
+    font-weight: 700;
+  }
+  .btn-dock-play:hover {
+    background: #c2410c;
+  }
+  .debug-dock-sliders {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .dock-slider-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.69rem;
+    color: #cbd5e1;
+  }
+  .dock-slider-row span:first-child {
+    width: 65px;
+    font-weight: 600;
+  }
+  .dock-slider-row input[type="range"] {
+    flex: 1;
+    accent-color: #38bdf8;
+    cursor: pointer;
+    height: 4px;
+  }
+  .dock-val {
+    width: 36px;
+    text-align: right;
+    font-family: monospace;
+    color: #38bdf8;
+    font-weight: 700;
+  }
+  .debug-dock.minimizado #debug-dock-body {
+    display: none;
   }
   #intro-actions-wrap {
+    position: absolute;
+    bottom: clamp(32px, 7vh, 64px);
+    left: 0;
+    right: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 8px;
     pointer-events: auto;
-    transition: opacity 0.2s ease, transform 0.2s ease;
+    z-index: 10;
+    transition: opacity 0.15s ease, transform 0.15s ease;
   }
   #btn-comenzar {
     display: inline-flex;
@@ -949,7 +1005,7 @@
       filter: none !important;
       transition: none !important;
     }
-    #intro-stage {
+    #stage-landing {
       display: none !important;
     }
   }
@@ -957,26 +1013,13 @@
 </head>
 <body>
 
-<!-- Entorno 3D de la Pelota -->
+<!-- Entorno 3D de la Pelota y Landing -->
 <div id="intro-stage">
   <canvas id="canvas-intro"></canvas>
 </div>
 
-<!-- Overlay de Bienvenida / Landing -->
+<!-- Overlay de Controles de Usuario -->
 <div id="stage-landing">
-  <div class="landing-stamp-wrap" id="landing-stamp-wrap">
-    <div class="landing-stamp">
-      <div class="stamp-stars" aria-label="3 estrellas oficiales ITTF">
-        <span class="star-straight">★</span>
-        <span class="star-straight">★</span>
-        <span class="star-straight">★</span>
-      </div>
-      <div class="stamp-doc">DOC</div>
-      <div class="stamp-spec">40+</div>
-      <div class="stamp-tagline">FIND YOUR EDGE</div>
-    </div>
-  </div>
-
   <div id="intro-actions-wrap">
     <button id="btn-comenzar" type="button">
       <span>ENTRENAR</span>
@@ -985,6 +1028,35 @@
       </svg>
     </button>
     <div class="intro-hint">Tocá para iniciar o presioná Espacio</div>
+  </div>
+</div>
+
+<!-- Barra Flotante de Depuración / Testeo de Animación -->
+<div id="debug-dock" class="debug-dock">
+  <div class="debug-dock-header">
+    <span class="debug-dock-title">🧪 TEST DE ANIMACIÓN</span>
+    <button type="button" class="btn-dock-toggle" id="btn-dock-min" title="Minimizar / Expandir">—</button>
+  </div>
+  <div class="debug-dock-body" id="debug-dock-body">
+    <div class="debug-dock-buttons">
+      <button type="button" class="btn-dock" id="btn-dock-0">0. Landing 2D</button>
+      <button type="button" class="btn-dock" id="btn-dock-1">1. Curvar</button>
+      <button type="button" class="btn-dock" id="btn-dock-2">2. Zoom Out</button>
+      <button type="button" class="btn-dock" id="btn-dock-3">3. Lanzar</button>
+      <button type="button" class="btn-dock btn-dock-play" id="btn-dock-play">▶ Play Todo</button>
+    </div>
+    <div class="debug-dock-sliders">
+      <label class="dock-slider-row">
+        <span>Curvatura:</span>
+        <input type="range" id="slider-curvatura" min="0" max="1" step="0.01" value="0">
+        <span class="dock-val" id="val-curvatura">0.00</span>
+      </label>
+      <label class="dock-slider-row">
+        <span>Zoom 3D:</span>
+        <input type="range" id="slider-zoom" min="0" max="1" step="0.01" value="0">
+        <span class="dock-val" id="val-zoom">Cerca</span>
+      </label>
+    </div>
   </div>
 </div>
 
@@ -2295,17 +2367,22 @@ async function cargarVisor3D() {
 // INTRO CINEMATOGRÁFICA: LA PELOTA DE PING PONG (THREE.JS PROCEDURAL)
 // =========================================================================
 let sharedAudioCtx = null;
+
+function getAudioContext() {
+  if (!sharedAudioCtx) {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (AudioCtx) sharedAudioCtx = new AudioCtx();
+  }
+  if (sharedAudioCtx && sharedAudioCtx.state === 'suspended') {
+    sharedAudioCtx.resume();
+  }
+  return sharedAudioCtx;
+}
+
 function sonarPique(vol = 0.25) {
   try {
-    if (!sharedAudioCtx) {
-      const AudioCtx = window.AudioContext || window.webkitAudioContext;
-      if (AudioCtx) sharedAudioCtx = new AudioCtx();
-    }
-    if (!sharedAudioCtx) return;
-    if (sharedAudioCtx.state === 'suspended') {
-      sharedAudioCtx.resume();
-    }
-    const ctx = sharedAudioCtx;
+    const ctx = getAudioContext();
+    if (!ctx) return;
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.type = 'triangle';
@@ -2320,13 +2397,59 @@ function sonarPique(vol = 0.25) {
   } catch(e) {}
 }
 
-let introAnimId = null;
-let introScene, introCamera, introRenderer, introBall;
-let introStampTex = null;
-let introIniciada = false;
-let piqueFired = false;
+function sonarTensionAire(vol = 0.24) {
+  try {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+    const dur = 0.25;
 
-// Variables y lógica para la mini pelota 3D interactiva en el Header
+    // 1. Tono oscilante ascendente: sensación elástica / tensión de aire
+    const osc = ctx.createOscillator();
+    const oscGain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(140, now);
+    osc.frequency.exponentialRampToValueAtTime(460, now + dur);
+    oscGain.gain.setValueAtTime(0.001, now);
+    oscGain.gain.linearRampToValueAtTime(vol * 0.7, now + 0.07);
+    oscGain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+    osc.connect(oscGain);
+    oscGain.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + dur);
+
+    // 2. Whoosh aerodinámico filtrado (ruido con barrido paso-banda)
+    const bufferSize = Math.floor(ctx.sampleRate * dur);
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = Math.random() * 2 - 1;
+    }
+    const noise = ctx.createBufferSource();
+    noise.buffer = buffer;
+
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(260, now);
+    filter.frequency.exponentialRampToValueAtTime(1400, now + dur);
+    filter.Q.setValueAtTime(2.2, now);
+
+    const noiseGain = ctx.createGain();
+    noiseGain.gain.setValueAtTime(0.001, now);
+    noiseGain.gain.linearRampToValueAtTime(vol * 0.9, now + 0.07);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+
+    noise.connect(filter);
+    filter.connect(noiseGain);
+    noiseGain.connect(ctx.destination);
+    noise.start(now);
+    noise.stop(now + dur);
+  } catch(e) {}
+}
+
+// =========================================================================
+// MINI PELOTA 3D INTERACTIVA EN EL HEADER (THREE.JS)
+// =========================================================================
 let headerBallRenderer, headerBallScene, headerBallCamera, headerBallMesh;
 let headerBallSpinVel = 0.65;
 let headerBallIniciado = false;
@@ -2393,65 +2516,8 @@ function initHeaderBall(stampTex) {
   }
 }
 
-function acelerarSpinPelotaHeader() {
-  headerBallSpinVel = 7.5;
-}
-
-function getMacroZ() {
-  const aspect = window.innerWidth / window.innerHeight;
-  // Plano macro cinematográfico: la superficie naranja de la pelota llena el 100% del encuadre
-  if (aspect >= 1.6) return 0.033;
-  if (aspect >= 1.0) return 0.035;
-  return 0.038; // Móvil vertical
-}
-
-function initIntroBall() {
-  if (introIniciada || !window.THREE) return;
-  introIniciada = true;
-
-  const canvas = $('canvas-intro');
-  if (!canvas) return;
-
-  const w = window.innerWidth;
-  const h = window.innerHeight;
-
-  introScene = new THREE.Scene();
-  introCamera = new THREE.PerspectiveCamera(30, w / h, 0.001, 10);
-  introCamera.position.set(0, 0, getMacroZ());
-
-  introRenderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
-  introRenderer.setSize(w, h);
-  introRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2.5));
-  introRenderer.outputColorSpace = THREE.SRGBColorSpace;
-
-  // Geometría oficial: radio 20 mm (diámetro 40 mm) con malla suave
-  const R = 0.02;
-  const geometry = new THREE.SphereGeometry(R, 64, 48);
-
-  // Material físico naranja de competición puro (sin cuño texturado que cree doble imagen en macro)
-  const material = new THREE.MeshStandardMaterial({
-    color: 0xff7700,
-    roughness: 0.50,
-    metalness: 0.02,
-  });
-
-  introBall = new THREE.Mesh(geometry, material);
-  introBall.rotation.set(0, 0, 0); // Cara frontal hacia la cámara
-  introBall.position.set(0, 0, 0);
-  introBall.visible = true;
-  introScene.add(introBall);
-
-  // Iluminación deportiva realista que acentúa la curvatura y el volumen 3D
-  const amb = new THREE.AmbientLight(0xffffff, 0.72);
-  introScene.add(amb);
-  introScene.userData.ambLight = amb;
-
-  const dir = new THREE.DirectionalLight(0xffffff, 0.68);
-  dir.position.set(0.22, 0.35, 0.45);
-  introScene.add(dir);
-  introScene.userData.dirLight = dir;
-
-  // Cuño dedicado en ultra resolución para el mini-logo 3D del Header
+function setupHeaderBall() {
+  if (!window.THREE || headerBallIniciado) return;
   const cHeader = document.createElement('canvas');
   cHeader.width = 512; cHeader.height = 512;
   const ctxH = cHeader.getContext('2d');
@@ -2471,13 +2537,229 @@ function initIntroBall() {
   headerStampTex.generateMipmaps = false;
   headerStampTex.colorSpace = THREE.SRGBColorSpace;
   initHeaderBall(headerStampTex);
+}
 
-  // En reposo la pelota se presenta calma, estática y centrada (Apple Design: cero distracción)
-  if (introBall) {
-    introBall.rotation.set(0, 0, 0);
-    introBall.position.set(0, 0, 0);
+function acelerarSpinPelotaHeader() {
+  headerBallSpinVel = 8.5;
+}
+
+// =========================================================================
+// INTRO CINEMATOGRÁFICA 3D: LANDING PLANA -> CURVADO DE LETRAS -> ZOOM OUT -> TOP SPIN
+// =========================================================================
+let introScene, introCamera, introRenderer, introMesh, introBallGroup;
+let currentCurvatura = 0.0;
+let currentZoom = 0.0;
+let introAnimId = null;
+let animandoCinematica = false;
+let introActiva = true;
+
+// Dimensiones físicas y de cámara calculadas para cobertura total sin distorsión
+const R_BALL_CLOSE = 0.0784; // Radio en reposo/curvado (subtiende 36.9° > esquina 28.7° para cubrir 100% la pantalla)
+const R_BALL_FAR = 0.0200;   // Radio oficial ITTF (40 mm de diámetro físico)
+const Z_CAM_CLOSE = 0.1306;  // Distancia cercana a la superficie (sin efecto micro-lupa ni pixelación)
+const Z_CAM_FAR = 0.2200;    // Distancia lejana (pelota al 34% del alto en el centro del estadio)
+
+let introCanvasTex = null;
+let introCanvasElem = null;
+let introCanvasCtx = null;
+
+function renderIntroFrame() {
+  if (introRenderer && introScene && introCamera) {
+    introRenderer.render(introScene, introCamera);
   }
-  renderIntroFrame();
+}
+
+function actualizarTexturaPelota(tCurv) {
+  if (!introCanvasElem) {
+    introCanvasElem = document.createElement('canvas');
+    introCanvasElem.width = 2048;
+    introCanvasElem.height = 2048;
+    introCanvasCtx = introCanvasElem.getContext('2d');
+  }
+  const ctx = introCanvasCtx;
+  const w = 2048;
+  const h = 2048;
+  const cx = w / 2;
+  const cy = h / 2;
+  const t = Math.max(0, Math.min(1, tCurv));
+
+  // 1. Base naranja oficial de competición ITTF
+  ctx.fillStyle = '#ff7700';
+  ctx.fillRect(0, 0, w, h);
+
+  // Tinta profunda slate
+  ctx.fillStyle = '#0f172a';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  // 2. Tres estrellas ITTF (★★★)
+  // En t=0 están en línea horizontal; en t=1 adoptan la curvatura en arco superior
+  const starSize = 56;
+  ctx.font = `bold ${starSize}px sans-serif`;
+  const starSpacing = 76;
+
+  // Estrella central
+  ctx.fillText('★', cx, cy - 146 - 15 * t);
+
+  // Estrella izquierda
+  ctx.save();
+  ctx.translate(cx - starSpacing, cy - 146 + 12 * t);
+  ctx.rotate(-0.13 * t);
+  ctx.fillText('★', 0, 0);
+  ctx.restore();
+
+  // Estrella derecha
+  ctx.save();
+  ctx.translate(cx + starSpacing, cy - 146 + 12 * t);
+  ctx.rotate(0.13 * t);
+  ctx.fillText('★', 0, 0);
+  ctx.restore();
+
+  // 3. Marca principal "DOC"
+  const docSize = 166;
+  ctx.font = `900 ${docSize}px -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif`;
+  ctx.save();
+  ctx.translate(cx, cy - 26);
+  ctx.scale(1 + 0.03 * t, 1 - 0.02 * t);
+  ctx.fillText('DOC', 0, 0);
+  ctx.restore();
+
+  // 4. Calibre oficial "40+"
+  const specSize = 68;
+  ctx.font = `800 ${specSize}px -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif`;
+  ctx.fillText('40+', cx, cy + 72 + 6 * t);
+
+  // 5. Lema "FIND YOUR EDGE" con transición de línea recta a arco esférico ITTF
+  const tagSize = 27;
+  ctx.font = `900 ${tagSize}px -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif`;
+  const tag = 'FIND YOUR EDGE';
+  const chars = Array.from(tag);
+  const n = chars.length;
+  const trackingFlat = 10;
+  const charWidths = chars.map(ch => ctx.measureText(ch).width);
+  const totalFlatW = charWidths.reduce((a, b) => a + b, 0) + (n - 1) * trackingFlat;
+
+  let currentFlatX = cx - totalFlatW / 2;
+  const flatPositions = [];
+  for (let i = 0; i < n; i++) {
+    flatPositions.push(currentFlatX + charWidths[i] / 2);
+    currentFlatX += charWidths[i] + trackingFlat;
+  }
+
+  const R_arc = 360;
+  const baseTagY = cy + 140;
+
+  for (let i = 0; i < n; i++) {
+    const norm = (i - (n - 1) / 2);
+    const xFlat = flatPositions[i];
+    const yFlat = baseTagY;
+
+    const angle = norm * 0.076;
+    const xArc = cx + R_arc * Math.sin(angle);
+    const yArc = baseTagY + R_arc * (1 - Math.cos(angle)) * 0.95;
+
+    const x = (1 - t) * xFlat + t * xArc;
+    const y = (1 - t) * yFlat + t * yArc;
+    const rot = t * angle;
+
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(rot);
+    ctx.fillText(chars[i], 0, 0);
+    ctx.restore();
+  }
+
+  if (introCanvasTex) {
+    introCanvasTex.needsUpdate = true;
+  }
+}
+
+function initIntroBall() {
+  if (!window.THREE) return;
+  const canvas = $('canvas-intro');
+  if (!canvas) return;
+
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  const aspect = w / h;
+
+  introScene = new THREE.Scene();
+  introCamera = new THREE.PerspectiveCamera(30, aspect, 0.001, 10);
+  introCamera.position.set(0, 0, Z_CAM_CLOSE);
+
+  introRenderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  introRenderer.setSize(w, h);
+  introRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2.5));
+  introRenderer.outputColorSpace = THREE.SRGBColorSpace;
+
+  // Iluminación
+  const amb = new THREE.AmbientLight(0xffffff, 1.0);
+  introScene.add(amb);
+  introScene.userData.ambLight = amb;
+
+  const dir = new THREE.DirectionalLight(0xffffff, 0.0);
+  dir.position.set(0.20, 0.35, 0.50);
+  introScene.add(dir);
+  introScene.userData.dirLight = dir;
+
+  // Esfera 3D 100% CERRADA (polos curvos y continuos, sin cortes planos)
+  const sphereGeo = new THREE.SphereGeometry(1.0, 64, 48);
+  const pos = sphereGeo.attributes.position;
+  const uvs = sphereGeo.attributes.uv;
+  const count = pos.count;
+  const thetaMax = 35 * Math.PI / 180;
+
+  for (let i = 0; i < count; i++) {
+    const x = pos.getX(i);
+    const y = pos.getY(i);
+    const z = pos.getZ(i);
+
+    const zc = Math.max(-1, Math.min(1, z));
+    const rxy = Math.hypot(x, y);
+
+    if (rxy < 1e-6) {
+      if (zc > 0) {
+        uvs.setXY(i, 0.5, 0.5);
+      } else {
+        uvs.setXY(i, 0.04, 0.04);
+      }
+    } else {
+      const theta = Math.acos(zc);
+      const r_uv = Math.min(0.44, (theta / thetaMax) * 0.44);
+      const u = 0.5 + (x / rxy) * r_uv;
+      const v = 0.5 + (y / rxy) * r_uv;
+      uvs.setXY(i, u, v);
+    }
+  }
+  uvs.needsUpdate = true;
+
+  actualizarTexturaPelota(0.0);
+  introCanvasTex = new THREE.CanvasTexture(introCanvasElem);
+  introCanvasTex.generateMipmaps = true;
+  introCanvasTex.minFilter = THREE.LinearMipmapLinearFilter;
+  introCanvasTex.magFilter = THREE.LinearFilter;
+  introCanvasTex.colorSpace = THREE.SRGBColorSpace;
+  if (introRenderer) {
+    introCanvasTex.anisotropy = Math.min(16, introRenderer.capabilities.getMaxAnisotropy());
+  }
+
+  const material = new THREE.MeshStandardMaterial({
+    map: introCanvasTex,
+    roughness: 0.52,
+    metalness: 0.02,
+  });
+
+  introMesh = new THREE.Mesh(sphereGeo, material);
+
+  // Grupo centrado para rotaciones y escala física
+  introBallGroup = new THREE.Group();
+  introBallGroup.position.set(0, 0, 0);
+  introBallGroup.scale.set(R_BALL_CLOSE, R_BALL_CLOSE, R_BALL_CLOSE);
+  introBallGroup.add(introMesh);
+  introScene.add(introBallGroup);
+
+  setCurvatura(0.0);
+  setZoom(0.0);
 
   window.addEventListener('resize', () => {
     if (!introRenderer || !introCamera) return;
@@ -2486,22 +2768,304 @@ function initIntroBall() {
     introCamera.aspect = nw / nh;
     introCamera.updateProjectionMatrix();
     introRenderer.setSize(nw, nh);
-    if (!animandoCinematica && introActiva) {
-      introCamera.position.set(0, 0, getMacroZ());
-      renderIntroFrame();
-    }
+    setCurvatura(currentCurvatura);
+    setZoom(currentZoom);
   });
 }
 
-// =========================================================================
-// INTRO: PELOTA EN FONDO OSCURO Y ELEVACIÓN FLUIDA AL ENTRENAR (APPLE DESIGN)
-// =========================================================================
-let animandoCinematica = false;
-let introActiva = true;
+function setCurvatura(t) {
+  currentCurvatura = Math.max(0, Math.min(1, t));
+  actualizarTexturaPelota(currentCurvatura);
 
-function renderIntroFrame() {
-  if (introRenderer && introScene && introCamera) {
-    introRenderer.render(introScene, introCamera);
+  if (introScene && introScene.userData.dirLight) {
+    introScene.userData.dirLight.intensity = currentCurvatura * 0.85;
+  }
+  if (introScene && introScene.userData.ambLight) {
+    introScene.userData.ambLight.intensity = 1.0 - currentCurvatura * 0.20;
+  }
+
+  const slider = $('slider-curvatura');
+  if (slider && document.activeElement !== slider) slider.value = currentCurvatura;
+  const valSpan = $('val-curvatura');
+  if (valSpan) valSpan.textContent = currentCurvatura.toFixed(2);
+
+  renderIntroFrame();
+}
+
+function setZoom(t) {
+  currentZoom = Math.max(0, Math.min(1, t));
+  if (!introCamera || !introBallGroup) return;
+
+  const R = R_BALL_CLOSE + (R_BALL_FAR - R_BALL_CLOSE) * currentZoom;
+  const zCam = Z_CAM_CLOSE + (Z_CAM_FAR - Z_CAM_CLOSE) * currentZoom;
+
+  introBallGroup.scale.set(R, R, R);
+  introCamera.position.z = zCam;
+
+  const slider = $('slider-zoom');
+  if (slider && document.activeElement !== slider) slider.value = currentZoom;
+  const valSpan = $('val-zoom');
+  if (valSpan) valSpan.textContent = currentZoom === 0 ? 'Cerca' : (currentZoom === 1 ? 'Lejos' : currentZoom.toFixed(2));
+
+  renderIntroFrame();
+}
+
+function cancelarAnimacionActual() {
+  if (introAnimId) {
+    cancelAnimationFrame(introAnimId);
+    introAnimId = null;
+  }
+  animandoCinematica = false;
+}
+
+function actualizarBotonesActivos(activoId) {
+  document.querySelectorAll('.btn-dock').forEach(b => b.classList.remove('activo'));
+  const b = $(activoId);
+  if (b) b.classList.add('activo');
+}
+
+function ejecutarEtapa(etapa) {
+  cancelarAnimacionActual();
+  introActiva = true;
+
+  const stageLanding = $('stage-landing');
+  const actionsWrap = $('intro-actions-wrap');
+  const appMain = $('app-main');
+  const stage = $('intro-stage');
+
+  if (stage) {
+    stage.style.display = 'block';
+    stage.style.opacity = '1';
+  }
+
+  if (etapa === 0) {
+    // -----------------------------------------------------------------
+    // ESTADO 0: Landing 2D Plana en reposo
+    // -----------------------------------------------------------------
+    actualizarBotonesActivos('btn-dock-0');
+    setCurvatura(0.0);
+    setZoom(0.0);
+    if (introBallGroup) {
+      introBallGroup.position.set(0, 0, 0);
+      introBallGroup.rotation.set(0, 0, 0);
+    }
+    if (stageLanding) {
+      stageLanding.style.display = 'block';
+      stageLanding.style.opacity = '1';
+    }
+    if (actionsWrap) {
+      actionsWrap.style.opacity = '1';
+      actionsWrap.style.transform = '';
+      actionsWrap.style.pointerEvents = 'auto';
+    }
+    renderIntroFrame();
+  } else if (etapa === 1) {
+    // -----------------------------------------------------------------
+    // ESTADO 1: Curvado de la tipografía e iluminación 3D (Pantalla sigue 100% naranja)
+    // -----------------------------------------------------------------
+    actualizarBotonesActivos('btn-dock-1');
+    if (actionsWrap) {
+      actionsWrap.style.opacity = '0';
+      actionsWrap.style.pointerEvents = 'none';
+    }
+    if (introBallGroup) {
+      introBallGroup.position.set(0, 0, 0);
+      introBallGroup.rotation.set(0, 0, 0);
+    }
+    setZoom(0.0);
+    const startC = currentCurvatura;
+    const dur = 420;
+    const startTime = performance.now();
+
+    function loopCurvar(now) {
+      const p = Math.min(1, (now - startTime) / dur);
+      const ease = p * p * (3 - 2 * p);
+      setCurvatura(startC + (1.0 - startC) * ease);
+      if (p < 1) {
+        introAnimId = requestAnimationFrame(loopCurvar);
+      } else {
+        introAnimId = null;
+      }
+    }
+    introAnimId = requestAnimationFrame(loopCurvar);
+  } else if (etapa === 2) {
+    // -----------------------------------------------------------------
+    // ESTADO 2: Zoom Out (La silueta circular de la esfera entra al cuadro y revela el estadio)
+    // -----------------------------------------------------------------
+    actualizarBotonesActivos('btn-dock-2');
+    setCurvatura(1.0);
+    if (actionsWrap) {
+      actionsWrap.style.opacity = '0';
+      actionsWrap.style.pointerEvents = 'none';
+    }
+    if (introBallGroup) {
+      introBallGroup.position.set(0, 0, 0);
+      introBallGroup.rotation.set(0, 0, 0);
+    }
+    if (appMain && !appMain.classList.contains('visible')) {
+      appMain.classList.add('visible');
+    }
+    const startZ = currentZoom;
+    const dur = 480;
+    const startTime = performance.now();
+
+    function loopZoom(now) {
+      const p = Math.min(1, (now - startTime) / dur);
+      const ease = 1 - Math.pow(1 - p, 3);
+      setZoom(startZ + (1.0 - startZ) * ease);
+      if (p < 1) {
+        introAnimId = requestAnimationFrame(loopZoom);
+      } else {
+        introAnimId = null;
+      }
+    }
+    introAnimId = requestAnimationFrame(loopZoom);
+  } else if (etapa === 3) {
+    // -----------------------------------------------------------------
+    // ESTADO 3: Impacto "TOC!", Topspin y Despegue hacia el Header
+    // -----------------------------------------------------------------
+    actualizarBotonesActivos('btn-dock-3');
+    setCurvatura(1.0);
+    setZoom(1.0);
+    sonarPique(0.42);
+
+    const dur = 320;
+    const startTime = performance.now();
+
+    function loopLanzar(now) {
+      const p = Math.min(1, (now - startTime) / dur);
+      const ease = p * p * 1.35;
+      if (introBallGroup) {
+        introBallGroup.position.y = ease * 0.088;
+        introBallGroup.position.z = -ease * 0.12;
+        introBallGroup.rotation.x = -ease * 2.8;
+      }
+      renderIntroFrame();
+      if (p < 1) {
+        introAnimId = requestAnimationFrame(loopLanzar);
+      } else {
+        introAnimId = null;
+        acelerarSpinPelotaHeader();
+      }
+    }
+    introAnimId = requestAnimationFrame(loopLanzar);
+  } else if (etapa === 'play') {
+    // -----------------------------------------------------------------
+    // PLAY TODO: La coreografía completa continuada
+    // -----------------------------------------------------------------
+    actualizarBotonesActivos('btn-dock-play');
+    animandoCinematica = true;
+    sonarTensionAire(0.20);
+
+    if (actionsWrap) {
+      actionsWrap.style.transition = 'opacity 70ms ease, transform 70ms ease';
+      actionsWrap.style.opacity = '0';
+      actionsWrap.style.transform = 'translateY(14px) scale(0.96)';
+      actionsWrap.style.pointerEvents = 'none';
+    }
+    if (appMain && !appMain.classList.contains('visible')) {
+      appMain.classList.add('visible');
+    }
+
+    const durCurva = 280;
+    const durZoom = 380;
+    const durLanzar = 220;
+    const durTotal = durCurva + durZoom + durLanzar;
+    const startTime = performance.now();
+    let impactoFired = false;
+
+    function loopPlay(now) {
+      const elapsed = now - startTime;
+
+      if (elapsed < durCurva) {
+        // Fase 1: Curvado
+        const p1 = Math.min(1, elapsed / durCurva);
+        const ease1 = Math.sin(p1 * Math.PI / 2);
+        setCurvatura(ease1);
+        setZoom(0.0);
+      } else if (elapsed < durCurva + durZoom) {
+        // Fase 2: Zoom Out
+        setCurvatura(1.0);
+        const p2 = Math.min(1, (elapsed - durCurva) / durZoom);
+        const ease2 = 1 - Math.pow(1 - p2, 3);
+        setZoom(ease2);
+      } else {
+        // Fase 3: Impacto y lanzamiento
+        setCurvatura(1.0);
+        setZoom(1.0);
+        if (!impactoFired) {
+          impactoFired = true;
+          sonarPique(0.42);
+        }
+        const p3 = Math.min(1, (elapsed - durCurva - durZoom) / durLanzar);
+        const ease3 = p3 * p3 * 1.35;
+        if (introBallGroup) {
+          introBallGroup.position.y = ease3 * 0.088;
+          introBallGroup.position.z = -ease3 * 0.12;
+          introBallGroup.rotation.x = -ease3 * 2.8;
+        }
+
+        const pFade = (elapsed - (durTotal - 90)) / 90;
+        const stage = $('intro-stage');
+        if (pFade > 0 && stage) {
+          stage.style.opacity = `${Math.max(0, 1 - pFade)}`;
+        }
+        renderIntroFrame();
+      }
+
+      if (elapsed < durTotal) {
+        introAnimId = requestAnimationFrame(loopPlay);
+      } else {
+        introAnimId = null;
+        introActiva = false;
+        animandoCinematica = false;
+        const stage = $('intro-stage');
+        if (stage) stage.style.display = 'none';
+        if (stageLanding) stageLanding.style.display = 'none';
+        acelerarSpinPelotaHeader();
+        if (typeof onResizeVisor === 'function') onResizeVisor();
+      }
+    }
+    introAnimId = requestAnimationFrame(loopPlay);
+  }
+}
+
+function initDebugDock() {
+  const b0 = $('btn-dock-0');
+  const b1 = $('btn-dock-1');
+  const b2 = $('btn-dock-2');
+  const b3 = $('btn-dock-3');
+  const bPlay = $('btn-dock-play');
+  const bMin = $('btn-dock-min');
+  const sCurv = $('slider-curvatura');
+  const sZoom = $('slider-zoom');
+  const dock = $('debug-dock');
+
+  if (b0) b0.addEventListener('click', () => ejecutarEtapa(0));
+  if (b1) b1.addEventListener('click', () => ejecutarEtapa(1));
+  if (b2) b2.addEventListener('click', () => ejecutarEtapa(2));
+  if (b3) b3.addEventListener('click', () => ejecutarEtapa(3));
+  if (bPlay) bPlay.addEventListener('click', () => ejecutarEtapa('play'));
+
+  if (bMin && dock) {
+    bMin.addEventListener('click', () => {
+      dock.classList.toggle('minimizado');
+      bMin.textContent = dock.classList.contains('minimizado') ? '+' : '—';
+    });
+  }
+
+  if (sCurv) {
+    sCurv.addEventListener('input', (e) => {
+      cancelarAnimacionActual();
+      setCurvatura(parseFloat(e.target.value));
+    });
+  }
+
+  if (sZoom) {
+    sZoom.addEventListener('input', (e) => {
+      cancelarAnimacionActual();
+      setZoom(parseFloat(e.target.value));
+    });
   }
 }
 
@@ -2511,118 +3075,17 @@ function deslizarYComenzar() {
     return;
   }
   if (!introActiva || animandoCinematica) return;
-  animandoCinematica = true;
-
-  const stage = $('intro-stage');
-  const stageLanding = $('stage-landing');
-  const stampWrap = $('landing-stamp-wrap');
-  const actionsWrap = $('intro-actions-wrap');
-  const appMain = $('app-main');
-
-  // Paso 2: Desvanecimiento instantáneo de botón y textos (< 80 ms)
-  if (actionsWrap) {
-    actionsWrap.style.transition = 'opacity 80ms ease, transform 80ms ease';
-    actionsWrap.style.opacity = '0';
-    actionsWrap.style.transform = 'translateY(12px) scale(0.96)';
-    actionsWrap.style.pointerEvents = 'none';
-  }
-
-  // Revelar el Dashboard HUD subyacente
-  if (appMain && !appMain.classList.contains('visible')) {
-    appMain.classList.add('visible');
-  }
-
-  // Coreografía exacta: Zoom Out (~260 ms) + Impacto seco y eyección hacia fondo/arriba (~240 ms) = ~500 ms
-  const startTime = performance.now();
-  const durZoom = 260; // ms: revelación rápida en Z
-  const durTotal = 500; // ms: duración total exacta de la coreografía
-  const zMacro = getMacroZ();
-  const zReveal = 0.125; // Distancia donde se comprende la escala real del objeto
-  let impactoFired = false;
-
-  function loopCoreografia(now) {
-    const elapsed = now - startTime;
-
-    if (elapsed <= durZoom) {
-      // PASO 3 (0 a 260 ms): Zoom out rápido en eje Z
-      const p1 = Math.min(1, elapsed / durZoom);
-      const ease1 = 1 - Math.pow(1 - p1, 2.5);
-
-      if (introCamera) {
-        introCamera.position.z = zMacro + (zReveal - zMacro) * ease1;
-      }
-      if (introBall) {
-        introBall.rotation.y = -0.10 * Math.sin(ease1 * Math.PI * 0.5);
-      }
-
-      // Desvanecer el sello en bloque conforme se descubre la esfera 3D
-      if (stampWrap) {
-        const pStamp = Math.min(1, p1 * 1.8);
-        stampWrap.style.opacity = `${Math.max(0, 1 - pStamp)}`;
-        stampWrap.style.transform = `scale(${1 - p1 * 0.15})`;
-      }
-
-      // El fondo naranja sólido se disuelve hacia el fondo oscuro del estadio (#080c14)
-      if (stage) {
-        const pOrange = Math.min(1, p1 * 1.4);
-        stage.style.background = `rgba(255, 119, 0, ${Math.max(0, 1 - pOrange)})`;
-      }
-    } else {
-      // PASO 4 (260 a 500 ms): ¡Impacto seco del celuloide ('toc') y eyección hacia el fondo/arriba!
-      if (!impactoFired) {
-        impactoFired = true;
-        sonarPique(0.38); // Impacto seco 'toc'
-      }
-
-      const p2 = Math.min(1, (elapsed - durZoom) / (durTotal - durZoom));
-      const ease2 = p2 * p2 * 1.25; // Aceleración de despegue dinámico hacia fondo/arriba
-
-      if (introBall) {
-        // La pelota sale eyectada hacia arriba (+Y) y hacia el fondo de la mesa (-Z)
-        introBall.position.y = ease2 * 0.082;
-        introBall.position.z = -ease2 * 0.11;
-        introBall.rotation.x = -ease2 * 2.4; // Topspin dinámico hacia adelante
-      }
-
-      // Desvanecer el telón por completo
-      if (stage) {
-        stage.style.opacity = `${Math.max(0, 1 - p2 * 1.6)}`;
-      }
-      if (stampWrap) {
-        stampWrap.style.opacity = '0';
-      }
-    }
-
-    renderIntroFrame();
-
-    if (elapsed < durTotal) {
-      requestAnimationFrame(loopCoreografia);
-    } else {
-      // PASO 5: Aterrizaje final en el Dashboard HUD
-      introActiva = false;
-      animandoCinematica = false;
-      if (stage) stage.style.display = 'none';
-      if (stageLanding) stageLanding.style.display = 'none';
-      if (typeof onResizeVisor === 'function') onResizeVisor();
-    }
-  }
-
-  requestAnimationFrame(loopCoreografia);
+  ejecutarEtapa('play');
 }
 
 function cerrarIntro() {
   introActiva = false;
   animandoCinematica = false;
+  cancelarAnimacionActual();
   const stage = $('intro-stage');
   const stageLanding = $('stage-landing');
-  if (stage) {
-    stage.classList.add('oculto');
-    stage.style.display = 'none';
-  }
-  if (stageLanding) {
-    stageLanding.classList.add('oculto');
-    stageLanding.style.display = 'none';
-  }
+  if (stage) stage.style.display = 'none';
+  if (stageLanding) stageLanding.style.display = 'none';
   const appMain = $('app-main');
   if (appMain && !appMain.classList.contains('visible')) {
     appMain.classList.add('visible');
@@ -2678,9 +3141,16 @@ window.addEventListener('keydown', (ev) => {
   }
 });
 
-// Inicializar la pelota apenas Three.js esté listo
-if (window.THREE) initIntroBall();
-else window.addEventListener('load', () => { if (window.THREE) initIntroBall(); });
+function iniciarTodoThree() {
+  if (window.THREE) {
+    setupHeaderBall();
+    initIntroBall();
+    initDebugDock();
+  }
+}
+
+if (window.THREE) iniciarTodoThree();
+else window.addEventListener('load', () => { if (window.THREE) iniciarTodoThree(); });
 
 if (document.readyState === 'complete') cargarVisor3D();
 else window.addEventListener('load', cargarVisor3D);
