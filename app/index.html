@@ -2420,7 +2420,7 @@ function sonarTensionAire(vol = 0.24) {
 // =========================================================================
 // INTRO CINEMATOGRÁFICA 3D: LANDING PLANA -> CURVADO -> ZOOM OUT Y MENÚ DE MODOS
 // =========================================================================
-let introScene, introCamera, introRenderer, introMesh, introBallGroup;
+let introScene, introCamera, introRenderer, introMesh, introBallGroup, introTableMesh, introShadowMesh;
 let uvsFlat = null;
 let uvsSphLanding = null;
 let uvsSphBall = null;
@@ -2506,6 +2506,62 @@ function crearTexturaPelotaIntro() {
   tex.minFilter = THREE.LinearMipmapLinearFilter;
   tex.magFilter = THREE.LinearFilter;
   tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+
+function crearTexturaMesaIntro() {
+  const w = 1024;
+  const h = 2048;
+  const c = document.createElement('canvas');
+  c.width = w;
+  c.height = h;
+  const ctx = c.getContext('2d');
+
+  // Superficie de mesa reglamentaria ITTF: Azul torneo mate profundo
+  const grad = ctx.createLinearGradient(0, 0, 0, h);
+  grad.addColorStop(0, '#060d16'); // Horizonte en penumbra
+  grad.addColorStop(0.35, '#0a1726');
+  grad.addColorStop(1, '#0e2238'); // Primer plano
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, w, h);
+
+  // Línea blanca central reglamentaria de saque (3 mm)
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.70)';
+  const lineW = 6;
+  ctx.fillRect((w - lineW) / 2, 0, lineW, h);
+
+  // Líneas laterales perimetrales
+  const borderW = 14;
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+  ctx.fillRect(0, 0, borderW, h);
+  ctx.fillRect(w - borderW, 0, borderW, h);
+
+  // Línea de red en el horizonte
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.40)';
+  ctx.fillRect(0, 0, w, 8);
+
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+
+function crearTexturaSombraIntro() {
+  const s = 256;
+  const c = document.createElement('canvas');
+  c.width = s;
+  c.height = s;
+  const ctx = c.getContext('2d');
+
+  const g = ctx.createRadialGradient(s / 2, s / 2, 0, s / 2, s / 2, s / 2);
+  g.addColorStop(0, 'rgba(0, 0, 0, 0.70)');
+  g.addColorStop(0.35, 'rgba(0, 0, 0, 0.40)');
+  g.addColorStop(0.70, 'rgba(0, 0, 0, 0.12)');
+  g.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, s, s);
+
+  const tex = new THREE.CanvasTexture(c);
   return tex;
 }
 
@@ -2629,6 +2685,34 @@ function initIntroBall() {
 
   introMesh = new THREE.Mesh(sphereGeo, material);
 
+  // Mesa de Ping Pong reglamentaria en perspectiva física
+  const tableGeo = new THREE.PlaneGeometry(0.38, 0.90);
+  tableGeo.rotateX(-Math.PI / 2);
+  const tableMat = new THREE.MeshStandardMaterial({
+    map: crearTexturaMesaIntro(),
+    roughness: 0.85,
+    metalness: 0.05,
+    transparent: true,
+    opacity: 0.0,
+    depthWrite: false
+  });
+  introTableMesh = new THREE.Mesh(tableGeo, tableMat);
+  introTableMesh.position.set(0, -0.0305, -0.16);
+  introScene.add(introTableMesh);
+
+  // Sombra de contacto suave sobre el tablero justo bajo la pelota
+  const shadowGeo = new THREE.PlaneGeometry(0.046, 0.032);
+  shadowGeo.rotateX(-Math.PI / 2);
+  const shadowMat = new THREE.MeshBasicMaterial({
+    map: crearTexturaSombraIntro(),
+    transparent: true,
+    opacity: 0.0,
+    depthWrite: false
+  });
+  introShadowMesh = new THREE.Mesh(shadowGeo, shadowMat);
+  introShadowMesh.position.set(0, -0.0302, 0);
+  introScene.add(introShadowMesh);
+
   // Grupo centrado para rotaciones y escala física
   introBallGroup = new THREE.Group();
   introBallGroup.position.set(0, 0, 0);
@@ -2734,6 +2818,15 @@ function setZoom(t) {
 
   if (introScene && introScene.userData.rimLight) {
     introScene.userData.rimLight.intensity = currentZoom * 0.55;
+  }
+
+  // Revelado armónico de la mesa de torneo y sombra de contacto al alejarse la cámara
+  const pTable = Math.max(0, Math.min(1, (currentZoom - 0.12) / 0.88));
+  if (introTableMesh) {
+    introTableMesh.material.opacity = pTable * 0.94;
+  }
+  if (introShadowMesh) {
+    introShadowMesh.material.opacity = pTable * 0.76;
   }
 
   actualizarUVs();
@@ -2842,6 +2935,7 @@ function ejecutarEtapa(etapa) {
         if (menuHub) menuHub.classList.add('visible');
         activarModoHub(0, false);
         iniciarIdleSpin();
+        if (typeof sonarPique === 'function') sonarPique(0.20);
       }
     }
     introAnimId = requestAnimationFrame(loopZoom);
@@ -2895,6 +2989,7 @@ function ejecutarEtapa(etapa) {
         if (menuHub) menuHub.classList.add('visible');
         activarModoHub(0, false);
         iniciarIdleSpin();
+        if (typeof sonarPique === 'function') sonarPique(0.20);
       }
     }
     introAnimId = requestAnimationFrame(loopPlay);
