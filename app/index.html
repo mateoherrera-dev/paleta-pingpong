@@ -2883,6 +2883,14 @@ function ejecutarEtapa(etapa) {
 }
 
 function initIntroMenu() {
+  const menuHub = $('intro-menu-hub');
+  if (menuHub) {
+    // Evita que clics en el título, espacios o bordes del menú se propaguen a stageLanding
+    menuHub.addEventListener('click', (e) => {
+      e.stopPropagation();
+    });
+  }
+
   document.querySelectorAll('.menu-card-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -2904,6 +2912,9 @@ function deslizarYComenzar() {
     return;
   }
   if (!introActiva || animandoCinematica) return;
+  const menuHub = $('intro-menu-hub');
+  // Si el menú ya está visible, no repetir la animación de entrada
+  if (menuHub && menuHub.classList.contains('visible')) return;
   ejecutarEtapa('play');
 }
 
