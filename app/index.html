@@ -54,8 +54,8 @@
   }
 
   main#app-main {
-    width: min(840px, calc(100vw - 32px));
-    max-width: 840px;
+    width: min(1180px, calc(100vw - 32px));
+    max-width: 1180px;
     margin: 0 auto;
     padding: 16px 0 56px 0;
     display: flex;
@@ -79,7 +79,7 @@
     justify-content: space-between;
     align-items: center;
     gap: 12px;
-    padding: 10px 16px;
+    padding: 10px 18px;
     background: rgba(11, 17, 30, 0.82);
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
@@ -90,6 +90,13 @@
   }
 
   .app-bar-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+
+  .app-bar-right {
     display: flex;
     align-items: center;
     gap: 12px;
@@ -104,8 +111,8 @@
     border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: var(--radius-pill);
     color: var(--fg);
-    padding: 6px 12px;
-    font-size: 0.78rem;
+    padding: 6px 14px;
+    font-size: 0.80rem;
     font-weight: 700;
     cursor: pointer;
     transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
@@ -129,7 +136,7 @@
 
   .brand {
     display: flex;
-    flex-direction: column;
+    align-items: center;
     cursor: pointer;
     user-select: none;
     transition: opacity 0.15s ease;
@@ -140,39 +147,41 @@
   .brand-row {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
+    flex-wrap: wrap;
   }
-  .brand-meta {
-    display: flex;
-    flex-direction: column;
-  }
-  .brand-title {
+  .brand-name {
     font-size: 1.15rem;
     font-weight: 900;
     letter-spacing: -0.02em;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .brand-title .brand-doc {
-    letter-spacing: 0.05em;
     color: #fff;
+    margin: 0;
+    line-height: 1;
   }
-  .brand-title .brand-stars {
-    font-size: 0.68rem;
-    color: var(--accent);
-    letter-spacing: 0.12em;
-  }
-  .brand-title .tag-chip {
-    font-size: 0.62rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    background: var(--accent-soft);
-    color: var(--accent);
-    padding: 2px 7px;
+  .coach-tag {
+    font-size: 0.74rem;
+    color: var(--fg-muted);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: var(--radius-pill);
-    border: 1px solid var(--line-active);
+    padding: 2px 9px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .coach-tag b {
+    color: var(--accent);
+    font-weight: 800;
+  }
+  .badge-modo {
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: var(--radius-pill);
+    background: rgba(255, 119, 0, 0.15);
+    border: 1px solid rgba(255, 119, 0, 0.4);
+    color: var(--accent);
+    letter-spacing: 0.02em;
   }
   .connection-status {
     display: flex;
@@ -247,6 +256,48 @@
   }
   .vista-tab.oculta {
     display: none !important;
+  }
+
+  /* --- Arquitectura Dual-Studio (Stage Visual + Panel Lateral Consolidado) --- */
+  .studio-grid {
+    display: grid;
+    grid-template-columns: minmax(340px, 1.25fr) minmax(320px, 1fr);
+    gap: 18px;
+    align-items: stretch;
+  }
+  @media (max-width: 880px) {
+    .studio-grid {
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+  }
+
+  .studio-stage {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    background: rgba(11, 17, 30, 0.82);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    border-top: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 18px;
+    padding: 22px 24px;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+  }
+
+  .studio-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    background: rgba(11, 17, 30, 0.82);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    border-top: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 18px;
+    padding: 22px 24px;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
   }
 
   /* --- Secciones y Superficies Unificadas --- */
@@ -330,30 +381,25 @@
     white-space: nowrap;
   }
 
-  /* --- Visor 3D Técnico: Lente Circular Centrado --- */
-  .visor-wrap {
+  /* --- Visor 3D Libre y Expansivo --- */
+  .visor-stage {
     position: relative;
-    width: 220px;
-    height: 220px;
-    margin: 4px auto 8px auto;
-    border-radius: 50%;
-    background: radial-gradient(circle at 45% 35%, rgba(20, 30, 48, 0.96) 0%, rgba(6, 10, 18, 0.98) 100%);
+    width: 100%;
+    height: 380px;
+    min-height: 320px;
+    border-radius: 16px;
+    background: radial-gradient(circle at 50% 50%, rgba(22, 36, 60, 0.55) 0%, rgba(6, 10, 18, 0.95) 100%);
     overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 2px solid rgba(255, 255, 255, 0.16);
-    box-shadow: 0 16px 42px rgba(0, 0, 0, 0.65), inset 0 2px 8px rgba(255, 255, 255, 0.2), 0 0 0 1.5px rgba(255, 119, 0, 0.3);
-    flex-shrink: 0;
+    border: 1px solid rgba(255, 255, 255, 0.08);
   }
-  .visor-wrap::before {
-    content: '';
-    position: absolute;
-    inset: 6px;
-    border: 1px dashed rgba(255, 255, 255, 0.08);
-    border-radius: 50%;
-    pointer-events: none;
-    z-index: 2;
+  @media (max-width: 600px) {
+    .visor-stage {
+      height: 290px;
+      min-height: 260px;
+    }
   }
   #canvas3d-container {
     width: 100%;
@@ -367,7 +413,6 @@
     display: block;
     width: 100% !important;
     height: 100% !important;
-    border-radius: 50%;
   }
 
   .visor-ayuda {
@@ -492,45 +537,30 @@
   }
   .agarre-banner b { color: var(--fg); font-weight: 600; }
 
-  /* --- Instrumental de Métricas Unificado (Sin cajas individuales) --- */
+  /* --- Instrumental de Métricas Consolidado (Grid 2x2 para Panel Lateral) --- */
   .telemetry-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    background: rgba(12, 18, 30, 0.85);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
-    border: 1px solid rgba(255, 255, 255, 0.10);
-    border-radius: var(--radius-md);
-    overflow: hidden;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
-  }
-  @media (max-width: 480px) {
-    .telemetry-grid { grid-template-columns: repeat(2, 1fr); }
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    background: transparent;
+    border: none;
+    box-shadow: none;
   }
 
   .telemetry-cell {
-    padding: 14px 16px;
+    padding: 12px 14px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     text-align: left;
-    border: none;
-    border-right: 1px solid rgba(255, 255, 255, 0.06);
-    background: transparent;
-    border-radius: 0;
-    transition: background-color var(--dur-fast) var(--ease-out);
-  }
-  .telemetry-cell:last-child {
-    border-right: none;
-  }
-  @media (max-width: 480px) {
-    .telemetry-cell:nth-child(2) { border-right: none; }
-    .telemetry-cell:nth-child(1), .telemetry-cell:nth-child(2) {
-      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-    }
+    background: rgba(255, 255, 255, 0.025);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: var(--radius-sm);
+    transition: background-color var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out);
   }
   .telemetry-cell:hover {
-    background: rgba(255, 255, 255, 0.035);
+    background: rgba(255, 255, 255, 0.045);
+    border-color: rgba(255, 255, 255, 0.10);
   }
   .telemetry-label {
     font-size: 0.66rem;
@@ -538,17 +568,14 @@
     text-transform: uppercase;
     letter-spacing: 0.1em;
     color: var(--fg-muted);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
   }
   .telemetry-val {
-    font-size: 1.6rem;
+    font-size: 1.5rem;
     font-weight: 900;
     letter-spacing: -0.03em;
     font-family: var(--font-mono);
     font-variant-numeric: tabular-nums;
-    margin-top: 6px;
+    margin-top: 4px;
     display: flex;
     align-items: baseline;
     gap: 4px;
@@ -561,46 +588,70 @@
     font-family: var(--font);
   }
 
-  /* --- Consejo Biomecánico --- */
-  .critique-card {
-    background: rgba(255, 119, 0, 0.08);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
-    border: 1px solid rgba(255, 119, 0, 0.28);
+  /* --- Tarjeta del Coach DOC --- */
+  .doc-card {
+    background: rgba(255, 119, 0, 0.07);
+    border: 1px solid rgba(255, 119, 0, 0.25);
     border-radius: var(--radius-md);
-    padding: 14px 18px;
-    font-size: 0.94rem;
-    font-weight: 500;
-    line-height: 1.5;
-    color: #f8fafc;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-    transition: background-color var(--dur-base) var(--ease-out), border-color var(--dur-base) var(--ease-out);
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
   }
-  .critique-card.ok {
-    border-color: rgba(16, 185, 129, 0.3);
-    background: rgba(16, 185, 129, 0.06);
-  }
-
-  .voice-row {
+  .doc-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 0.8rem;
-    color: var(--fg-muted);
-    padding-top: 2px;
   }
-  .voice-row label {
+  .doc-identity {
     display: flex;
     align-items: center;
     gap: 8px;
+  }
+  .doc-avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: rgba(255, 119, 0, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.78rem;
+    border: 1px solid rgba(255, 119, 0, 0.4);
+  }
+  .doc-name {
+    font-weight: 800;
+    font-size: 0.84rem;
+    color: #fff;
+    line-height: 1.1;
+  }
+  .doc-role {
+    font-size: 0.68rem;
+    color: var(--fg-muted);
+  }
+  .doc-voice-toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.76rem;
+    color: var(--fg-muted);
     cursor: pointer;
     user-select: none;
   }
-  .voice-row input[type="checkbox"] {
+  .doc-voice-toggle input[type="checkbox"] {
     accent-color: var(--accent);
-    width: 15px;
-    height: 15px;
     cursor: pointer;
+    width: 14px;
+    height: 14px;
+  }
+  .doc-bubble {
+    font-size: 0.88rem;
+    line-height: 1.45;
+    color: #f8fafc;
+    transition: color 0.15s ease;
+  }
+  .doc-bubble.ok {
+    color: #a7f3d0;
   }
 
   /* --- Badges y Chips Semánticos --- */
@@ -1249,7 +1300,7 @@
   <!-- Barra de Identidad y Conexión -->
   <header class="app-bar">
     <div class="app-bar-left">
-      <button id="btn-volver-intro" class="btn-volver" type="button" aria-label="Volver al menú de modos" title="Volver al menú de modos">
+      <button id="btn-volver-intro" class="btn-volver" type="button" aria-label="Volver al menú de modos" title="Volver al menú de modos (Esc)">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M19 12H5M12 19l-7-7 7-7"/>
         </svg>
@@ -1258,279 +1309,304 @@
 
       <div class="brand" id="brand-link" title="Volver al menú de modos">
         <div class="brand-row">
-          <div class="brand-meta">
-            <div class="brand-title">
-              <span class="brand-doc">DOC</span>
-              <span class="brand-stars">★★★</span>
-              <span class="tag-chip" id="modo-actual-badge">01 // MODO LIBRE</span>
-            </div>
-            <div class="connection-status">
-              <span class="dot-status" id="dot-ble"></span>
-              <span id="estado">Sin conectar</span>
-            </div>
-          </div>
+          <h1 class="brand-name">SPIN LAB</h1>
+          <span class="coach-tag">Coach: <b>Doc</b></span>
+          <span class="badge-modo" id="modo-actual-badge">Modo Libre</span>
         </div>
       </div>
     </div>
 
-    <div class="header-actions">
-      <button id="conectar" class="btn-primary" type="button">⚡ Conectar</button>
-      <button id="simular" class="btn-sec" type="button">Simulador</button>
+    <div class="app-bar-right">
+      <div class="connection-status">
+        <span class="dot-status" id="dot-ble"></span>
+        <span id="estado">Sin conectar</span>
+      </div>
+      <button id="conectar" class="btn-primary" type="button">Conectar</button>
     </div>
   </header>
 
   <!-- ==================== VISTA 1: MODO LIBRE ==================== -->
   <div id="vista-libre" class="vista-tab">
-    <section class="card" id="ultimo">
-      <div class="hero-strike-header">
-        <div class="strike-title" id="golpe">Esperando golpe…</div>
-        <div style="display:flex; align-items:center; gap:8px;">
-          <div class="visor-selector">
-            <button id="btn-m1" class="btn-m activo" type="button">8 KB</button>
-            <button id="btn-m2" class="btn-m" type="button">156 KB</button>
+    <div class="studio-grid" id="ultimo">
+      <!-- Columna Izquierda: Visor 3D Libre y Estado de Impacto -->
+      <section class="studio-stage">
+        <div class="hero-strike-header">
+          <div>
+            <span class="sub-heading">Golpe detectado</span>
+            <div class="strike-title" id="golpe">Esperando golpe…</div>
           </div>
           <div class="strike-conf-badge" id="certeza">Certeza: –</div>
         </div>
-      </div>
 
-      <!-- Visor 3D Interactivo: Lente Circular -->
-      <div class="visor-wrap">
-        <div id="canvas3d-container"></div>
-        <div class="visor-ayuda">ORIENTACIÓN 3D</div>
-        <div class="visor-badge-cara cara-roja" id="visor-cara">🔴 Goma Roja ⇄</div>
-        <div class="visor-indicador" style="display:none;">
-          <span id="visor-angulo">–°</span>
-          <small id="visor-etiqueta">Cara vertical</small>
+        <!-- Visor 3D Libre y Expansivo -->
+        <div class="visor-stage">
+          <div id="canvas3d-container"></div>
+          <div class="visor-ayuda">ORIENTACIÓN 3D INTERACTIVA</div>
+          <div class="visor-badge-cara cara-roja" id="visor-cara">🔴 Goma Roja ⇄</div>
+          <div class="visor-indicador" style="display:none;">
+            <span id="visor-angulo">–°</span>
+            <small id="visor-etiqueta">Cara vertical</small>
+          </div>
         </div>
-      </div>
 
-      <div class="agarre-banner">
-        <span>Agarre de referencia:</span> <b>⚫ Negra en Derecha · 🔴 Roja en Revés</b>
-      </div>
-
-      <!-- Grilla de Telemetría Biomecánica -->
-      <div class="telemetry-grid">
-        <div class="telemetry-cell">
-          <div class="telemetry-label">Velocidad</div>
-          <div class="telemetry-val"><span id="vel">–</span> <small class="telemetry-unit">km/h</small></div>
+        <div class="agarre-banner">
+          <span>Agarre de referencia:</span> <b>⚫ Negra en Derecha · 🔴 Roja en Revés</b>
         </div>
-        <div class="telemetry-cell">
-          <div class="telemetry-label">Ángulo</div>
-          <div class="telemetry-val"><span id="ang">–</span> <small class="telemetry-unit">°</small></div>
+      </section>
+
+      <!-- Columna Derecha: Panel Lateral Consolidado de Métricas & Doc -->
+      <aside class="studio-panel">
+        <div>
+          <span class="sub-heading" style="margin-bottom:8px;">Métricas del impacto</span>
+          <div class="telemetry-grid">
+            <div class="telemetry-cell">
+              <div class="telemetry-label">Velocidad</div>
+              <div class="telemetry-val"><span id="vel">–</span> <small class="telemetry-unit">km/h</small></div>
+            </div>
+            <div class="telemetry-cell">
+              <div class="telemetry-label">Ángulo</div>
+              <div class="telemetry-val"><span id="ang">–</span> <small class="telemetry-unit">°</small></div>
+            </div>
+            <div class="telemetry-cell">
+              <div class="telemetry-label">Timing</div>
+              <div class="telemetry-val"><span id="pico">–</span></div>
+            </div>
+            <div class="telemetry-cell">
+              <div class="telemetry-label">Score Técnico</div>
+              <div class="telemetry-val"><span id="score-pts" style="color:var(--accent)">–</span> <small class="telemetry-unit">/100</small></div>
+            </div>
+          </div>
         </div>
-        <div class="telemetry-cell">
-          <div class="telemetry-label">Timing</div>
-          <div class="telemetry-val"><span id="pico">–</span></div>
+
+        <!-- Tarjeta del Coach DOC -->
+        <div class="doc-card">
+          <div class="doc-header">
+            <div class="doc-identity">
+              <div class="doc-avatar">🏓</div>
+              <div>
+                <div class="doc-name">Doc</div>
+                <div class="doc-role">Coach Biomecánico IA</div>
+              </div>
+            </div>
+            <label class="doc-voice-toggle">
+              <input type="checkbox" id="voz">
+              <span>🔊 Voz</span>
+            </label>
+          </div>
+          <div class="doc-bubble" id="consejo">
+            Pegá un golpe con la paleta para que Doc analice tu técnica.
+          </div>
         </div>
-        <div class="telemetry-cell">
-          <div class="telemetry-label">Score Técnico</div>
-          <div class="telemetry-val"><span id="score-pts" style="color:var(--accent)">–</span> <small class="telemetry-unit">/100</small></div>
+
+        <!-- Distribución y Actividad Reciente -->
+        <div class="feed-wrap">
+          <div class="session-feed-header">
+            <span class="sub-heading">Distribución de la sesión</span>
+            <div class="conteo-inline" id="conteo">
+              <span class="vacio-inline">Esperando primeros golpes…</span>
+            </div>
+          </div>
+
+          <div style="margin-top:6px;">
+            <span class="sub-heading" style="margin-bottom:6px;">Últimos impactos</span>
+            <ul id="historial" class="lista-compacta">
+              <li class="vacio">Todavía no hay golpes registrados.</li>
+            </ul>
+          </div>
         </div>
-      </div>
+      </aside>
+    </div>
 
-      <!-- Feedback y Voz -->
-      <div class="critique-card" id="consejo">
-        Pegá un golpe con la paleta para ver el análisis biomécanico.
-      </div>
-      <div class="voice-row">
-        <label><input type="checkbox" id="voz"> 🔊 Dictar correcciones en voz alta</label>
-      </div>
-
-      <!-- Resumen Integrado de Sesión y Stream de Impactos (Sin tarjetas separadas) -->
-      <div class="section-divider-clean"></div>
-
-      <div class="session-feed-header">
-        <span class="sub-heading">Distribución de la sesión</span>
-        <div class="conteo-inline" id="conteo">
-          <span class="vacio-inline">Esperando primeros golpes…</span>
-        </div>
-      </div>
-
-      <div class="feed-wrap">
-        <span class="sub-heading">Últimos impactos</span>
-        <ul id="historial" class="lista-compacta">
-          <li class="vacio">Todavía no hay golpes registrados.</li>
-        </ul>
-      </div>
-    </section>
-
-    <!-- Telemetría Cruda (Developer drawer) -->
-    <details class="card-debug" id="panel-debug">
-      <summary>🛠️ Diagnóstico y Telemetría BLE (Capa Física)</summary>
-      <div class="debug-grid">
-        <div><span>Paquete BLE:</span> <b id="dbg-tam">–</b></div>
-        <div><span>Tipo crudo:</span> <b id="dbg-tipo">–</b></div>
-        <div><span>Confianza IA:</span> <b id="dbg-conf">–</b></div>
-        <div><span>Goma impacto:</span> <b id="dbg-cara">–</b></div>
-        <div><span>Velocidad:</span> <b id="dbg-vel">–</b></div>
-        <div><span>Ángulo cara:</span> <b id="dbg-ang">–</b></div>
-        <div><span>Pico giro:</span> <b id="dbg-pico">–</b></div>
-        <div><span>Score técnico:</span> <b id="dbg-score">–</b></div>
-        <div><span>Cuaternión q:</span> <b id="dbg-q">–</b></div>
-      </div>
-      <div class="debug-log-wrap" style="margin-top:6px;">
-        <pre id="dbg-log">Esperando impactos por BLE o simulador…</pre>
-      </div>
-    </details>
+    <!-- Contenedor técnico oculto para telemetría cruda en memoria -->
+    <div id="panel-debug" style="display:none;" aria-hidden="true">
+      <span id="dbg-tam"></span><span id="dbg-tipo"></span><span id="dbg-conf"></span>
+      <span id="dbg-cara"></span><span id="dbg-vel"></span><span id="dbg-ang"></span>
+      <span id="dbg-pico"></span><span id="dbg-score"></span><span id="dbg-q"></span>
+      <pre id="dbg-log"></pre>
+    </div>
   </div>
 
   <!-- ==================== VISTA 2: MODO TUTORIAL ==================== -->
   <div id="vista-tutorial" class="vista-tab oculta">
-    <section class="card" id="card-tutorial">
-      <div class="unified-card-header">
+    <div class="studio-grid" id="card-tutorial">
+      <!-- Columna Izquierda: Desafío de Entrenamiento -->
+      <section class="studio-stage">
+        <div class="unified-card-header">
+          <div>
+            <span class="sub-heading">Entrenamiento guiado</span>
+            <h2 class="unified-title" id="tut-titulo-paso">Paso 1: Ángulo de ataque</h2>
+          </div>
+          <div class="header-badges-row">
+            <span class="badge badge-neutral" id="tut-nivel-badge">Paso 1 / 3</span>
+            <span class="badge badge-neutral" id="tut-estado-paso">En curso</span>
+          </div>
+        </div>
+
+        <!-- Selectores Compactos -->
+        <div class="tut-selectors-strip">
+          <div class="chip-group" id="tut-selector-golpe">
+            <button class="chip-btn activo" data-golpe="TD" type="button">Topspin Der.</button>
+            <button class="chip-btn" data-golpe="TR" type="button">Topspin Rev.</button>
+            <button class="chip-btn" data-golpe="ED" type="button">Empuje Der.</button>
+            <button class="chip-btn" data-golpe="ER" type="button">Empuje Rev.</button>
+          </div>
+          <div class="chip-group" id="tut-selector-paso">
+            <button class="chip-btn activo" data-paso="1" type="button">1. Ángulo</button>
+            <button class="chip-btn" data-paso="2" type="button">2. Brushing</button>
+            <button class="chip-btn" data-paso="3" type="button">3. Timing</button>
+          </div>
+        </div>
+
+        <!-- Desafío Activo -->
+        <div class="challenge-box">
+          <div class="challenge-top">
+            <p id="tut-consigna" class="challenge-consigna">
+              Lográ 5 golpes seguidos con la cara cerrada en rango óptimo (-25° a -5°).
+            </p>
+            <span id="tut-progreso-txt" class="challenge-count">0 / 5</span>
+          </div>
+
+          <div class="barra-progreso-wrap">
+            <div class="barra-progreso-fill" id="tut-barra"></div>
+          </div>
+
+          <div class="challenge-meta">
+            <span>Racha de aciertos: <b id="tut-racha" style="color:var(--warn)">0</b> 🔥</span>
+          </div>
+        </div>
+
+        <div class="card-acciones">
+          <button id="tut-btn-reiniciar" class="btn-sec" type="button">Reiniciar paso</button>
+          <button id="tut-btn-siguiente" class="btn-primary" type="button" disabled>Siguiente paso ➔</button>
+        </div>
+      </section>
+
+      <!-- Columna Derecha: Feedback de Doc y Métricas de Validación -->
+      <aside class="studio-panel">
+        <div class="doc-card">
+          <div class="doc-header">
+            <div class="doc-identity">
+              <div class="doc-avatar">🏓</div>
+              <div>
+                <div class="doc-name">Doc</div>
+                <div class="doc-role">Evaluación en tiempo real</div>
+              </div>
+            </div>
+          </div>
+          <div class="doc-bubble" id="tut-feedback">
+            Pegá un golpe para iniciar el desafío del tutorial.
+          </div>
+        </div>
+
         <div>
-          <span class="sub-heading">Entrenador Biomecánico</span>
-          <h2 class="unified-title" id="tut-titulo-paso">Paso 1: Ángulo de ataque</h2>
+          <span class="sub-heading" style="margin-bottom:8px;">Telemetría del último intento</span>
+          <div class="telemetry-grid">
+            <div class="telemetry-cell">
+              <div class="telemetry-label">Ángulo</div>
+              <div class="telemetry-val"><span id="tut-stat-ang">–</span></div>
+            </div>
+            <div class="telemetry-cell">
+              <div class="telemetry-label">Velocidad</div>
+              <div class="telemetry-val"><span id="tut-stat-vel">–</span></div>
+            </div>
+            <div class="telemetry-cell">
+              <div class="telemetry-label">Timing</div>
+              <div class="telemetry-val"><span id="tut-stat-pico">–</span></div>
+            </div>
+            <div class="telemetry-cell">
+              <div class="telemetry-label">Score</div>
+              <div class="telemetry-val"><span id="tut-stat-score">–</span></div>
+            </div>
+          </div>
         </div>
-        <div class="header-badges-row">
-          <span class="badge badge-neutral" id="tut-nivel-badge">Paso 1 / 3</span>
-          <span class="badge badge-neutral" id="tut-estado-paso">En curso</span>
-        </div>
-      </div>
-
-      <!-- Barra de selectores compactos -->
-      <div class="tut-selectors-strip">
-        <div class="chip-group" id="tut-selector-golpe">
-          <button class="chip-btn activo" data-golpe="TD" type="button">Topspin Der.</button>
-          <button class="chip-btn" data-golpe="TR" type="button">Topspin Rev.</button>
-          <button class="chip-btn" data-golpe="ED" type="button">Empuje Der.</button>
-          <button class="chip-btn" data-golpe="ER" type="button">Empuje Rev.</button>
-        </div>
-        <div class="chip-group" id="tut-selector-paso">
-          <button class="chip-btn activo" data-paso="1" type="button">1. Ángulo</button>
-          <button class="chip-btn" data-paso="2" type="button">2. Brushing</button>
-          <button class="chip-btn" data-paso="3" type="button">3. Timing</button>
-        </div>
-      </div>
-
-      <!-- Desafío activo & Progreso -->
-      <div class="challenge-box">
-        <div class="challenge-top">
-          <p id="tut-consigna" class="challenge-consigna">
-            Lográ 5 golpes seguidos con la cara cerrada en rango óptimo (-25° a -5°).
-          </p>
-          <span id="tut-progreso-txt" class="challenge-count">0 / 5</span>
-        </div>
-
-        <div class="barra-progreso-wrap">
-          <div class="barra-progreso-fill" id="tut-barra"></div>
-        </div>
-
-        <div class="challenge-meta">
-          <span>Racha de aciertos: <b id="tut-racha" style="color:var(--warn)">0</b> 🔥</span>
-        </div>
-      </div>
-
-      <!-- Feedback de ejecución en vivo -->
-      <div class="critique-card" id="tut-feedback">
-        Pegá un golpe para iniciar el desafío del tutorial.
-      </div>
-
-      <!-- Instrumental de Telemetría Biomecánica -->
-      <div class="telemetry-grid">
-        <div class="telemetry-cell">
-          <div class="telemetry-label">Ángulo</div>
-          <div class="telemetry-val"><span id="tut-stat-ang">–</span></div>
-        </div>
-        <div class="telemetry-cell">
-          <div class="telemetry-label">Velocidad</div>
-          <div class="telemetry-val"><span id="tut-stat-vel">–</span></div>
-        </div>
-        <div class="telemetry-cell">
-          <div class="telemetry-label">Timing</div>
-          <div class="telemetry-val"><span id="tut-stat-pico">–</span></div>
-        </div>
-        <div class="telemetry-cell">
-          <div class="telemetry-label">Score</div>
-          <div class="telemetry-val"><span id="tut-stat-score">–</span></div>
-        </div>
-      </div>
-
-      <!-- Acciones del tutorial -->
-      <div class="card-acciones">
-        <button id="tut-btn-reiniciar" class="btn-sec" type="button">Reiniciar paso</button>
-        <button id="tut-btn-siguiente" class="btn-primary" type="button" disabled>Siguiente paso ➔</button>
-      </div>
-    </section>
+      </aside>
+    </div>
   </div>
 
   <!-- ==================== VISTA 3: MODO BENCHMARK (TEST) ==================== -->
   <div id="vista-test" class="vista-tab oculta">
-    <section class="card" id="card-benchmark">
-      <div class="unified-card-header">
+    <div class="studio-grid" id="card-benchmark">
+      <!-- Columna Izquierda: Configuración y HUD de Acierto -->
+      <section class="studio-stage">
+        <div class="unified-card-header">
+          <div>
+            <span class="sub-heading">Validación de Modelo</span>
+            <h2 class="unified-title">Precisión de Reconocimiento</h2>
+          </div>
+          <div class="header-badges-row">
+            <span class="badge badge-neutral" id="test-meta-badge">Meta: 10 pelotas</span>
+            <span class="badge badge-neutral" id="test-estado-badge">Esperando tiros…</span>
+          </div>
+        </div>
+
+        <!-- Configuración de la Tanda -->
+        <div class="benchmark-config-strip">
+          <div class="chip-group" id="test-selector-golpe">
+            <button class="chip-btn activo" data-golpe="TD" type="button">Topspin Der.</button>
+            <button class="chip-btn" data-golpe="TR" type="button">Topspin Rev.</button>
+            <button class="chip-btn" data-golpe="ED" type="button">Empuje Der.</button>
+            <button class="chip-btn" data-golpe="ER" type="button">Empuje Rev.</button>
+          </div>
+          <div class="tanda-select-wrap">
+            <select id="test-cant-tiros" class="select-clean">
+              <option value="10" selected>10 pelotas</option>
+              <option value="12">12 pelotas</option>
+              <option value="20">20 pelotas</option>
+              <option value="0">Libre</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- HUD Heroico de Acierto -->
+        <div class="benchmark-hud">
+          <div>
+            <div class="hud-title">Tasa de Acierto en vivo</div>
+            <div class="hud-val" id="test-porcentaje">– %</div>
+          </div>
+          <div style="text-align:right;">
+            <small id="test-conteo-tiros" class="hud-counter">0 / 10 tiros</small>
+          </div>
+        </div>
+
+        <!-- Acciones de la Tanda -->
+        <div class="card-acciones">
+          <button id="test-btn-reiniciar" class="btn-sec" type="button">Reiniciar tanda</button>
+          <button id="test-btn-copiar" class="btn-primary" type="button">📋 Copiar reporte</button>
+        </div>
+      </section>
+
+      <!-- Columna Derecha: Matriz de Resultados y Tiros -->
+      <aside class="studio-panel">
         <div>
-          <span class="sub-heading">Test de Precisión</span>
-          <h2 class="unified-title">Precisión de Reconocimiento</h2>
+          <span class="sub-heading" style="margin-bottom:8px;">Matriz de clasificación</span>
+          <div class="telemetry-grid">
+            <div class="telemetry-cell">
+              <div class="telemetry-label">Aciertos</div>
+              <div class="telemetry-val" style="color:var(--ok)"><span id="test-cant-ok">0</span></div>
+            </div>
+            <div class="telemetry-cell">
+              <div class="telemetry-label">Confusión</div>
+              <div class="telemetry-val" style="color:var(--bad)"><span id="test-cant-conf">0</span></div>
+            </div>
+            <div class="telemetry-cell">
+              <div class="telemetry-label">Ruido/Desc.</div>
+              <div class="telemetry-val" style="color:var(--warn)"><span id="test-cant-ruido">0</span></div>
+            </div>
+            <div class="telemetry-cell">
+              <div class="telemetry-label">Certeza IA</div>
+              <div class="telemetry-val"><span id="test-conf-prom">–</span></div>
+            </div>
+          </div>
         </div>
-        <div class="header-badges-row">
-          <span class="badge badge-neutral" id="test-meta-badge">Meta: 10 pelotas</span>
-          <span class="badge badge-neutral" id="test-estado-badge">Esperando tiros…</span>
-        </div>
-      </div>
 
-      <!-- Configuración de la Tanda -->
-      <div class="benchmark-config-strip">
-        <div class="chip-group" id="test-selector-golpe">
-          <button class="chip-btn activo" data-golpe="TD" type="button">Topspin Der.</button>
-          <button class="chip-btn" data-golpe="TR" type="button">Topspin Rev.</button>
-          <button class="chip-btn" data-golpe="ED" type="button">Empuje Der.</button>
-          <button class="chip-btn" data-golpe="ER" type="button">Empuje Rev.</button>
+        <div class="feed-wrap">
+          <span class="sub-heading">Desglose de tiros</span>
+          <ul id="test-historial" class="lista-compacta">
+            <li class="vacio">Todavía no hay tiros registrados.</li>
+          </ul>
         </div>
-        <div class="tanda-select-wrap">
-          <select id="test-cant-tiros" class="select-clean">
-            <option value="10" selected>10 pelotas</option>
-            <option value="12">12 pelotas</option>
-            <option value="20">20 pelotas</option>
-            <option value="0">Libre</option>
-          </select>
-        </div>
-      </div>
-
-      <!-- HUD Heroico de Acierto -->
-      <div class="benchmark-hud">
-        <div>
-          <div class="hud-title">Tasa de Acierto en vivo</div>
-          <div class="hud-val" id="test-porcentaje">– %</div>
-        </div>
-        <div style="text-align:right;">
-          <small id="test-conteo-tiros" class="hud-counter">0 / 10 tiros</small>
-        </div>
-      </div>
-
-      <!-- Matriz de Resultados -->
-      <div class="telemetry-grid">
-        <div class="telemetry-cell">
-          <div class="telemetry-label">Aciertos</div>
-          <div class="telemetry-val" style="color:var(--ok)"><span id="test-cant-ok">0</span></div>
-        </div>
-        <div class="telemetry-cell">
-          <div class="telemetry-label">Confusión</div>
-          <div class="telemetry-val" style="color:var(--bad)"><span id="test-cant-conf">0</span></div>
-        </div>
-        <div class="telemetry-cell">
-          <div class="telemetry-label">Ruido/Desc.</div>
-          <div class="telemetry-val" style="color:var(--warn)"><span id="test-cant-ruido">0</span></div>
-        </div>
-        <div class="telemetry-cell">
-          <div class="telemetry-label">Certeza IA</div>
-          <div class="telemetry-val"><span id="test-conf-prom">–</span></div>
-        </div>
-      </div>
-
-      <!-- Acciones de la Tanda -->
-      <div class="card-acciones">
-        <button id="test-btn-reiniciar" class="btn-sec" type="button">Reiniciar tanda</button>
-        <button id="test-btn-copiar" class="btn-primary" type="button">📋 Copiar reporte</button>
-      </div>
-
-      <!-- Stream de Tiros de la Tanda (Sin viñetas ni bordes de lista) -->
-      <div class="feed-wrap">
-        <span class="sub-heading">Desglose de tiros de la tanda</span>
-        <ul id="test-historial" class="lista-compacta">
-          <li class="vacio">Todavía no hay tiros registrados.</li>
-        </ul>
-      </div>
-    </section>
+      </aside>
+    </div>
   </div>
 </main>
 
@@ -1730,24 +1806,8 @@ function iniciarVisor3D() {
   paletaGroup = new THREE.Group();
   scene3d.add(paletaGroup);
 
-  // Cargar por defecto la paleta deportiva limpia de 8 KB
+  // Cargar la paleta deportiva limpia de 8 KB
   cargarModelo('paleta.glb');
-
-  // Botones de selección de modelo
-  const b1 = $('btn-m1');
-  const b2 = $('btn-m2');
-  if (b1 && b2) {
-    b1.addEventListener('click', () => {
-      b1.classList.add('activo');
-      b2.classList.remove('activo');
-      cargarModelo('paleta.glb');
-    });
-    b2.addEventListener('click', () => {
-      b2.classList.add('activo');
-      b1.classList.remove('activo');
-      cargarModelo('paleta2.glb');
-    });
-  }
 
   // Interacción táctil / mouse para girar levemente en Y
   container.addEventListener('pointerdown', (ev) => {
@@ -2034,20 +2094,18 @@ function mostrar(e, registrarSesion = true) {
   $('consejo').classList.toggle('ok', c.ok);
   if (registrarSesion) decir(c.texto);
 
-  // Actualizar panel de diagnóstico en vivo (telemetría BLE sin cables)
+  // Actualizar panel de diagnóstico si está disponible
   const caraCalculada = determinarCara(e.golpe, e.ang, e.q);
-  $('dbg-tam').textContent = `${e.tam ?? 14} bytes`;
-  $('dbg-tipo').textContent = `${e.tipo_raw ?? '–'} (${GOLPES[e.golpe] ?? e.golpe})`;
-  $('dbg-conf').textContent = e.conf !== null ? `${e.conf} %` : '–';
-  $('dbg-cara').textContent = caraCalculada === 'roja' ? '🔴 Roja' : '⚫ Negra';
-  $('dbg-vel').textContent = e.vel !== null ? `${e.vel} km/h` : '–';
-  $('dbg-ang').textContent = e.ang !== null ? `${e.ang}°` : '–';
-  $('dbg-pico').textContent = formatearPico(e.pico);
-  const dbgScoreEl = $('dbg-score');
-  if (dbgScoreEl) {
-    dbgScoreEl.textContent = e.score ? `${e.score.total} pts (ang=${e.score.sAng}, din=${e.score.sDin}, tim=${e.score.sTim})` : '–';
-  }
-  $('dbg-q').textContent = e.q ? `(${e.q.w.toFixed(2)}, ${e.q.x.toFixed(2)}, ${e.q.y.toFixed(2)}, ${e.q.z.toFixed(2)})` : 'No presente (14B)';
+  const setTxt = (id, val) => { const el = $(id); if (el) el.textContent = val; };
+  setTxt('dbg-tam', `${e.tam ?? 14} bytes`);
+  setTxt('dbg-tipo', `${e.tipo_raw ?? '–'} (${GOLPES[e.golpe] ?? e.golpe})`);
+  setTxt('dbg-conf', e.conf !== null ? `${e.conf} %` : '–');
+  setTxt('dbg-cara', caraCalculada === 'roja' ? '🔴 Roja' : '⚫ Negra');
+  setTxt('dbg-vel', e.vel !== null ? `${e.vel} km/h` : '–');
+  setTxt('dbg-ang', e.ang !== null ? `${e.ang}°` : '–');
+  setTxt('dbg-pico', formatearPico(e.pico));
+  setTxt('dbg-score', e.score ? `${e.score.total} pts` : '–');
+  setTxt('dbg-q', e.q ? `(${e.q.w.toFixed(2)}, ${e.q.x.toFixed(2)}, ${e.q.y.toFixed(2)}, ${e.q.z.toFixed(2)})` : 'No presente (14B)');
 
   const dbgLog = $('dbg-log');
   if (dbgLog) {
@@ -2106,9 +2164,9 @@ function mostrar(e, registrarSesion = true) {
 let tabActiva = 'libre';
 
 const MODOS_METADATA = {
-  libre: { badge: '01 // MODO LIBRE' },
-  tutorial: { badge: '02 // TUTORIAL' },
-  test: { badge: '03 // BENCHMARK' },
+  libre: { badge: 'Modo Libre' },
+  tutorial: { badge: 'Tutorial' },
+  test: { badge: 'Benchmark' },
 };
 
 function cambiarTab(nuevoModo) {
@@ -2500,16 +2558,17 @@ async function conectar() {
 // Simulador: genera eventos falsos con el mismo formato que la placa
 let simulador = null, nSim = 0;
 function alternarSimulador() {
+  const btnSim = $('simular');
   if (simulador) {
     clearInterval(simulador); simulador = null;
-    $('simular').textContent = 'Simulador';
+    if (btnSim) btnSim.textContent = 'Simulador';
     setEstadoBLE(false, 'Simulador detenido.');
     return;
   }
   const azar = (a, b) => Math.round(a + Math.random() * (b - a));
   const inicio = Date.now();
   setEstadoBLE(true, 'Simulador activo (golpe c/ 2,5 s)');
-  $('simular').textContent = '⏹ Detener';
+  if (btnSim) btnSim.textContent = '⏹ Detener';
   simulador = setInterval(() => {
     let tipo;
     if (tabActiva === 'test') {
@@ -2548,12 +2607,14 @@ function alternarSimulador() {
 
     recibir({ target: { value: datos } });
   }, 2500);
-  $('simular').textContent = 'Detener simulador';
+  if (btnSim) btnSim.textContent = 'Detener simulador';
   $('estado').textContent = 'Simulador: golpes inventados cada 2,5 s.';
 }
 
-$('conectar').addEventListener('click', conectar);
-$('simular').addEventListener('click', alternarSimulador);
+const btnConectar = $('conectar');
+if (btnConectar) btnConectar.addEventListener('click', conectar);
+const btnSimular = $('simular');
+if (btnSimular) btnSimular.addEventListener('click', alternarSimulador);
 
 
 
