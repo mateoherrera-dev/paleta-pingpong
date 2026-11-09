@@ -1310,7 +1310,6 @@
       <div class="brand" id="brand-link" title="Volver al menú de modos">
         <div class="brand-row">
           <h1 class="brand-name">SPIN LAB</h1>
-          <span class="coach-tag">Coach: <b>Doc</b></span>
           <span class="badge-modo" id="modo-actual-badge">Modo Libre</span>
         </div>
       </div>
@@ -1328,7 +1327,7 @@
   <!-- ==================== VISTA 1: MODO LIBRE ==================== -->
   <div id="vista-libre" class="vista-tab">
     <div class="studio-grid" id="ultimo">
-      <!-- Columna Izquierda: Visor 3D Libre y Estado de Impacto -->
+      <!-- Columna Izquierda: Visor 3D Libre y Consejo de Doc -->
       <section class="studio-stage">
         <div class="hero-strike-header">
           <div>
@@ -1338,11 +1337,9 @@
           <div class="strike-conf-badge" id="certeza">Certeza: –</div>
         </div>
 
-        <!-- Visor 3D Libre y Expansivo -->
+        <!-- Visor 3D Libre y Expansivo (Limpio y sin marcas de agua) -->
         <div class="visor-stage">
           <div id="canvas3d-container"></div>
-          <div class="visor-ayuda">ORIENTACIÓN 3D INTERACTIVA</div>
-          <div class="visor-badge-cara cara-roja" id="visor-cara">🔴 Goma Roja ⇄</div>
           <div class="visor-indicador" style="display:none;">
             <span id="visor-angulo">–°</span>
             <small id="visor-etiqueta">Cara vertical</small>
@@ -1352,9 +1349,29 @@
         <div class="agarre-banner">
           <span>Agarre de referencia:</span> <b>⚫ Negra en Derecha · 🔴 Roja en Revés</b>
         </div>
+
+        <!-- Tarjeta del Coach DOC (a la izquierda, acompañando el tiro en vivo) -->
+        <div class="doc-card">
+          <div class="doc-header">
+            <div class="doc-identity">
+              <div class="doc-avatar">🏓</div>
+              <div>
+                <div class="doc-name">Doc</div>
+                <div class="doc-role">Coach Biomecánico IA</div>
+              </div>
+            </div>
+            <label class="doc-voice-toggle">
+              <input type="checkbox" id="voz">
+              <span>🔊 Voz</span>
+            </label>
+          </div>
+          <div class="doc-bubble" id="consejo">
+            Pegá un golpe con la paleta para que Doc analice tu técnica.
+          </div>
+        </div>
       </section>
 
-      <!-- Columna Derecha: Panel Lateral Consolidado de Métricas & Doc -->
+      <!-- Columna Derecha: Panel Consolidado de Métricas & Historial -->
       <aside class="studio-panel">
         <div>
           <span class="sub-heading" style="margin-bottom:8px;">Métricas del impacto</span>
@@ -1378,26 +1395,6 @@
           </div>
         </div>
 
-        <!-- Tarjeta del Coach DOC -->
-        <div class="doc-card">
-          <div class="doc-header">
-            <div class="doc-identity">
-              <div class="doc-avatar">🏓</div>
-              <div>
-                <div class="doc-name">Doc</div>
-                <div class="doc-role">Coach Biomecánico IA</div>
-              </div>
-            </div>
-            <label class="doc-voice-toggle">
-              <input type="checkbox" id="voz">
-              <span>🔊 Voz</span>
-            </label>
-          </div>
-          <div class="doc-bubble" id="consejo">
-            Pegá un golpe con la paleta para que Doc analice tu técnica.
-          </div>
-        </div>
-
         <!-- Distribución y Actividad Reciente -->
         <div class="feed-wrap">
           <div class="session-feed-header">
@@ -1407,7 +1404,7 @@
             </div>
           </div>
 
-          <div style="margin-top:6px;">
+          <div style="margin-top:8px;">
             <span class="sub-heading" style="margin-bottom:6px;">Últimos impactos</span>
             <ul id="historial" class="lista-compacta">
               <li class="vacio">Todavía no hay golpes registrados.</li>
@@ -1422,6 +1419,7 @@
       <span id="dbg-tam"></span><span id="dbg-tipo"></span><span id="dbg-conf"></span>
       <span id="dbg-cara"></span><span id="dbg-vel"></span><span id="dbg-ang"></span>
       <span id="dbg-pico"></span><span id="dbg-score"></span><span id="dbg-q"></span>
+      <span id="visor-cara"></span>
       <pre id="dbg-log"></pre>
     </div>
   </div>
@@ -2618,18 +2616,7 @@ if (btnSimular) btnSimular.addEventListener('click', alternarSimulador);
 
 
 
-const badgeEl = $('visor-cara');
-if (badgeEl) {
-  badgeEl.title = 'Hacé clic para alternar goma';
-  badgeEl.addEventListener('click', () => {
-    caraForzadaManual = (caraActual === 'roja') ? 'negra' : 'roja';
-    if (ultimoEvento) {
-      actualizarVisor3D(ultimoEvento.ang, ultimoEvento.golpe, ultimoEvento.q, caraForzadaManual);
-      const dbgCara = $('dbg-cara');
-      if (dbgCara) dbgCara.textContent = caraForzadaManual === 'roja' ? '🔴 Roja (manual)' : '⚫ Negra (manual)';
-    }
-  });
-}
+
 
 // Three.js principal está en <head>. El GLTFLoader para el visor 3D de la paleta se baja dinámicamente.
 const LIBRERIAS_3D = [
