@@ -1094,7 +1094,7 @@
       <button type="button" class="dock-segment" data-modo="test">
         <span class="segment-idx">03</span>
         <div class="segment-title">Benchmark</div>
-        <div class="segment-desc">Validación de aciertos del predictor en placa</div>
+        <div class="segment-desc">Test de precisión y reconocimiento de golpes</div>
       </button>
     </div>
   </div>
@@ -1316,7 +1316,7 @@
   <div id="vista-test" class="vista-tab oculta">
     <section class="card">
       <div style="display:flex; justify-content:space-between; align-items:center;">
-        <span style="font-size:0.85rem; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:0.06em;">Validación TinyML</span>
+        <span style="font-size:0.85rem; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:0.06em;">Precisión de Reconocimiento</span>
         <span class="badge badge-neutral" id="test-meta-badge">Meta: 10 pelotas</span>
       </div>
 
@@ -2648,10 +2648,11 @@ function crearTexturaSombraIntro() {
   c.height = s;
   const ctx = c.getContext('2d');
 
+  // Contacto oclusivo: núcleo oscuro directamente debajo de la pelota que eclipsa la línea central
   const g = ctx.createRadialGradient(s / 2, s / 2, 0, s / 2, s / 2, s / 2);
-  g.addColorStop(0, 'rgba(0, 0, 0, 0.70)');
-  g.addColorStop(0.35, 'rgba(0, 0, 0, 0.40)');
-  g.addColorStop(0.70, 'rgba(0, 0, 0, 0.12)');
+  g.addColorStop(0, 'rgba(0, 0, 0, 0.90)');
+  g.addColorStop(0.28, 'rgba(2, 6, 14, 0.65)');
+  g.addColorStop(0.65, 'rgba(4, 10, 20, 0.22)');
   g.addColorStop(1, 'rgba(0, 0, 0, 0)');
 
   ctx.fillStyle = g;
@@ -2909,7 +2910,7 @@ function setZoom(t) {
   const zCam = Z_CAM_CLOSE + (Z_CAM_FAR - Z_CAM_CLOSE) * currentZoom;
 
   introBallGroup.scale.set(R, R, R);
-  introBallGroup.position.set(0, 0, 0); // La pelota permanece 100% en el centro (sin subir ni marear)
+  introBallGroup.position.set(0, currentZoom * 0.0038, 0); // Despeje milimétrico sutil sobre la mesa para evitar que la base choque la línea
   introCamera.position.z = zCam;
 
   if (introScene && introScene.userData.rimLight) {
@@ -2922,7 +2923,7 @@ function setZoom(t) {
     introTableMesh.material.opacity = pTable * 0.94;
   }
   if (introShadowMesh) {
-    introShadowMesh.material.opacity = pTable * 0.76;
+    introShadowMesh.material.opacity = pTable * 0.88;
   }
 
   actualizarUVs();
