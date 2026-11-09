@@ -765,13 +765,9 @@
     z-index: 100;
     overflow: hidden;
     background:
-      /* Halo de reflector cenital de estadio sobre la pelota */
-      radial-gradient(ellipse 680px 420px at 50% 36%, rgba(255, 119, 0, 0.12), transparent 65%),
-      /* Sombra de contacto / superficie de mesa bajo la esfera */
-      radial-gradient(ellipse 320px 42px at 50% 56%, rgba(0, 0, 0, 0.72), transparent 70%),
-      /* Línea reglamentaria sutil de cancha ITTF que ancla la escena */
-      linear-gradient(90deg, transparent 5%, rgba(255, 255, 255, 0.04) 20%, rgba(255, 119, 0, 0.18) 50%, rgba(255, 255, 255, 0.04) 80%, transparent 95%) 50% 56% / 90% 1px no-repeat,
-      /* Degradé de estadio deportivo profundo */
+      /* Halo de iluminacion deportiva suave sobre la pelota */
+      radial-gradient(ellipse 700px 440px at 50% 38%, rgba(255, 119, 0, 0.09), transparent 65%),
+      /* Degrade profundo de estadio deportivo */
       linear-gradient(180deg, #070a12 0%, #0a0f1c 55%, #050811 100%);
     pointer-events: none;
     transition: opacity 0.3s ease;
@@ -861,10 +857,10 @@
   /* --- Hub de Selección de Modo (Fila Horizontal Inferior) --- */
   .intro-menu-hub {
     position: absolute;
-    bottom: clamp(24px, 5vh, 48px);
+    bottom: clamp(20px, 4vh, 36px);
     left: 50%;
-    transform: translateX(-50%) translateY(20px);
-    width: min(920px, calc(100vw - 32px));
+    transform: translateX(-50%) translateY(16px);
+    width: min(840px, calc(100vw - 32px));
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -872,141 +868,96 @@
     z-index: 10;
     pointer-events: none;
     opacity: 0;
-    transition: opacity 0.38s cubic-bezier(0.16, 1, 0.3, 1), transform 0.38s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
   }
   .intro-menu-hub.visible {
     opacity: 1;
     transform: translateX(-50%) translateY(0);
     pointer-events: auto;
   }
-  .menu-hub-header {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
+  .menu-hub-title {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    color: rgba(248, 250, 252, 0.45);
     user-select: none;
   }
-  .hub-tag {
-    font-family: var(--font-mono);
-    font-size: 0.62rem;
-    font-weight: 700;
-    letter-spacing: 0.16em;
-    color: var(--accent);
-    text-transform: uppercase;
-  }
-  .menu-hub-title {
-    font-size: 0.82rem;
-    font-weight: 800;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    color: rgba(248, 250, 252, 0.85);
-  }
   .menu-hub-grid {
-    display: flex;
-    flex-direction: row;
-    gap: 14px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
     width: 100%;
-    justify-content: center;
   }
   .menu-card-btn {
-    flex: 1;
-    min-width: 0;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
-    gap: 10px;
-    background: rgba(13, 19, 32, 0.78);
+    gap: 8px;
+    background: rgba(13, 19, 32, 0.75);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border: 1px solid rgba(255, 255, 255, 0.08);
-    border-top: 1px solid rgba(255, 255, 255, 0.16);
-    border-radius: 14px;
+    border-radius: 12px;
     padding: 14px 16px;
     color: #ffffff;
     cursor: pointer;
     text-align: left;
-    transition: transform 0.18s cubic-bezier(0.23, 1, 0.32, 1), background-color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+    transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1),
+                background-color 0.15s ease,
+                border-color 0.15s ease,
+                box-shadow 0.15s ease;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
     position: relative;
-    overflow: hidden;
   }
   .menu-card-btn:hover {
-    background: rgba(20, 29, 48, 0.94);
-    border-color: rgba(255, 119, 0, 0.45);
-    border-top-color: #ff7700;
+    background: rgba(22, 32, 54, 0.92);
+    border-color: rgba(255, 119, 0, 0.5);
     transform: translateY(-2px);
-    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.55), 0 0 20px rgba(255, 119, 0, 0.18);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5), 0 0 16px rgba(255, 119, 0, 0.14);
   }
   .menu-card-btn:active {
-    transform: translateY(0) scale(0.97);
+    transform: translateY(0) scale(0.98);
   }
-  .card-meta-top {
+  .card-top {
     display: flex;
     align-items: center;
     justify-content: space-between;
     width: 100%;
   }
-  .card-idx {
+  .card-num {
     font-family: var(--font-mono);
-    font-size: 0.65rem;
+    font-size: 0.70rem;
     font-weight: 700;
-    letter-spacing: 0.10em;
+    letter-spacing: 0.08em;
     color: var(--accent);
   }
-  .card-svg {
-    color: rgba(255, 255, 255, 0.45);
-    transition: color 0.18s ease, transform 0.18s ease;
+  .card-arrow {
+    color: rgba(255, 255, 255, 0.3);
+    transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), color 0.18s ease;
   }
-  .menu-card-btn:hover .card-svg {
+  .menu-card-btn:hover .card-arrow {
     color: #ffffff;
-    transform: scale(1.08);
-  }
-  .menu-card-info {
-    flex: 1;
-    min-width: 0;
-  }
-  .menu-card-name {
-    font-size: 0.94rem;
-    font-weight: 800;
-    letter-spacing: -0.015em;
-    color: #f8fafc;
-    margin-top: 2px;
-  }
-  .menu-card-desc {
-    font-size: 0.72rem;
-    color: var(--muted);
-    line-height: 1.35;
-    margin-top: 3px;
-  }
-  .card-meta-bottom {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding-top: 8px;
-    border-top: 1px solid rgba(255, 255, 255, 0.06);
-    margin-top: 2px;
-  }
-  .card-sub-tag {
-    font-size: 0.66rem;
-    font-weight: 600;
-    color: rgba(255, 255, 255, 0.45);
-    letter-spacing: 0.02em;
-  }
-  .card-chevron {
-    color: rgba(255, 255, 255, 0.35);
-    font-size: 0.85rem;
-    font-weight: 700;
-    transition: transform 0.18s ease, color 0.18s ease;
-  }
-  .menu-card-btn:hover .card-chevron {
-    color: var(--accent);
     transform: translateX(3px);
+  }
+  .card-name {
+    font-size: 0.94rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: #f8fafc;
+  }
+  .card-desc {
+    font-size: 0.72rem;
+    color: rgba(248, 250, 252, 0.6);
+    line-height: 1.35;
   }
 
   @media (max-width: 680px) {
     .menu-hub-grid {
-      flex-direction: column;
-      gap: 10px;
+      grid-template-columns: 1fr;
+      gap: 8px;
+    }
+    .menu-card-btn {
+      padding: 12px 14px;
     }
   }
 
@@ -1050,65 +1001,39 @@
 
   <!-- Hub de Selección de Modo (Aparece bajo la esfera al terminar el Zoom Out) -->
   <div id="intro-menu-hub" class="intro-menu-hub">
-    <div class="menu-hub-header">
-      <span class="hub-tag">DOC · SISTEMA DE ENTRENAMIENTO</span>
-      <div class="menu-hub-title">Elegí el modo de sesión</div>
-    </div>
+    <div class="menu-hub-title">Elegí tu modo</div>
     <div class="menu-hub-grid">
       <button type="button" class="menu-card-btn" data-modo="libre">
-        <div class="card-meta-top">
-          <span class="card-idx">01 // EN VIVO</span>
-          <svg class="card-svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
-            <circle cx="12" cy="12" r="3"/>
+        <div class="card-top">
+          <span class="card-num">01</span>
+          <svg class="card-arrow" viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3 8h10M9 4l4 4-4 4"/>
           </svg>
         </div>
-        <div class="menu-card-info">
-          <div class="menu-card-name">Modo Libre</div>
-          <div class="menu-card-desc">Telemetría biomecánica y visor 3D en tiempo real</div>
-        </div>
-        <div class="card-meta-bottom">
-          <span class="card-sub-tag">Sesión abierta</span>
-          <span class="card-chevron">→</span>
-        </div>
+        <div class="card-name">Modo Libre</div>
+        <div class="card-desc">Telemetría y visor 3D en tiempo real</div>
       </button>
 
       <button type="button" class="menu-card-btn" data-modo="tutorial">
-        <div class="card-meta-top">
-          <span class="card-idx">02 // GUIADO</span>
-          <svg class="card-svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10"/>
-            <circle cx="12" cy="12" r="4"/>
-            <path d="M12 2v4M12 18v4M2 12h4M18 12h4"/>
+        <div class="card-top">
+          <span class="card-num">02</span>
+          <svg class="card-arrow" viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3 8h10M9 4l4 4-4 4"/>
           </svg>
         </div>
-        <div class="menu-card-info">
-          <div class="menu-card-name">Tutorial</div>
-          <div class="menu-card-desc">Entrenador de ángulo, brushing y timing paso a paso</div>
-        </div>
-        <div class="card-meta-bottom">
-          <span class="card-sub-tag">3 niveles guiados</span>
-          <span class="card-chevron">→</span>
-        </div>
+        <div class="card-name">Tutorial</div>
+        <div class="card-desc">Entrenador biomecánico paso a paso</div>
       </button>
 
       <button type="button" class="menu-card-btn" data-modo="test">
-        <div class="card-meta-top">
-          <span class="card-idx">03 // TINYML</span>
-          <svg class="card-svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="4" y="4" width="16" height="16" rx="2"/>
-            <rect x="9" y="9" width="6" height="6"/>
-            <path d="M9 1v3M15 1v3M9 20v3M15 20v3M1 9h3M1 15h3M20 9h3M20 15h3"/>
+        <div class="card-top">
+          <span class="card-num">03</span>
+          <svg class="card-arrow" viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3 8h10M9 4l4 4-4 4"/>
           </svg>
         </div>
-        <div class="menu-card-info">
-          <div class="menu-card-name">Benchmark</div>
-          <div class="menu-card-desc">Validación de aciertos del modelo IA en placa</div>
-        </div>
-        <div class="card-meta-bottom">
-          <span class="card-sub-tag">Inferencia en chip</span>
-          <span class="card-chevron">→</span>
-        </div>
+        <div class="card-name">Benchmark</div>
+        <div class="card-desc">Validación de aciertos TinyML en placa</div>
       </button>
     </div>
   </div>
