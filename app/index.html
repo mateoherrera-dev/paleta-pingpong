@@ -2525,20 +2525,30 @@ function crearTexturaMesaIntro() {
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, w, h);
 
-  // Línea blanca central reglamentaria de saque (3 mm)
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.70)';
-  const lineW = 6;
+  // 1. Línea blanca central reglamentaria de saque (3 mm)
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+  const lineW = 10;
   ctx.fillRect((w - lineW) / 2, 0, lineW, h);
 
-  // Líneas laterales perimetrales
-  const borderW = 14;
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+  // 2. Líneas laterales perimetrales reglamentarias (20 mm)
+  const borderW = 20;
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.80)';
   ctx.fillRect(0, 0, borderW, h);
   ctx.fillRect(w - borderW, 0, borderW, h);
 
-  // Línea de red en el horizonte
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.40)';
-  ctx.fillRect(0, 0, w, 8);
+  // 3. Línea de fondo en el primer plano (borde del jugador)
+  const borderH = 26;
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+  ctx.fillRect(0, h - borderH, w, borderH);
+
+  // 4. Línea del fondo reglamentaria bien marcada y nítida en el horizonte
+  const farLineH = 34;
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, w, farLineH);
+
+  // Sutil relieve de sombra bajo la línea del fondo para definir la profundidad
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
+  ctx.fillRect(0, farLineH, w, 10);
 
   const tex = new THREE.CanvasTexture(c);
   tex.colorSpace = THREE.SRGBColorSpace;
