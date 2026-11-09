@@ -775,22 +775,6 @@
     transition: opacity 0.3s ease;
     will-change: opacity;
   }
-  .intro-bg-watermark {
-    position: absolute;
-    top: 38%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-family: var(--font-sans);
-    font-size: clamp(120px, 22vw, 340px);
-    font-weight: 900;
-    letter-spacing: -0.04em;
-    color: rgba(255, 255, 255, 0.024);
-    white-space: nowrap;
-    user-select: none;
-    pointer-events: none;
-    z-index: 0;
-    line-height: 1;
-  }
   #intro-stage.oculto {
     opacity: 0;
   }
@@ -933,30 +917,13 @@
   .dock-segment:active {
     transform: translateY(0) scale(0.985);
   }
-  .segment-meta {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 2px;
-  }
   .segment-idx {
     font-family: var(--font-mono);
-    font-size: 0.68rem;
+    font-size: 0.70rem;
     font-weight: 700;
     letter-spacing: 0.08em;
     color: var(--accent, #ff7700);
-  }
-  .segment-tag {
-    font-size: 0.58rem;
-    font-weight: 700;
-    letter-spacing: 0.10em;
-    color: rgba(255, 255, 255, 0.35);
-    text-transform: uppercase;
-    transition: color 0.16s ease;
-  }
-  .dock-segment:hover .segment-tag,
-  .dock-segment.active .segment-tag {
-    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 2px;
   }
   .segment-title {
     font-size: 0.95rem;
@@ -1023,7 +990,6 @@
 
 <!-- Entorno 3D de la Pelota y Landing -->
 <div id="intro-stage">
-  <div class="intro-bg-watermark" aria-hidden="true">DOC 40+</div>
   <canvas id="canvas-intro"></canvas>
 </div>
 
@@ -1043,32 +1009,23 @@
   <div id="intro-menu-hub" class="intro-menu-hub">
     <div class="dock-container">
       <button type="button" class="dock-segment active" data-modo="libre">
-        <div class="segment-meta">
-          <span class="segment-idx">01</span>
-          <span class="segment-tag">EN VIVO</span>
-        </div>
+        <span class="segment-idx">01</span>
         <div class="segment-title">Modo Libre</div>
-        <div class="segment-desc">Telemetría biomecánica y visor 3D en tiempo real</div>
+        <div class="segment-desc">Orientación y telemetría de la paleta en vivo</div>
       </button>
 
       <div class="dock-divider" aria-hidden="true"></div>
 
       <button type="button" class="dock-segment" data-modo="tutorial">
-        <div class="segment-meta">
-          <span class="segment-idx">02</span>
-          <span class="segment-tag">GUIADO</span>
-        </div>
+        <span class="segment-idx">02</span>
         <div class="segment-title">Tutorial</div>
-        <div class="segment-desc">Entrenador de ángulo de cara y brushing paso a paso</div>
+        <div class="segment-desc">Práctica de ángulo y contacto paso a paso</div>
       </button>
 
       <div class="dock-divider" aria-hidden="true"></div>
 
       <button type="button" class="dock-segment" data-modo="test">
-        <div class="segment-meta">
-          <span class="segment-idx">03</span>
-          <span class="segment-tag">MODELO</span>
-        </div>
+        <span class="segment-idx">03</span>
         <div class="segment-title">Benchmark</div>
         <div class="segment-desc">Validación de aciertos del predictor en placa</div>
       </button>
