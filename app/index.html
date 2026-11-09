@@ -2908,22 +2908,36 @@ function setZoom(t) {
 
   const R = R_BALL_CLOSE + (R_BALL_FAR - R_BALL_CLOSE) * currentZoom;
   const zCam = Z_CAM_CLOSE + (Z_CAM_FAR - Z_CAM_CLOSE) * currentZoom;
+  const ballY = currentZoom * 0.0038;
 
   introBallGroup.scale.set(R, R, R);
-  introBallGroup.position.set(0, currentZoom * 0.0038, 0); // Despeje milimétrico sutil sobre la mesa para evitar que la base choque la línea
+  introBallGroup.position.set(0, ballY, 0); // Despeje milimétrico sutil sobre la mesa
   introCamera.position.z = zCam;
 
   if (introScene && introScene.userData.rimLight) {
     introScene.userData.rimLight.intensity = currentZoom * 0.55;
   }
 
-  // Revelado armónico de la mesa de torneo y sombra de contacto al alejarse la cámara
-  const pTable = Math.max(0, Math.min(1, (currentZoom - 0.12) / 0.88));
+  // Revelado cinematográfico de la mesa ("encendido de reflectores"):
+  // Al principio la mesa permanece oculta en la penumbra para evitar cualquier intersección.
+  // Emerge con un fade in suave a partir del 62% del zoom, cuando la pelota ya alcanzó su escala real.
+  const pTable = Math.max(0, Math.min(1, (currentZoom - 0.62) / 0.38));
+  const easeTable = pTable * pTable * (3 - 2 * pTable); // smoothstep para encendido orgánico de reflectores
+
+  // Posición segura en Y: garantiza que la mesa nunca intersecte la base de la pelota en ningún fotograma
+  const yMesaFinal = -0.0305;
+  const yBasePelota = ballY - R;
+  const yMesaSegura = Math.min(yMesaFinal, yBasePelota - 0.0035);
+
   if (introTableMesh) {
-    introTableMesh.material.opacity = pTable * 0.94;
+    introTableMesh.position.y = yMesaSegura;
+    introTableMesh.material.opacity = easeTable * 0.94;
+    introTableMesh.visible = easeTable > 0.001;
   }
   if (introShadowMesh) {
-    introShadowMesh.material.opacity = pTable * 0.88;
+    introShadowMesh.position.y = yMesaSegura + 0.0003;
+    introShadowMesh.material.opacity = easeTable * 0.88;
+    introShadowMesh.visible = easeTable > 0.001;
   }
 
   actualizarUVs();
