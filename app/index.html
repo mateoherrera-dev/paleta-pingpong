@@ -262,41 +262,41 @@
   .studio-grid {
     display: grid;
     grid-template-columns: minmax(340px, 1.25fr) minmax(320px, 1fr);
-    gap: 18px;
+    gap: 14px;
     align-items: stretch;
   }
   @media (max-width: 880px) {
     .studio-grid {
       grid-template-columns: 1fr;
-      gap: 16px;
+      gap: 14px;
     }
   }
 
   .studio-stage {
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 10px;
     background: rgba(11, 17, 30, 0.82);
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
     border: 1px solid rgba(255, 255, 255, 0.10);
     border-top: 1px solid rgba(255, 255, 255, 0.16);
-    border-radius: 18px;
-    padding: 22px 24px;
+    border-radius: 16px;
+    padding: 16px 18px;
     box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
   }
 
   .studio-panel {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 12px;
     background: rgba(11, 17, 30, 0.82);
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
     border: 1px solid rgba(255, 255, 255, 0.10);
     border-top: 1px solid rgba(255, 255, 255, 0.16);
-    border-radius: 18px;
-    padding: 22px 24px;
+    border-radius: 16px;
+    padding: 16px 18px;
     box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
   }
 
@@ -304,18 +304,18 @@
   .card {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 12px;
     background: rgba(11, 17, 30, 0.85);
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
     border: 1px solid rgba(255, 255, 255, 0.10);
     border-top: 1px solid rgba(255, 255, 255, 0.16);
-    border-radius: 18px;
-    padding: 22px 24px;
+    border-radius: 16px;
+    padding: 16px 18px;
     box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
   }
   .sub-heading {
-    font-size: 0.70rem;
+    font-size: 0.68rem;
     font-weight: 800;
     color: var(--fg-muted);
     text-transform: uppercase;
@@ -323,7 +323,7 @@
     display: block;
   }
   .section-header {
-    font-size: 0.72rem;
+    font-size: 0.70rem;
     font-weight: 800;
     color: var(--fg-muted);
     text-transform: uppercase;
@@ -340,7 +340,7 @@
   }
   .unified-title {
     margin: 2px 0 0 0;
-    font-size: 1.35rem;
+    font-size: 1.25rem;
     font-weight: 900;
     letter-spacing: -0.025em;
     color: #fff;
@@ -363,7 +363,7 @@
     padding-bottom: 2px;
   }
   .strike-title {
-    font-size: 1.65rem;
+    font-size: 1.45rem;
     font-weight: 900;
     letter-spacing: -0.03em;
     line-height: 1.15;
@@ -381,13 +381,13 @@
     white-space: nowrap;
   }
 
-  /* --- Visor 3D Libre y Expansivo --- */
+  /* --- Visor 3D Libre y Expansivo (Sin scroll) --- */
   .visor-stage {
     position: relative;
     width: 100%;
-    height: 380px;
-    min-height: 320px;
-    border-radius: 16px;
+    height: 250px;
+    min-height: 220px;
+    border-radius: 14px;
     background: radial-gradient(circle at 50% 50%, rgba(22, 36, 60, 0.55) 0%, rgba(6, 10, 18, 0.95) 100%);
     overflow: hidden;
     display: flex;
@@ -397,8 +397,8 @@
   }
   @media (max-width: 600px) {
     .visor-stage {
-      height: 290px;
-      min-height: 260px;
+      height: 230px;
+      min-height: 200px;
     }
   }
   #canvas3d-container {
@@ -875,6 +875,70 @@
     display: flex;
     flex-direction: column;
     gap: 6px;
+  }
+
+  /* --- Navegador Compacto de Impactos (1 solo tiro visible con flechas para no scrollear) --- */
+  .impacto-nav-card {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: var(--radius-sm);
+    padding: 7px 10px;
+  }
+  .impacto-nav-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+  }
+  .impacto-nav-controls {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .btn-nav-impacto {
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #fff;
+    font-size: 1.05rem;
+    font-weight: 700;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease;
+  }
+  .btn-nav-impacto:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.28);
+  }
+  .btn-nav-impacto:disabled {
+    opacity: 0.25;
+    cursor: default;
+  }
+  .impacto-nav-pos {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--fg-muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .impacto-single-row {
+    min-height: 32px;
+    display: flex;
+    align-items: center;
+  }
+  .impacto-single-row .hist-row {
+    width: 100%;
+    padding: 4px 6px;
+    background: transparent;
+    border: none;
   }
 
   /* --- Listas Compactas (Filas limpias fluidas sin viñetas) --- */
@@ -1400,11 +1464,18 @@
             </div>
           </div>
 
-          <div style="margin-top:8px;">
-            <span class="sub-heading" style="margin-bottom:6px;">Últimos impactos</span>
-            <ul id="historial" class="lista-compacta">
-              <li class="vacio">Todavía no hay golpes registrados.</li>
-            </ul>
+          <div class="impacto-nav-card" style="margin-top:4px;">
+            <div class="impacto-nav-header">
+              <span class="sub-heading">Historial de impactos</span>
+              <div class="impacto-nav-controls">
+                <button type="button" class="btn-nav-impacto" id="btn-hist-ant" title="Impacto anterior" disabled>‹</button>
+                <span class="impacto-nav-pos" id="hist-pos">0 / 0</span>
+                <button type="button" class="btn-nav-impacto" id="btn-hist-sig" title="Impacto siguiente" disabled>›</button>
+              </div>
+            </div>
+            <div id="historial" class="impacto-single-row">
+              <span class="vacio-inline">Todavía no hay golpes registrados.</span>
+            </div>
           </div>
         </div>
       </aside>
@@ -1594,11 +1665,18 @@
           </div>
         </div>
 
-        <div class="feed-wrap">
-          <span class="sub-heading">Desglose de tiros</span>
-          <ul id="test-historial" class="lista-compacta">
-            <li class="vacio">Todavía no hay tiros registrados.</li>
-          </ul>
+        <div class="impacto-nav-card" style="margin-top:4px;">
+          <div class="impacto-nav-header">
+            <span class="sub-heading">Desglose de tiros</span>
+            <div class="impacto-nav-controls">
+              <button type="button" class="btn-nav-impacto" id="btn-test-ant" title="Tiro anterior" disabled>‹</button>
+              <span class="impacto-nav-pos" id="test-pos">0 / 0</span>
+              <button type="button" class="btn-nav-impacto" id="btn-test-sig" title="Tiro siguiente" disabled>›</button>
+            </div>
+          </div>
+          <div id="test-historial" class="impacto-single-row">
+            <span class="vacio-inline">Todavía no hay tiros registrados.</span>
+          </div>
         </div>
       </aside>
     </div>
@@ -2123,37 +2201,79 @@ function mostrar(e, registrarSesion = true) {
     }
   }
 
-  const histEl = $('historial');
-  if (histEl) {
-    if (sesion.golpes.length === 0) {
-      histEl.innerHTML = '<li class="vacio">Todavía no hay golpes registrados.</li>';
-    } else {
-      histEl.innerHTML = sesion.golpes.slice(0, 10)
-        .map((g) => {
-          const scoreBadge = g.score ? `<span class="hist-score">${g.score.total} pts</span>` : '';
-          const caraIcon = determinarCara(g.golpe, g.ang, g.q) === 'roja' ? '🔴' : '⚫';
-          return `<li class="hist-row">
-            <div class="hist-main">
-              <span class="hist-num">#${g.n}</span>
-              <span class="hist-golpe">${GOLPES[g.golpe]}</span>
-              <span class="hist-cara">${caraIcon}</span>
-            </div>
-            <div class="hist-metrics">
-              <span>${g.vel ?? '–'} km/h</span>
-              <span>${g.ang ?? '–'}°</span>
-              <span>${formatearPico(g.pico)}</span>
-              ${scoreBadge}
-            </div>
-          </li>`;
-        }).join('');
-    }
-  }
+  // Actualizar navegador de impacto reciente (1 solo tiro visible con flechas para no scrollear)
+  idxHistorial = 0;
+  renderImpactoPaginado();
 
   // Actualizar modos interactivos (Tutorial y Benchmark de Modelo)
   if (registrarSesion) {
     procesarTutorial(e);
     procesarTest(e);
   }
+}
+
+// --- Navegador de Historial Paginado (Modo Libre) ---
+let idxHistorial = 0; // 0 = impacto más reciente
+
+function renderImpactoPaginado() {
+  const histEl = $('historial');
+  const posEl = $('hist-pos');
+  const btnAnt = $('btn-hist-ant');
+  const btnSig = $('btn-hist-sig');
+
+  const total = sesion.golpes.length;
+  if (total === 0) {
+    if (histEl) histEl.innerHTML = '<span class="vacio-inline">Todavía no hay golpes registrados.</span>';
+    if (posEl) posEl.textContent = '0 / 0';
+    if (btnAnt) btnAnt.disabled = true;
+    if (btnSig) btnSig.disabled = true;
+    return;
+  }
+
+  if (idxHistorial < 0) idxHistorial = 0;
+  if (idxHistorial >= total) idxHistorial = total - 1;
+
+  const g = sesion.golpes[idxHistorial];
+  if (posEl) posEl.textContent = `${total - idxHistorial} / ${total}`;
+  if (btnAnt) btnAnt.disabled = (idxHistorial >= total - 1);
+  if (btnSig) btnSig.disabled = (idxHistorial <= 0);
+
+  if (histEl && g) {
+    const scoreBadge = g.score ? `<span class="hist-score">${g.score.total} pts</span>` : '';
+    const caraIcon = determinarCara(g.golpe, g.ang, g.q) === 'roja' ? '🔴' : '⚫';
+    histEl.innerHTML = `<div class="hist-row">
+      <div class="hist-main">
+        <span class="hist-num">#${g.n}</span>
+        <span class="hist-golpe">${GOLPES[g.golpe]}</span>
+        <span class="hist-cara">${caraIcon}</span>
+      </div>
+      <div class="hist-metrics">
+        <span>${g.vel ?? '–'} km/h</span>
+        <span>${g.ang ?? '–'}°</span>
+        <span>${formatearPico(g.pico)}</span>
+        ${scoreBadge}
+      </div>
+    </div>`;
+  }
+}
+
+const btnHistAnt = $('btn-hist-ant');
+if (btnHistAnt) {
+  btnHistAnt.addEventListener('click', () => {
+    if (idxHistorial < sesion.golpes.length - 1) {
+      idxHistorial++;
+      renderImpactoPaginado();
+    }
+  });
+}
+const btnHistSig = $('btn-hist-sig');
+if (btnHistSig) {
+  btnHistSig.addEventListener('click', () => {
+    if (idxHistorial > 0) {
+      idxHistorial--;
+      renderImpactoPaginado();
+    }
+  });
 }
 
 // --- Control de Modos de la App ---
@@ -2387,7 +2507,8 @@ function actualizarUITest() {
     const badge = $('test-estado-badge');
     badge.className = 'badge badge-neutral';
     badge.textContent = 'Esperando tiros…';
-    $('test-historial').innerHTML = '<li class="vacio">Todavía no hay tiros registrados.</li>';
+    idxTestHistorial = 0;
+    renderTestPaginado();
     return;
   }
 
@@ -2409,29 +2530,71 @@ function actualizarUITest() {
     badge.textContent = '🔴 Insuficiente (< 60%)';
   }
 
-  const testHistEl = $('test-historial');
-  if (testHistEl) {
-    if (testBenchmark.tiros.length === 0) {
-      testHistEl.innerHTML = '<li class="vacio">Todavía no hay tiros registrados.</li>';
-    } else {
-      testHistEl.innerHTML = testBenchmark.tiros.map((t, idx) => {
-        let tag = '';
-        if (t.resultado === 'ok') tag = '<b style="color:var(--ok)">✅ Acierto</b>';
-        else if (t.resultado === 'ruido') tag = '<b style="color:var(--warn)">⚠️ Ruido</b>';
-        else tag = `<b style="color:var(--bad)">❌ Error (${t.obtenido})</b>`;
+  idxTestHistorial = 0;
+  renderTestPaginado();
+}
 
-        return `<li class="hist-row">
-          <div class="hist-main">
-            <span class="hist-num">#${total - idx}</span>
-            <span class="hist-golpe">${t.obtenido}</span>
-            <span style="color:var(--fg-muted); font-size:0.75rem;">(${t.conf}%)</span>
-            <span style="color:var(--fg-muted); font-size:0.75rem; margin-left:4px;">${t.ang !== null ? t.ang + '°' : '–'} · ${t.vel !== null ? t.vel + ' km/h' : '–'}</span>
-          </div>
-          <div>${tag}</div>
-        </li>`;
-      }).join('');
-    }
+// --- Navegador de Historial Paginado (Modo Benchmark) ---
+let idxTestHistorial = 0; // 0 = tiro más reciente
+
+function renderTestPaginado() {
+  const testHistEl = $('test-historial');
+  const posEl = $('test-pos');
+  const btnAnt = $('btn-test-ant');
+  const btnSig = $('btn-test-sig');
+
+  const total = testBenchmark.tiros.length;
+  if (total === 0) {
+    if (testHistEl) testHistEl.innerHTML = '<span class="vacio-inline">Todavía no hay tiros registrados.</span>';
+    if (posEl) posEl.textContent = '0 / 0';
+    if (btnAnt) btnAnt.disabled = true;
+    if (btnSig) btnSig.disabled = true;
+    return;
   }
+
+  if (idxTestHistorial < 0) idxTestHistorial = 0;
+  if (idxTestHistorial >= total) idxTestHistorial = total - 1;
+
+  const t = testBenchmark.tiros[idxTestHistorial];
+  if (posEl) posEl.textContent = `${total - idxTestHistorial} / ${total}`;
+  if (btnAnt) btnAnt.disabled = (idxTestHistorial >= total - 1);
+  if (btnSig) btnSig.disabled = (idxTestHistorial <= 0);
+
+  if (testHistEl && t) {
+    let tag = '';
+    if (t.resultado === 'ok') tag = '<b style="color:var(--ok)">✅ Acierto</b>';
+    else if (t.resultado === 'ruido') tag = '<b style="color:var(--warn)">⚠️ Ruido</b>';
+    else tag = `<b style="color:var(--bad)">❌ Error (${t.obtenido})</b>`;
+
+    testHistEl.innerHTML = `<div class="hist-row">
+      <div class="hist-main">
+        <span class="hist-num">#${total - idxTestHistorial}</span>
+        <span class="hist-golpe">${t.obtenido}</span>
+        <span style="color:var(--fg-muted); font-size:0.75rem;">(${t.conf}%)</span>
+        <span style="color:var(--fg-muted); font-size:0.75rem; margin-left:4px;">${t.ang !== null ? t.ang + '°' : '–'} · ${t.vel !== null ? t.vel + ' km/h' : '–'}</span>
+      </div>
+      <div>${tag}</div>
+    </div>`;
+  }
+}
+
+const btnTestAnt = $('btn-test-ant');
+if (btnTestAnt) {
+  btnTestAnt.addEventListener('click', () => {
+    if (idxTestHistorial < testBenchmark.tiros.length - 1) {
+      idxTestHistorial++;
+      renderTestPaginado();
+    }
+  });
+}
+const btnTestSig = $('btn-test-sig');
+if (btnTestSig) {
+  btnTestSig.addEventListener('click', () => {
+    if (idxTestHistorial > 0) {
+      idxTestHistorial--;
+      renderTestPaginado();
+    }
+  });
 }
 
 function procesarTest(e) {
