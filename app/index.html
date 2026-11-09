@@ -969,17 +969,17 @@
     user-select: none;
   }
 
-  /* --- Hub de Selección de Modo (Post Zoom Out) --- */
+  /* --- Hub de Selección de Modo (Fila Horizontal Inferior) --- */
   .intro-menu-hub {
     position: absolute;
-    bottom: clamp(24px, 5.5vh, 52px);
+    bottom: clamp(20px, 4vh, 40px);
     left: 50%;
-    transform: translateX(-50%) translateY(24px);
-    width: min(500px, calc(100vw - 32px));
+    transform: translateX(-50%) translateY(20px);
+    width: min(860px, calc(100vw - 32px));
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     z-index: 10;
     pointer-events: none;
     opacity: 0;
@@ -991,28 +991,31 @@
     pointer-events: auto;
   }
   .menu-hub-title {
-    font-size: 0.72rem;
+    font-size: 0.70rem;
     font-weight: 700;
     letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: rgba(255, 255, 255, 0.55);
+    color: rgba(255, 255, 255, 0.50);
   }
   .menu-hub-grid {
     display: flex;
-    flex-direction: column;
-    gap: 8px;
+    flex-direction: row;
+    gap: 12px;
     width: 100%;
+    justify-content: center;
   }
   .menu-card-btn {
+    flex: 1;
+    min-width: 0;
     display: flex;
     align-items: center;
-    gap: 14px;
+    gap: 10px;
     background: rgba(15, 23, 42, 0.88);
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
     border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: 12px;
-    padding: 11px 16px;
+    padding: 11px 14px;
     color: #ffffff;
     cursor: pointer;
     text-align: left;
@@ -1022,39 +1025,54 @@
   .menu-card-btn:hover {
     background: rgba(30, 41, 59, 0.95);
     border-color: rgba(255, 119, 0, 0.55);
-    transform: translateY(-2px) scale(1.01);
+    transform: translateY(-2px) scale(1.02);
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45), 0 0 14px rgba(255, 119, 0, 0.25);
   }
   .menu-card-btn:active {
     transform: translateY(0) scale(0.98);
   }
   .menu-card-icon {
-    font-size: 1.45rem;
+    font-size: 1.35rem;
     line-height: 1;
     flex-shrink: 0;
   }
   .menu-card-info {
     flex: 1;
+    min-width: 0;
   }
   .menu-card-name {
-    font-size: 0.90rem;
+    font-size: 0.88rem;
     font-weight: 800;
     letter-spacing: -0.01em;
     color: #f8fafc;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   .menu-card-desc {
-    font-size: 0.72rem;
+    font-size: 0.68rem;
     color: #94a3b8;
     margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   .menu-card-arrow {
     color: rgba(255, 255, 255, 0.35);
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     transition: transform 0.16s ease, color 0.16s ease;
+    flex-shrink: 0;
   }
   .menu-card-btn:hover .menu-card-arrow {
     color: #ff7700;
-    transform: translateX(4px);
+    transform: translateX(3px);
+  }
+
+  @media (max-width: 680px) {
+    .menu-hub-grid {
+      flex-direction: column;
+      gap: 8px;
+    }
   }
 
   /* --- Accesibilidad: Reducción de Movimiento (Apple HIG / WCAG) --- */
@@ -2544,7 +2562,8 @@ function sonarTensionAire(vol = 0.24) {
 // =========================================================================
 let introScene, introCamera, introRenderer, introMesh, introBallGroup;
 let uvsFlat = null;
-let uvsSph = null;
+let uvsSphLanding = null;
+let uvsSphBall = null;
 let currentCurvatura = 0.0;
 let currentZoom = 0.0;
 let introAnimId = null;
@@ -2555,7 +2574,7 @@ let introActiva = true;
 const R_BALL_CLOSE = 0.0784; // Radio en reposo/curvado (subtiende 36.9° > esquina 28.7° para cubrir 100% la pantalla)
 const R_BALL_FAR = 0.0200;   // Radio oficial ITTF (40 mm de diámetro físico)
 const Z_CAM_CLOSE = 0.1306;  // Distancia cercana a la superficie (sin efecto micro-lupa ni pixelación)
-const Z_CAM_FAR = 0.2200;    // Distancia lejana (pelota al 34% del alto en el centro del estadio)
+const Z_CAM_FAR = 0.2200;    // Distancia lejana (pelota en el centro de la pantalla)
 
 let introCanvasTex = null;
 
@@ -2667,7 +2686,13 @@ function initIntroBall() {
   const scaleFlat = (zCamUnit - 1.0) / thetaMax;
 
   uvsFlat = new Float32Array(count * 2);
-  uvsSph = new Float32Array(count * 2);
+  uvsSphLanding = new Float32Array(count * 2);
+  uvsSphBall = new Float32Array(count * 2);
+
+  // OPCIÓN 1: Escala dinámica. En landing la tipografía es ~34% más descansada y con aire;
+  // al hacer zoom out se expande sutilmente para ser 100% legible sobre la esfera 3D.
+  const scaleLanding = 0.28;
+  const scaleBall = 0.44;
 
   for (let i = 0; i < count; i++) {
     const x = pos.getX(i);
@@ -2678,26 +2703,38 @@ function initIntroBall() {
     const rxy = Math.hypot(x, y);
     const distCam = Math.max(0.1, zCamUnit - z);
 
-    // 1. uvFlat (Compensación de perspectiva de cámara para vista 100% plana y recta en reposo)
-    const rFlat = (scaleFlat / distCam) * 0.44;
+    // 1. uvFlat (Landing plana, escala descansada)
+    const rFlat = (scaleFlat / distCam) * scaleLanding;
     const uF = 0.5 + x * rFlat;
     const vF = 0.5 + y * rFlat;
     uvsFlat[i * 2] = Math.max(0.02, Math.min(0.98, uF));
     uvsFlat[i * 2 + 1] = Math.max(0.02, Math.min(0.98, vF));
 
-    // 2. uvSph (Mapeo esférico azimutal continuo sobre la cara de la esfera)
-    let uS = 0.5, vS = 0.5;
+    // 2. uvSphLanding (Esfera en curvado, escala de landing)
+    // 3. uvSphBall (Esfera en zoom out, escala oficial de pelota ITTF)
+    let uSL = 0.5, vSL = 0.5;
+    let uSB = 0.5, vSB = 0.5;
     if (rxy < 1e-6) {
-      if (zc > 0) { uS = 0.5; vS = 0.5; }
-      else { uS = 0.04; vS = 0.04; }
+      if (zc > 0) {
+        uSL = 0.5; vSL = 0.5;
+        uSB = 0.5; vSB = 0.5;
+      } else {
+        uSL = 0.04; vSL = 0.04;
+        uSB = 0.04; vSB = 0.04;
+      }
     } else {
       const theta = Math.acos(zc);
-      const r_uv = Math.min(0.44, (theta / thetaMax) * 0.44);
-      uS = 0.5 + (x / rxy) * r_uv;
-      vS = 0.5 + (y / rxy) * r_uv;
+      const r_uv_L = Math.min(scaleLanding, (theta / thetaMax) * scaleLanding);
+      const r_uv_B = Math.min(scaleBall, (theta / thetaMax) * scaleBall);
+      uSL = 0.5 + (x / rxy) * r_uv_L;
+      vSL = 0.5 + (y / rxy) * r_uv_L;
+      uSB = 0.5 + (x / rxy) * r_uv_B;
+      vSB = 0.5 + (y / rxy) * r_uv_B;
     }
-    uvsSph[i * 2] = uS;
-    uvsSph[i * 2 + 1] = vS;
+    uvsSphLanding[i * 2] = uSL;
+    uvsSphLanding[i * 2 + 1] = vSL;
+    uvsSphBall[i * 2] = uSB;
+    uvsSphBall[i * 2 + 1] = vSB;
   }
 
   introCanvasTex = crearTexturaPelotaIntro();
@@ -2735,26 +2772,35 @@ function initIntroBall() {
   });
 }
 
-// 0.05 ms por frame: sólo actualiza 24 KB de coordenadas UV en GPU sin tocar texturas pesadas (60/120 FPS sin lag)
-function setCurvatura(t) {
-  currentCurvatura = Math.max(0, Math.min(1, t));
-  if (!introMesh || !uvsFlat || !uvsSph) return;
-
+function actualizarUVs() {
+  if (!introMesh || !uvsFlat || !uvsSphLanding || !uvsSphBall) return;
   const uvs = introMesh.geometry.attributes.uv;
   const count = uvs.count;
-  const tEase = currentCurvatura;
+  const c = currentCurvatura;
+  const z = currentZoom;
 
   for (let i = 0; i < count; i++) {
     const uF = uvsFlat[i * 2];
     const vF = uvsFlat[i * 2 + 1];
-    const uS = uvsSph[i * 2];
-    const vS = uvsSph[i * 2 + 1];
+    const uSL = uvsSphLanding[i * 2];
+    const vSL = uvsSphLanding[i * 2 + 1];
+    const uSB = uvsSphBall[i * 2];
+    const vSB = uvsSphBall[i * 2 + 1];
+
+    const u0 = uF + (uSL - uF) * c;
+    const v0 = vF + (vSL - vF) * c;
+
     uvs.setXY(i,
-      uF + (uS - uF) * tEase,
-      vF + (vS - vF) * tEase
+      u0 + (uSB - uSL) * z * c,
+      v0 + (vSB - vSL) * z * c
     );
   }
   uvs.needsUpdate = true;
+}
+
+function setCurvatura(t) {
+  currentCurvatura = Math.max(0, Math.min(1, t));
+  actualizarUVs();
 
   if (introScene && introScene.userData.dirLight) {
     introScene.userData.dirLight.intensity = currentCurvatura * 0.85;
@@ -2805,12 +2851,12 @@ function setZoom(t) {
 
   const R = R_BALL_CLOSE + (R_BALL_FAR - R_BALL_CLOSE) * currentZoom;
   const zCam = Z_CAM_CLOSE + (Z_CAM_FAR - Z_CAM_CLOSE) * currentZoom;
-  // Elevar la pelota suavemente para encuadrar las tarjetas del menú abajo
-  const posY = 0.022 * currentZoom;
 
   introBallGroup.scale.set(R, R, R);
-  introBallGroup.position.y = posY;
+  introBallGroup.position.set(0, 0, 0); // La pelota permanece 100% en el centro (sin subir ni marear)
   introCamera.position.z = zCam;
+
+  actualizarUVs();
 
   const slider = $('slider-zoom');
   if (slider && document.activeElement !== slider) slider.value = currentZoom;
