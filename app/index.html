@@ -2547,6 +2547,8 @@ function acelerarSpinPelotaHeader() {
 // INTRO CINEMATOGRÁFICA 3D: LANDING PLANA -> CURVADO DE LETRAS -> ZOOM OUT -> TOP SPIN
 // =========================================================================
 let introScene, introCamera, introRenderer, introMesh, introBallGroup;
+let uvsFlat = null;
+let uvsSph = null;
 let currentCurvatura = 0.0;
 let currentZoom = 0.0;
 let introAnimId = null;
@@ -2560,8 +2562,6 @@ const Z_CAM_CLOSE = 0.1306;  // Distancia cercana a la superficie (sin efecto mi
 const Z_CAM_FAR = 0.2200;    // Distancia lejana (pelota al 34% del alto en el centro del estadio)
 
 let introCanvasTex = null;
-let introCanvasElem = null;
-let introCanvasCtx = null;
 
 function renderIntroFrame() {
   if (introRenderer && introScene && introCamera) {
@@ -2569,109 +2569,69 @@ function renderIntroFrame() {
   }
 }
 
-function actualizarTexturaPelota(tCurv) {
-  if (!introCanvasElem) {
-    introCanvasElem = document.createElement('canvas');
-    introCanvasElem.width = 2048;
-    introCanvasElem.height = 2048;
-    introCanvasCtx = introCanvasElem.getContext('2d');
-  }
-  const ctx = introCanvasCtx;
+// Textura única generada al inicio: todo el texto es 100% recto y nítido (sin re-subidas a VRAM por cuadro)
+function crearTexturaPelotaIntro() {
   const w = 2048;
   const h = 2048;
-  const cx = w / 2;
-  const cy = h / 2;
-  const t = Math.max(0, Math.min(1, tCurv));
+  const c = document.createElement('canvas');
+  c.width = w;
+  c.height = h;
+  const ctx = c.getContext('2d');
 
   // 1. Base naranja oficial de competición ITTF
   ctx.fillStyle = '#ff7700';
   ctx.fillRect(0, 0, w, h);
+
+  const cx = w / 2;
+  const cy = h / 2;
 
   // Tinta profunda slate
   ctx.fillStyle = '#0f172a';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
 
-  // 2. Tres estrellas ITTF (★★★)
-  // En t=0 están en línea horizontal; en t=1 adoptan la curvatura en arco superior
+  // 2. Tres estrellas ITTF (★★★) en fila horizontal
   const starSize = 56;
   ctx.font = `bold ${starSize}px sans-serif`;
   const starSpacing = 76;
-
-  // Estrella central
-  ctx.fillText('★', cx, cy - 146 - 15 * t);
-
-  // Estrella izquierda
-  ctx.save();
-  ctx.translate(cx - starSpacing, cy - 146 + 12 * t);
-  ctx.rotate(-0.13 * t);
-  ctx.fillText('★', 0, 0);
-  ctx.restore();
-
-  // Estrella derecha
-  ctx.save();
-  ctx.translate(cx + starSpacing, cy - 146 + 12 * t);
-  ctx.rotate(0.13 * t);
-  ctx.fillText('★', 0, 0);
-  ctx.restore();
+  const starsY = cy - 146;
+  ctx.fillText('★', cx - starSpacing, starsY);
+  ctx.fillText('★', cx, starsY);
+  ctx.fillText('★', cx + starSpacing, starsY);
 
   // 3. Marca principal "DOC"
-  const docSize = 166;
+  const docSize = 168;
   ctx.font = `900 ${docSize}px -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif`;
-  ctx.save();
-  ctx.translate(cx, cy - 26);
-  ctx.scale(1 + 0.03 * t, 1 - 0.02 * t);
-  ctx.fillText('DOC', 0, 0);
-  ctx.restore();
+  ctx.fillText('DOC', cx, cy - 26);
 
   // 4. Calibre oficial "40+"
   const specSize = 68;
   ctx.font = `800 ${specSize}px -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif`;
-  ctx.fillText('40+', cx, cy + 72 + 6 * t);
+  ctx.fillText('40+', cx, cy + 72);
 
-  // 5. Lema "FIND YOUR EDGE" con transición de línea recta a arco esférico ITTF
+  // 5. Lema "FIND YOUR EDGE" - 100% RECTO, horizontal con tracking generoso (sin deformaciones cóncavas)
   const tagSize = 27;
   ctx.font = `900 ${tagSize}px -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif`;
   const tag = 'FIND YOUR EDGE';
   const chars = Array.from(tag);
   const n = chars.length;
-  const trackingFlat = 10;
+  const tracking = 10;
   const charWidths = chars.map(ch => ctx.measureText(ch).width);
-  const totalFlatW = charWidths.reduce((a, b) => a + b, 0) + (n - 1) * trackingFlat;
+  const totalFlatW = charWidths.reduce((a, b) => a + b, 0) + (n - 1) * tracking;
 
-  let currentFlatX = cx - totalFlatW / 2;
-  const flatPositions = [];
+  let startX = cx - totalFlatW / 2;
+  const tagY = cy + 140;
   for (let i = 0; i < n; i++) {
-    flatPositions.push(currentFlatX + charWidths[i] / 2);
-    currentFlatX += charWidths[i] + trackingFlat;
+    ctx.fillText(chars[i], startX + charWidths[i] / 2, tagY);
+    startX += charWidths[i] + tracking;
   }
 
-  const R_arc = 360;
-  const baseTagY = cy + 140;
-
-  for (let i = 0; i < n; i++) {
-    const norm = (i - (n - 1) / 2);
-    const xFlat = flatPositions[i];
-    const yFlat = baseTagY;
-
-    const angle = norm * 0.076;
-    const xArc = cx + R_arc * Math.sin(angle);
-    const yArc = baseTagY + R_arc * (1 - Math.cos(angle)) * 0.95;
-
-    const x = (1 - t) * xFlat + t * xArc;
-    const y = (1 - t) * yFlat + t * yArc;
-    const rot = t * angle;
-
-    ctx.save();
-    ctx.translate(x, y);
-    ctx.rotate(rot);
-    ctx.fillText(chars[i], 0, 0);
-    ctx.restore();
-  }
-
-  if (introCanvasTex) {
-    introCanvasTex.needsUpdate = true;
-  }
+  const tex = new THREE.CanvasTexture(c);
+  tex.generateMipmaps = true;
+  tex.minFilter = THREE.LinearMipmapLinearFilter;
+  tex.magFilter = THREE.LinearFilter;
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
 }
 
 function initIntroBall() {
@@ -2705,9 +2665,13 @@ function initIntroBall() {
   // Esfera 3D 100% CERRADA (polos curvos y continuos, sin cortes planos)
   const sphereGeo = new THREE.SphereGeometry(1.0, 64, 48);
   const pos = sphereGeo.attributes.position;
-  const uvs = sphereGeo.attributes.uv;
   const count = pos.count;
   const thetaMax = 35 * Math.PI / 180;
+  const zCamUnit = Z_CAM_CLOSE / R_BALL_CLOSE;
+  const scaleFlat = (zCamUnit - 1.0) / thetaMax;
+
+  uvsFlat = new Float32Array(count * 2);
+  uvsSph = new Float32Array(count * 2);
 
   for (let i = 0; i < count; i++) {
     const x = pos.getX(i);
@@ -2716,29 +2680,31 @@ function initIntroBall() {
 
     const zc = Math.max(-1, Math.min(1, z));
     const rxy = Math.hypot(x, y);
+    const distCam = Math.max(0.1, zCamUnit - z);
 
+    // 1. uvFlat (Compensación de perspectiva de cámara para vista 100% plana y recta en reposo)
+    const rFlat = (scaleFlat / distCam) * 0.44;
+    const uF = 0.5 + x * rFlat;
+    const vF = 0.5 + y * rFlat;
+    uvsFlat[i * 2] = Math.max(0.02, Math.min(0.98, uF));
+    uvsFlat[i * 2 + 1] = Math.max(0.02, Math.min(0.98, vF));
+
+    // 2. uvSph (Mapeo esférico azimutal continuo sobre la cara de la esfera)
+    let uS = 0.5, vS = 0.5;
     if (rxy < 1e-6) {
-      if (zc > 0) {
-        uvs.setXY(i, 0.5, 0.5);
-      } else {
-        uvs.setXY(i, 0.04, 0.04);
-      }
+      if (zc > 0) { uS = 0.5; vS = 0.5; }
+      else { uS = 0.04; vS = 0.04; }
     } else {
       const theta = Math.acos(zc);
       const r_uv = Math.min(0.44, (theta / thetaMax) * 0.44);
-      const u = 0.5 + (x / rxy) * r_uv;
-      const v = 0.5 + (y / rxy) * r_uv;
-      uvs.setXY(i, u, v);
+      uS = 0.5 + (x / rxy) * r_uv;
+      vS = 0.5 + (y / rxy) * r_uv;
     }
+    uvsSph[i * 2] = uS;
+    uvsSph[i * 2 + 1] = vS;
   }
-  uvs.needsUpdate = true;
 
-  actualizarTexturaPelota(0.0);
-  introCanvasTex = new THREE.CanvasTexture(introCanvasElem);
-  introCanvasTex.generateMipmaps = true;
-  introCanvasTex.minFilter = THREE.LinearMipmapLinearFilter;
-  introCanvasTex.magFilter = THREE.LinearFilter;
-  introCanvasTex.colorSpace = THREE.SRGBColorSpace;
+  introCanvasTex = crearTexturaPelotaIntro();
   if (introRenderer) {
     introCanvasTex.anisotropy = Math.min(16, introRenderer.capabilities.getMaxAnisotropy());
   }
@@ -2773,9 +2739,26 @@ function initIntroBall() {
   });
 }
 
+// 0.05 ms por frame: sólo actualiza 24 KB de coordenadas UV en GPU sin tocar texturas pesadas (60/120 FPS sin lag)
 function setCurvatura(t) {
   currentCurvatura = Math.max(0, Math.min(1, t));
-  actualizarTexturaPelota(currentCurvatura);
+  if (!introMesh || !uvsFlat || !uvsSph) return;
+
+  const uvs = introMesh.geometry.attributes.uv;
+  const count = uvs.count;
+  const tEase = currentCurvatura;
+
+  for (let i = 0; i < count; i++) {
+    const uF = uvsFlat[i * 2];
+    const vF = uvsFlat[i * 2 + 1];
+    const uS = uvsSph[i * 2];
+    const vS = uvsSph[i * 2 + 1];
+    uvs.setXY(i,
+      uF + (uS - uF) * tEase,
+      vF + (vS - vF) * tEase
+    );
+  }
+  uvs.needsUpdate = true;
 
   if (introScene && introScene.userData.dirLight) {
     introScene.userData.dirLight.intensity = currentCurvatura * 0.85;
