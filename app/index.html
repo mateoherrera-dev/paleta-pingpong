@@ -379,7 +379,7 @@
     padding: 22px 24px;
   }
   #card-benchmark .studio-panel {
-    justify-content: space-between;
+    justify-content: flex-start;
     padding: 22px 24px;
     gap: 16px;
   }
@@ -1270,7 +1270,7 @@
     user-select: none;
   }
 
-  /* --- Dock Unificado de Selección de Modo (Pie de Página) --- */
+  /* --- DOCk Unificado de Selección de Modo (Pie de Página) --- */
   .intro-menu-hub {
     position: absolute;
     bottom: clamp(24px, 4.5vh, 44px);
@@ -1422,7 +1422,7 @@
     <div class="intro-hint">Tocá para iniciar o presioná Espacio</div>
   </div>
 
-  <!-- Dock Unificado de Selección de Modo -->
+  <!-- DOCk Unificado de Selección de Modo -->
   <div id="intro-menu-hub" class="intro-menu-hub">
     <div class="dock-container">
       <button type="button" class="dock-segment active" data-modo="libre">
@@ -1498,7 +1498,7 @@
         </div>
       </section>
 
-      <!-- Columna Derecha: Métricas, Feedback de Doc & Historial -->
+      <!-- Columna Derecha: Métricas, Feedback de DOC & Historial -->
       <aside class="studio-panel">
         <div>
           <span class="sub-heading" style="margin-bottom:8px;">Métricas del impacto</span>
@@ -1528,7 +1528,7 @@
             <div class="doc-identity">
               <div class="doc-avatar">🏓</div>
               <div>
-                <div class="doc-name">Doc</div>
+                <div class="doc-name">DOC</div>
                 <div class="doc-role">Coach Biomecánico IA</div>
               </div>
             </div>
@@ -1538,7 +1538,7 @@
             </label>
           </div>
           <div class="doc-bubble" id="consejo">
-            Pegá un golpe con la paleta para que Doc analice tu técnica.
+            Pegá un golpe con la paleta para que DOC analice tu técnica.
           </div>
         </div>
 
@@ -1628,14 +1628,14 @@
         </div>
       </section>
 
-      <!-- Columna Derecha: Feedback de Doc y Métricas de Validación -->
+      <!-- Columna Derecha: Feedback de DOC y Métricas de Validación -->
       <aside class="studio-panel">
         <div class="doc-card">
           <div class="doc-header">
             <div class="doc-identity">
               <div class="doc-avatar">🏓</div>
               <div>
-                <div class="doc-name">Doc</div>
+                <div class="doc-name">DOC</div>
                 <div class="doc-role">Evaluación en tiempo real</div>
               </div>
             </div>
@@ -1722,8 +1722,22 @@
         </div>
       </section>
 
-      <!-- Columna Derecha: Matriz de Resultados y Tiros -->
+      <!-- Columna Derecha: Desglose de Tiros y Matriz de Resultados -->
       <aside class="studio-panel">
+        <div class="impacto-nav-card">
+          <div class="impacto-nav-header">
+            <span class="sub-heading">Desglose de tiros</span>
+            <div class="impacto-nav-controls">
+              <button type="button" class="btn-nav-impacto" id="btn-test-ant" title="Tiro anterior" disabled>‹</button>
+              <span class="impacto-nav-pos" id="test-pos">0 / 0</span>
+              <button type="button" class="btn-nav-impacto" id="btn-test-sig" title="Tiro siguiente" disabled>›</button>
+            </div>
+          </div>
+          <div id="test-historial" class="impacto-single-row">
+            <span class="vacio-inline">Todavía no hay tiros registrados.</span>
+          </div>
+        </div>
+
         <div>
           <span class="sub-heading" style="margin-bottom:8px;">Matriz de clasificación</span>
           <div class="telemetry-grid">
@@ -1743,20 +1757,6 @@
               <div class="telemetry-label">Certeza IA</div>
               <div class="telemetry-val"><span id="test-conf-prom">–</span></div>
             </div>
-          </div>
-        </div>
-
-        <div class="impacto-nav-card" style="margin-top:4px;">
-          <div class="impacto-nav-header">
-            <span class="sub-heading">Desglose de tiros</span>
-            <div class="impacto-nav-controls">
-              <button type="button" class="btn-nav-impacto" id="btn-test-ant" title="Tiro anterior" disabled>‹</button>
-              <span class="impacto-nav-pos" id="test-pos">0 / 0</span>
-              <button type="button" class="btn-nav-impacto" id="btn-test-sig" title="Tiro siguiente" disabled>›</button>
-            </div>
-          </div>
-          <div id="test-historial" class="impacto-single-row">
-            <span class="vacio-inline">Todavía no hay tiros registrados.</span>
           </div>
         </div>
       </aside>
@@ -2343,7 +2343,7 @@ function renderImpactoPaginado() {
       </div>
     </div>`;
 
-    // Sincronizar Doc y métricas con el golpe seleccionado en el historial
+    // Sincronizar DOC y métricas con el golpe seleccionado en el historial
     const c = consejo(g);
     const elConsejo = $('consejo');
     if (elConsejo) {
