@@ -144,44 +144,12 @@
   .brand:hover {
     opacity: 0.85;
   }
-  .brand-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
-  }
-  .brand-name {
-    font-size: 1.15rem;
-    font-weight: 900;
-    letter-spacing: -0.02em;
-    color: #fff;
-    margin: 0;
-    line-height: 1;
-  }
-  .coach-tag {
-    font-size: 0.74rem;
-    color: var(--fg-muted);
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: var(--radius-pill);
-    padding: 2px 9px;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-  }
-  .coach-tag b {
-    color: var(--accent);
-    font-weight: 800;
-  }
-  .badge-modo {
-    font-size: 0.72rem;
+  .brand-mode-title {
+    font-size: 1.05rem;
     font-weight: 700;
-    padding: 3px 10px;
-    border-radius: var(--radius-pill);
-    background: rgba(255, 119, 0, 0.15);
-    border: 1px solid rgba(255, 119, 0, 0.4);
-    color: var(--accent);
-    letter-spacing: 0.02em;
+    letter-spacing: -0.015em;
+    color: #ffffff;
+    line-height: 1;
   }
   .connection-status {
     display: flex;
@@ -385,8 +353,8 @@
   .visor-stage {
     position: relative;
     width: 100%;
-    height: 250px;
-    min-height: 220px;
+    height: 290px;
+    min-height: 240px;
     border-radius: 14px;
     background: radial-gradient(circle at 50% 50%, rgba(22, 36, 60, 0.55) 0%, rgba(6, 10, 18, 0.95) 100%);
     overflow: hidden;
@@ -590,13 +558,13 @@
 
   /* --- Tarjeta del Coach DOC --- */
   .doc-card {
-    background: rgba(255, 119, 0, 0.07);
-    border: 1px solid rgba(255, 119, 0, 0.25);
+    background: rgba(255, 119, 0, 0.05);
+    border: 1px solid rgba(255, 119, 0, 0.22);
     border-radius: var(--radius-md);
-    padding: 14px 16px;
+    padding: 10px 14px;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
   }
   .doc-header {
     display: flex;
@@ -609,14 +577,14 @@
     gap: 8px;
   }
   .doc-avatar {
-    width: 24px;
-    height: 24px;
+    width: 22px;
+    height: 22px;
     border-radius: 50%;
     background: rgba(255, 119, 0, 0.2);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.78rem;
+    font-size: 0.74rem;
     border: 1px solid rgba(255, 119, 0, 0.4);
   }
   .doc-name {
@@ -633,7 +601,7 @@
     display: flex;
     align-items: center;
     gap: 6px;
-    font-size: 0.76rem;
+    font-size: 0.74rem;
     color: var(--fg-muted);
     cursor: pointer;
     user-select: none;
@@ -645,8 +613,8 @@
     height: 14px;
   }
   .doc-bubble {
-    font-size: 0.88rem;
-    line-height: 1.45;
+    font-size: 0.84rem;
+    line-height: 1.4;
     color: #f8fafc;
     transition: color 0.15s ease;
   }
@@ -654,21 +622,22 @@
     color: #a7f3d0;
   }
 
-  /* --- Badges y Chips Semánticos --- */
+  /* --- Indicadores de Estado y Metadatos (Texto Normal) --- */
   .badge {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
-    font-size: 0.72rem;
-    font-weight: 700;
-    padding: 3px 9px;
-    border-radius: var(--radius-pill);
-    letter-spacing: 0.02em;
+    gap: 6px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 0;
+    background: transparent;
+    border: none;
+    letter-spacing: normal;
   }
-  .badge-ok { background: var(--ok-soft); color: var(--ok); border: 1px solid rgba(16, 185, 129, 0.3); }
-  .badge-bad { background: var(--bad-soft); color: var(--bad); border: 1px solid rgba(244, 63, 94, 0.3); }
-  .badge-warn { background: var(--warn-soft); color: var(--warn); border: 1px solid rgba(245, 158, 11, 0.3); }
-  .badge-neutral { background: var(--card-soft); border: 1px solid var(--line); color: var(--fg-muted); }
+  .badge-ok { color: var(--ok); }
+  .badge-bad { color: var(--bad); }
+  .badge-warn { color: var(--warn); }
+  .badge-neutral { color: var(--fg-muted); }
 
   .chip-group {
     display: flex;
@@ -849,11 +818,10 @@
   .conteo-pill {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    background: rgba(255, 255, 255, 0.035);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: var(--radius-pill);
-    padding: 3px 10px;
+    gap: 4px;
+    background: transparent;
+    border: none;
+    padding: 1px 4px;
     font-size: 0.74rem;
   }
   .conteo-pill .c-lbl {
@@ -1268,6 +1236,9 @@
     color: rgba(248, 250, 252, 0.55);
     line-height: 1.35;
     transition: color 0.16s ease;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   .dock-segment:hover .segment-desc,
   .dock-segment.active .segment-desc {
@@ -1354,7 +1325,7 @@
       <button type="button" class="dock-segment" data-modo="test">
         <span class="segment-idx">03</span>
         <div class="segment-title">Benchmark</div>
-        <div class="segment-desc">Test de precisión y reconocimiento de golpes</div>
+        <div class="segment-desc">Prueba de precisión y reconocimiento</div>
       </button>
     </div>
   </div>
@@ -1372,10 +1343,7 @@
       </button>
 
       <div class="brand" id="brand-link" title="Volver al menú de modos">
-        <div class="brand-row">
-          <h1 class="brand-name">SPIN LAB</h1>
-          <span class="badge-modo" id="modo-actual-badge">Modo Libre</span>
-        </div>
+        <span class="brand-mode-title" id="modo-actual-badge">Modo Libre</span>
       </div>
     </div>
 
@@ -1391,7 +1359,7 @@
   <!-- ==================== VISTA 1: MODO LIBRE ==================== -->
   <div id="vista-libre" class="vista-tab">
     <div class="studio-grid" id="ultimo">
-      <!-- Columna Izquierda: Visor 3D Libre y Consejo de Doc -->
+      <!-- Columna Izquierda: Visor 3D de la Paleta -->
       <section class="studio-stage">
         <div class="hero-strike-header">
           <div class="strike-title" id="golpe">Esperando golpe…</div>
@@ -1409,29 +1377,9 @@
         <div class="agarre-banner">
           <span>Agarre de referencia:</span> <b>⚫ Negra en Derecha · 🔴 Roja en Revés</b>
         </div>
-
-        <!-- Tarjeta del Coach DOC (a la izquierda, acompañando el tiro en vivo) -->
-        <div class="doc-card">
-          <div class="doc-header">
-            <div class="doc-identity">
-              <div class="doc-avatar">🏓</div>
-              <div>
-                <div class="doc-name">Doc</div>
-                <div class="doc-role">Coach Biomecánico IA</div>
-              </div>
-            </div>
-            <label class="doc-voice-toggle">
-              <input type="checkbox" id="voz">
-              <span>🔊 Voz</span>
-            </label>
-          </div>
-          <div class="doc-bubble" id="consejo">
-            Pegá un golpe con la paleta para que Doc analice tu técnica.
-          </div>
-        </div>
       </section>
 
-      <!-- Columna Derecha: Panel Consolidado de Métricas & Historial -->
+      <!-- Columna Derecha: Métricas, Feedback de Doc & Historial -->
       <aside class="studio-panel">
         <div>
           <span class="sub-heading" style="margin-bottom:8px;">Métricas del impacto</span>
@@ -1455,16 +1403,29 @@
           </div>
         </div>
 
-        <!-- Distribución y Actividad Reciente -->
-        <div class="feed-wrap">
-          <div class="session-feed-header">
-            <span class="sub-heading">Distribución de la sesión</span>
-            <div class="conteo-inline" id="conteo">
-              <span class="vacio-inline">Esperando primeros golpes…</span>
+        <!-- Tarjeta del Coach DOC (aquí acompañando las métricas del tiro) -->
+        <div class="doc-card" id="coach-card">
+          <div class="doc-header">
+            <div class="doc-identity">
+              <div class="doc-avatar">🏓</div>
+              <div>
+                <div class="doc-name">Doc</div>
+                <div class="doc-role">Coach Biomecánico IA</div>
+              </div>
             </div>
+            <label class="doc-voice-toggle">
+              <input type="checkbox" id="voz">
+              <span>🔊 Voz</span>
+            </label>
           </div>
+          <div class="doc-bubble" id="consejo">
+            Pegá un golpe con la paleta para que Doc analice tu técnica.
+          </div>
+        </div>
 
-          <div class="impacto-nav-card" style="margin-top:4px;">
+        <!-- Navegador de Impactos y Sesión -->
+        <div class="feed-wrap">
+          <div class="impacto-nav-card">
             <div class="impacto-nav-header">
               <span class="sub-heading">Historial de impactos</span>
               <div class="impacto-nav-controls">
@@ -1475,6 +1436,13 @@
             </div>
             <div id="historial" class="impacto-single-row">
               <span class="vacio-inline">Todavía no hay golpes registrados.</span>
+            </div>
+          </div>
+
+          <div class="session-feed-header" style="margin-top:6px;">
+            <span class="sub-heading">Distribución de la sesión</span>
+            <div class="conteo-inline" id="conteo">
+              <span class="vacio-inline">Esperando primeros golpes…</span>
             </div>
           </div>
         </div>
@@ -2254,6 +2222,31 @@ function renderImpactoPaginado() {
         ${scoreBadge}
       </div>
     </div>`;
+
+    // Sincronizar Doc y métricas con el golpe seleccionado en el historial
+    const c = consejo(g);
+    const elConsejo = $('consejo');
+    if (elConsejo) {
+      elConsejo.textContent = c.texto;
+      elConsejo.classList.toggle('ok', c.ok);
+    }
+    if ($('vel')) $('vel').textContent = g.vel === null ? '–' : `${g.vel} km/h`;
+    if ($('ang')) $('ang').textContent = g.ang === null ? '–' : `${g.ang}°`;
+    if ($('pico')) $('pico').textContent = formatearPico(g.pico);
+    if ($('golpe')) $('golpe').textContent = GOLPES[g.golpe];
+    const elScore = $('score-pts');
+    if (elScore) {
+      if (g.score) {
+        elScore.textContent = `${g.score.total}`;
+        if (g.score.total >= 75) elScore.style.color = 'var(--ok)';
+        else if (g.score.total >= 40) elScore.style.color = '#b87800';
+        else elScore.style.color = 'var(--bad)';
+      } else {
+        elScore.textContent = '–';
+        elScore.style.color = '';
+      }
+    }
+    if (g.q) actualizarVisor3D(g.ang, g.golpe, g.q);
   }
 }
 
