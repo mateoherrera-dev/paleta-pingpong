@@ -2689,13 +2689,15 @@ function initIntroBall() {
   uvsSphLanding = new Float32Array(count * 2);
   uvsSphBall = new Float32Array(count * 2);
 
-  // Escala dinámica calibrada:
-  // - En Landing (scaleLanding = 0.82): la tipografía ocupa el ~33% del alto de pantalla,
-  //   con generoso aire naranja arriba y abajo, aspecto refinado y elegante.
-  // - En la pelota 3D (scaleBall = 0.10): el sello oficial ITTF cubre el ~52% del diámetro
-  //   de la esfera, nítido, imponente y 100% legible mientras la pelota gira.
+  // Calibración unificada de curvatura y escala:
+  // - En Landing (scaleLanding = 0.82): la tipografía plana 2D ocupa el ~33% del alto de pantalla,
+  //   con aire naranja elegante y respirable.
+  // - En la esfera 3D (scaleBall = 0.14): el sello ITTF abarca el ~52% del ancho y ~34% del alto
+  //   de la pelota con 39.7° de curvatura esférica real.
+  // - Al unificar la escala esférica (uvsSphLanding == uvsSphBall), la curvatura desde el inicio
+  //   es 100% idéntica a la final, y se ELIMINA totalmente el efecto de agrandar las letras en el zoom out.
   const scaleLanding = 0.82;
-  const scaleBall = 0.10;
+  const scaleBall = 0.14;
 
   for (let i = 0; i < count; i++) {
     const x = pos.getX(i);
@@ -2713,40 +2715,34 @@ function initIntroBall() {
     uvsFlat[i * 2] = Math.max(0.02, Math.min(0.98, uF));
     uvsFlat[i * 2 + 1] = Math.max(0.02, Math.min(0.98, vF));
 
-    // 2. uvSphLanding (Esfera durante curvado a escala de landing)
-    // 3. uvSphBall (Pelota completa con sello ITTF prominente al hacer zoom out)
-    let uSL = 0.5, vSL = 0.5;
-    let uSB = 0.5, vSB = 0.5;
+    // 2. uvSphLanding & 3. uvSphBall: Mapeo esférico único y consistente.
+    // Curva la tipografía con su auténtica profundidad 3D desde el primer instante
+    // sin deformaciones ni inflación de tamaño durante el zoom out.
+    let uS = 0.5, vS = 0.5;
     if (rxy < 1e-6) {
       if (zc > 0) {
-        uSL = 0.5; vSL = 0.5;
-        uSB = 0.5; vSB = 0.5;
+        uS = 0.5; vS = 0.5;
       } else {
-        uSL = 0.04; vSL = 0.04;
-        uSB = 0.04; vSB = 0.04;
+        uS = 0.04; vS = 0.04;
       }
     } else {
       const theta = Math.acos(zc);
-      const r_uv_L = Math.min(scaleLanding, (theta / thetaMax) * scaleLanding);
-
-      let r_uv_B;
+      let r_uv_S;
       if (theta <= thetaMax) {
-        r_uv_B = (theta / thetaMax) * scaleBall;
+        r_uv_S = (theta / thetaMax) * scaleBall;
       } else {
         // Fuera del sello, se extiende suavemente hacia los márgenes naranjas sin cortes
         const frac = Math.min(1.0, (theta - thetaMax) / (Math.PI / 2 - thetaMax));
-        r_uv_B = scaleBall + frac * (0.45 - scaleBall);
+        r_uv_S = scaleBall + frac * (0.45 - scaleBall);
       }
 
-      uSL = Math.max(0.02, Math.min(0.98, 0.5 + (x / rxy) * r_uv_L));
-      vSL = Math.max(0.02, Math.min(0.98, 0.5 + (y / rxy) * r_uv_L));
-      uSB = Math.max(0.02, Math.min(0.98, 0.5 + (x / rxy) * r_uv_B));
-      vSB = Math.max(0.02, Math.min(0.98, 0.5 + (y / rxy) * r_uv_B));
+      uS = Math.max(0.02, Math.min(0.98, 0.5 + (x / rxy) * r_uv_S));
+      vS = Math.max(0.02, Math.min(0.98, 0.5 + (y / rxy) * r_uv_S));
     }
-    uvsSphLanding[i * 2] = uSL;
-    uvsSphLanding[i * 2 + 1] = vSL;
-    uvsSphBall[i * 2] = uSB;
-    uvsSphBall[i * 2 + 1] = vSB;
+    uvsSphLanding[i * 2] = uS;
+    uvsSphLanding[i * 2 + 1] = vS;
+    uvsSphBall[i * 2] = uS;
+    uvsSphBall[i * 2 + 1] = vS;
   }
 
   introCanvasTex = crearTexturaPelotaIntro();
