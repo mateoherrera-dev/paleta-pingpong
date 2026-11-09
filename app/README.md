@@ -14,7 +14,7 @@ App web que se conecta a la paleta por Bluetooth (Web Bluetooth) y muestra cada 
 
 La placa acepta hasta 3 conexiones a la vez (por ejemplo, dos celulares y la compu). Si la placa se reinicia (desenchufarla, o cerrar y abrir `grabar.py`), se corta el Bluetooth: hay que volver a tocar "Conectar paleta".
 
-**Sin la placa:** "Simulador" manda golpes inventados cada 2,5 s. En la compu se puede servir local con `python -m http.server 8000` desde la raiz del repo y abrir `http://localhost:8000/app/` (Web Bluetooth anda en `localhost` y en https, no en una IP de la red).
+**Sin la placa:** "Simulador" manda golpes inventados cada 2,5 s. En la compu se puede servir local haciendo doble clic en `lanzar_web.bat` (o con `python -m http.server 8000` desde la raiz del repo) y abrir `http://localhost:8000/app/` (Web Bluetooth anda en `localhost` y en https, no en una IP de la red).
 
 ## Que muestra
 

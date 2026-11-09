@@ -420,6 +420,29 @@ El usuario entra a una pantalla con 3 pasos guiados:
 - **Impacto en la evaluacion: Altisimo.**
   Pasan de presentar *"un hardware con acelerometro que tira numeritos en pantalla"* a presentar *"un entrenador biomecanico interactivo de tenis de mesa"*.
 
+---
+
+### 5.2 Modo Benchmark: Validacion TinyML en Vivo (Herramienta para el Hito del 80%)
+
+Para validar de forma cuantitativa el hito de precision $\ge 80\%$ frente a jugadores externos durante las pruebas ciegas del viernes 6/11 y la toma de metricas del 13/11, la app incluye una pestaña dedicada de validacion de inferencia.
+
+#### 1. Como funciona
+1. **Asignacion de golpe:** P2 o el evaluador eligen que golpe se le pide al jugador (`TD`, `TR`, `ED` o `ER`).
+2. **Meta de pelotas:** Se fija una tanda (10, 12, 20 pelotas o libre).
+3. **Procesamiento automatico:** Con cada impacto recibido por BLE:
+   - Si la clase predicha coincide con el golpe pedido: suma **Acierto**.
+   - Si predijo otro golpe reconocido: suma **Confusion**.
+   - Si la red devolvio ruido o certeza insuficiente ($< 55\%$): suma **Descarte / Ruido**.
+4. **Calculo en vivo:**
+   $$\text{Tasa de Acierto} = \frac{\text{Aciertos}}{\text{Aciertos} + \text{Confusiones}} \times 100$$
+5. **Indicador de estado visual:**
+   - **Verde ($\ge 80\%$):** Cumple el hito de precision del MVP.
+   - **Amarillo ($60-79\%$):** Precision intermedia / modelo a revisar.
+   - **Rojo ($< 60\%$):** Fallo de inferencia o sesgo en datos.
+6. **Boton 'Copiar reporte':** Exporta en texto el resumen completo de la tanda (golpe evaluado, total de tiros, aciertos, confusiones, descartes y certeza promedio de la red) listo para pegar en el informe o en el chat del equipo.
+
+---
+
 
 
 ## 6. Matriz de Riesgos y Planes de Contingencia
