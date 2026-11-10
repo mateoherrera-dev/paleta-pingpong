@@ -1271,6 +1271,88 @@
     display: flex;
     align-items: center;
   }
+
+  /* --- Tira de Peloteo: Últimos 5 Impactos (Rally Strip) --- */
+  .hist-rally-strip {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+    margin: 8px 0 6px 0;
+    padding-bottom: 6px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  }
+  .rally-chip {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    padding: 6px 3px;
+    background: rgba(255, 255, 255, 0.025);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+  }
+  .rally-chip:hover:not(.vacio) {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.22);
+  }
+  .rally-chip.activo {
+    background: rgba(255, 119, 0, 0.14);
+    border-color: #ff7700;
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.4);
+  }
+  .rally-chip.vacio {
+    opacity: 0.3;
+    cursor: default;
+    border-style: dashed;
+  }
+  .rally-chip-header {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 0.80rem;
+    font-weight: 800;
+    color: #ffffff;
+    line-height: 1;
+  }
+  .rally-chip-dot {
+    font-size: 0.72rem;
+    line-height: 1;
+  }
+  .rally-chip-score {
+    font-family: var(--font-mono);
+    font-size: 0.76rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    padding: 1px 5px;
+    border-radius: var(--radius-pill);
+    line-height: 1.1;
+  }
+  .rally-chip-score.score-good {
+    color: #86efac;
+    background: rgba(34, 197, 94, 0.15);
+  }
+  .rally-chip-score.score-mid {
+    color: #fde047;
+    background: rgba(245, 158, 11, 0.15);
+  }
+  .rally-chip-score.score-bad {
+    color: #fca5a5;
+    background: rgba(239, 68, 68, 0.15);
+  }
+  .rally-chip-score.score-none {
+    color: var(--fg-muted);
+    background: rgba(255, 255, 255, 0.05);
+  }
+  .rally-chip-num {
+    font-family: var(--font-mono);
+    font-size: 0.74rem;
+    color: var(--fg-muted);
+    font-weight: 600;
+  }
   .impacto-single-row .hist-row {
     width: 100%;
     padding: 4px 6px;
@@ -1831,6 +1913,7 @@
                 <button type="button" class="btn-nav-impacto" id="btn-hist-sig" title="Impacto siguiente" disabled>›</button>
               </div>
             </div>
+            <div id="hist-rally-strip" class="hist-rally-strip" aria-label="Últimos impactos de la serie"></div>
             <div id="historial" class="impacto-single-row">
               <span class="vacio-inline">Todavía no hay golpes registrados.</span>
             </div>
@@ -2601,6 +2684,7 @@ function renderImpactoPaginado() {
   const posEl = $('hist-pos');
   const btnAnt = $('btn-hist-ant');
   const btnSig = $('btn-hist-sig');
+  const stripEl = $('hist-rally-strip');
 
   const total = sesion.golpes.length;
   if (total === 0) {
@@ -2608,6 +2692,15 @@ function renderImpactoPaginado() {
     if (posEl) posEl.textContent = '0 / 0';
     if (btnAnt) btnAnt.disabled = true;
     if (btnSig) btnSig.disabled = true;
+    if (stripEl) {
+      stripEl.innerHTML = Array(5).fill(0).map(() => `
+        <div class="rally-chip vacio" aria-hidden="true">
+          <div class="rally-chip-header"><span>–</span></div>
+          <span class="rally-chip-score score-none">–</span>
+          <span class="rally-chip-num">#–</span>
+        </div>
+      `).join('');
+    }
     return;
   }
 
@@ -2618,6 +2711,50 @@ function renderImpactoPaginado() {
   if (posEl) posEl.textContent = `${total - idxHistorial} / ${total}`;
   if (btnAnt) btnAnt.disabled = (idxHistorial >= total - 1);
   if (btnSig) btnSig.disabled = (idxHistorial <= 0);
+
+  // Renderizar la tira de peloteo (Rally Strip con ventana de 5 impactos)
+  if (stripEl) {
+    let inicioIdx = Math.max(0, idxHistorial - 2);
+    let finIdx = inicioIdx + 4;
+    if (finIdx >= total) {
+      finIdx = total - 1;
+      inicioIdx = Math.max(0, finIdx - 4);
+    }
+
+    const chipsHtml = [];
+    for (let i = finIdx; i >= inicioIdx; i--) {
+      const gItem = sesion.golpes[i];
+      const esActivo = (i === idxHistorial);
+      const scoreVal = gItem.score ? gItem.score.total : null;
+      let scoreClass = 'score-none';
+      if (scoreVal !== null) {
+        if (scoreVal >= 75) scoreClass = 'score-good';
+        else if (scoreVal >= 40) scoreClass = 'score-mid';
+        else scoreClass = 'score-bad';
+      }
+      const caraIcon = determinarCara(gItem.golpe, gItem.ang, gItem.q) === 'roja' ? '🔴' : '⚫';
+      chipsHtml.push(`
+        <div class="rally-chip ${esActivo ? 'activo' : ''}" data-idx="${i}" role="button" tabindex="0" title="Impacto #${gItem.n}: ${GOLPES[gItem.golpe]} (${scoreVal !== null ? scoreVal + ' pts' : '–'})">
+          <div class="rally-chip-header">
+            <span>${gItem.golpe}</span>
+            <span class="rally-chip-dot">${caraIcon}</span>
+          </div>
+          <span class="rally-chip-score ${scoreClass}">${scoreVal !== null ? scoreVal : '–'}</span>
+          <span class="rally-chip-num">#${gItem.n}</span>
+        </div>
+      `);
+    }
+    while (chipsHtml.length < 5) {
+      chipsHtml.push(`
+        <div class="rally-chip vacio" aria-hidden="true">
+          <div class="rally-chip-header"><span>–</span></div>
+          <span class="rally-chip-score score-none">–</span>
+          <span class="rally-chip-num">#–</span>
+        </div>
+      `);
+    }
+    stripEl.innerHTML = chipsHtml.join('');
+  }
 
   if (histEl && g) {
     const scoreBadge = g.score ? `<span class="hist-score">${g.score.total} pts</span>` : '';
@@ -2678,6 +2815,31 @@ if (btnHistSig) {
     if (idxHistorial > 0) {
       idxHistorial--;
       renderImpactoPaginado();
+    }
+  });
+}
+
+const stripRallyEl = $('hist-rally-strip');
+if (stripRallyEl) {
+  stripRallyEl.addEventListener('click', (ev) => {
+    const chip = ev.target.closest('.rally-chip[data-idx]');
+    if (!chip) return;
+    const targetIdx = parseInt(chip.getAttribute('data-idx'), 10);
+    if (!isNaN(targetIdx)) {
+      idxHistorial = targetIdx;
+      renderImpactoPaginado();
+    }
+  });
+  stripRallyEl.addEventListener('keydown', (ev) => {
+    if (ev.key === 'Enter' || ev.key === ' ') {
+      const chip = ev.target.closest('.rally-chip[data-idx]');
+      if (!chip) return;
+      ev.preventDefault();
+      const targetIdx = parseInt(chip.getAttribute('data-idx'), 10);
+      if (!isNaN(targetIdx)) {
+        idxHistorial = targetIdx;
+        renderImpactoPaginado();
+      }
     }
   });
 }
