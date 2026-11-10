@@ -357,13 +357,6 @@
     flex: 1;
     min-height: 0;
   }
-  @media (max-width: 880px) {
-    .studio-grid {
-      grid-template-columns: 1fr;
-      gap: 14px;
-      flex: none;
-    }
-  }
 
   .studio-stage {
     display: flex;
@@ -493,6 +486,130 @@
     justify-content: flex-start;
     padding: 22px 24px;
     gap: 16px;
+  }
+
+  /* --- Responsive: Adaptación para Tablets y Celulares --- */
+  @media (max-width: 880px) {
+    main#app-main {
+      width: 100%;
+      padding: 10px 12px 28px 12px;
+      min-height: 100vh;
+      height: auto;
+    }
+    .vista-tab {
+      height: auto;
+      min-height: auto;
+      justify-content: flex-start;
+      gap: 14px;
+    }
+    .studio-grid {
+      grid-template-columns: 1fr;
+      gap: 14px;
+      flex: none;
+    }
+    #card-tutorial,
+    #card-benchmark {
+      max-height: none;
+      margin: 0;
+      width: 100%;
+    }
+    .studio-stage,
+    .studio-panel {
+      height: auto;
+      min-height: auto;
+    }
+    #card-tutorial .challenge-box,
+    #card-tutorial .doc-card,
+    #card-benchmark .benchmark-hud {
+      flex: none;
+    }
+  }
+
+  @media (max-width: 580px) {
+    header.app-bar {
+      padding: 8px 12px;
+    }
+    #card-tutorial .studio-stage,
+    #card-tutorial .studio-panel,
+    #card-benchmark .studio-stage,
+    #card-benchmark .studio-panel {
+      padding: 14px 14px;
+      gap: 12px;
+    }
+    #card-tutorial .challenge-box {
+      padding: 14px 14px;
+      gap: 12px;
+    }
+    #card-tutorial .challenge-top {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 6px;
+    }
+    #card-tutorial .challenge-count {
+      font-size: 1.15rem;
+    }
+    #card-tutorial .challenge-meta {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 8px;
+    }
+    .drill-pips-container {
+      width: 100%;
+      justify-content: space-between;
+    }
+    .card-acciones {
+      flex-direction: column;
+      gap: 8px;
+      width: 100%;
+    }
+    .card-acciones button {
+      width: 100%;
+      min-height: 44px;
+    }
+    #card-benchmark .benchmark-hud {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 10px;
+      padding: 16px 14px;
+      text-align: center;
+    }
+    #card-benchmark .benchmark-hud .hud-val {
+      font-size: 2.1rem;
+      text-align: center;
+    }
+    #card-benchmark .benchmark-hud div:last-child {
+      text-align: center;
+    }
+    .benchmark-config-strip {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 8px;
+    }
+    .benchmark-config-strip .chip-group {
+      min-width: 0;
+      width: 100%;
+    }
+    .tanda-select-wrap,
+    .select-clean {
+      width: 100%;
+    }
+    .chip-btn {
+      padding: 7px 8px;
+      font-size: 0.74rem;
+      min-width: 52px;
+    }
+    .unified-card-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+    }
+    .header-badges-row {
+      justify-content: flex-start;
+    }
+    #card-tutorial .telemetry-cell,
+    #card-benchmark .telemetry-cell {
+      padding: 10px 12px;
+    }
   }
 
   /* --- Secciones y Superficies Unificadas --- */
