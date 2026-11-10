@@ -1353,7 +1353,7 @@
     flex-direction: row;
     align-items: stretch;
     width: 100%;
-    background: rgba(11, 17, 30, 0.82);
+    background: rgba(11, 17, 30, 0.92);
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
     border: 1px solid rgba(255, 255, 255, 0.10);
@@ -3190,7 +3190,8 @@ function crearTexturaMesaIntro() {
   // 1. Línea blanca central reglamentaria de saque (3 mm)
   ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
   const lineW = 10;
-  ctx.fillRect((w - lineW) / 2, 0, lineW, h);
+  const borderH = 26;
+  ctx.fillRect((w - lineW) / 2, 0, lineW, h - borderH);
 
   // 2. Líneas laterales perimetrales reglamentarias (20 mm)
   const borderW = 20;
@@ -3199,7 +3200,6 @@ function crearTexturaMesaIntro() {
   ctx.fillRect(w - borderW, 0, borderW, h);
 
   // 3. Línea de fondo en el primer plano (borde del jugador)
-  const borderH = 26;
   ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
   ctx.fillRect(0, h - borderH, w, borderH);
 
@@ -3358,8 +3358,8 @@ function initIntroBall() {
 
   introMesh = new THREE.Mesh(sphereGeo, material);
 
-  // Mesa de Ping Pong reglamentaria en perspectiva física
-  const tableGeo = new THREE.PlaneGeometry(0.38, 0.90);
+  // Mesa de Ping Pong reglamentaria en perspectiva física (longitud calibrada para terminar con holgura sobre el dock)
+  const tableGeo = new THREE.PlaneGeometry(0.38, 0.46);
   tableGeo.rotateX(-Math.PI / 2);
   const tableMat = new THREE.MeshStandardMaterial({
     map: crearTexturaMesaIntro(),
@@ -3370,7 +3370,7 @@ function initIntroBall() {
     depthWrite: false
   });
   introTableMesh = new THREE.Mesh(tableGeo, tableMat);
-  introTableMesh.position.set(0, -0.0305, -0.16);
+  introTableMesh.position.set(0, -0.0305, -0.21);
   introScene.add(introTableMesh);
 
   // Sombra de contacto suave sobre el tablero justo bajo la pelota
