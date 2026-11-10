@@ -184,6 +184,108 @@
     box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.25);
   }
 
+  .badge-compat-ble {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(239, 68, 68, 0.15);
+    border: 1px solid rgba(239, 68, 68, 0.35);
+    color: #fca5a5;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: var(--radius-pill);
+    cursor: help;
+  }
+
+  /* --- Banner de Desconexión BLE (Resiliencia en Cancha) --- */
+  .alerta-desconexion-ble {
+    position: fixed;
+    top: 18px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+    width: min(92vw, 640px);
+    background: rgba(12, 21, 39, 0.96);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(239, 68, 68, 0.45);
+    border-radius: var(--radius-md);
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.65);
+    animation: slideDownAlert 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  @keyframes slideDownAlert {
+    from {
+      opacity: 0;
+      transform: translate(-50%, -18px);
+    }
+    to {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+  }
+  .alerta-ble-content {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+  }
+  .alerta-ble-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    color: #f87171;
+    text-transform: uppercase;
+  }
+  .alerta-ble-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #ef4444;
+    display: inline-block;
+  }
+  .alerta-ble-msg {
+    font-size: 0.88rem;
+    color: #f8fafc;
+    line-height: 1.4;
+    font-weight: 500;
+  }
+  .alerta-ble-acciones {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+  .alerta-ble-btn {
+    padding: 8px 16px;
+    font-size: 0.84rem;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .alerta-ble-cerrar {
+    background: transparent;
+    border: none;
+    color: var(--fg-muted);
+    font-size: 1.1rem;
+    padding: 6px 10px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: color 0.15s ease, background 0.15s ease;
+  }
+  .alerta-ble-cerrar:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.08);
+  }
+
   .header-actions {
     display: flex;
     gap: 8px;
@@ -1598,6 +1700,9 @@
     </div>
 
     <div class="app-bar-right">
+      <div id="badge-compat-ble" class="badge-compat-ble" style="display:none;" title="Web Bluetooth no soportado en este navegador. Usá Chrome, Edge o Bluefy en iPhone.">
+        <span>⚠️ Sin Web BLE</span>
+      </div>
       <div class="connection-status">
         <span class="dot-status" id="dot-ble"></span>
         <span id="estado">Sin conectar</span>
@@ -1605,6 +1710,23 @@
       <button id="conectar" class="btn-primary" type="button">Conectar</button>
     </div>
   </header>
+
+  <!-- Banner Flotante de Desconexión BLE (Resiliencia en Cancha) -->
+  <div id="alerta-desconexion-ble" class="alerta-desconexion-ble" style="display:none;" role="alert" aria-live="assertive">
+    <div class="alerta-ble-content">
+      <div class="alerta-ble-badge">
+        <span class="alerta-ble-dot"></span>
+        <span>SEÑAL BLE PERDIDA</span>
+      </div>
+      <div class="alerta-ble-msg">
+        Se interrumpió el enlace con la paleta. Acercate a la mesa o verificá la batería.
+      </div>
+    </div>
+    <div class="alerta-ble-acciones">
+      <button id="btn-reconectar-ble" class="btn-primary alerta-ble-btn" type="button">⚡ Reconectar</button>
+      <button id="btn-cerrar-alerta-ble" class="alerta-ble-cerrar" type="button" aria-label="Cerrar aviso">✕</button>
+    </div>
+  </div>
 
   <!-- ==================== VISTA 1: MODO LIBRE ==================== -->
   <div id="vista-libre" class="vista-tab">
@@ -1756,7 +1878,7 @@
           <div class="challenge-meta">
             <div class="drill-streak-label">
               <span class="drill-streak-dot"></span>
-              <span>Consistencia en serie</span>
+              <span>Racha</span>
             </div>
             <div class="drill-pips-container">
               <div class="drill-pips" id="tut-pips" aria-label="Racha de impactos seguidos" role="status">
@@ -2984,7 +3106,8 @@ function recibir(evento) {
 
 async function conectar() {
   if (!navigator.bluetooth) {
-    setEstadoBLE(false, 'Navegador sin Bluetooth Web (usar Chrome en Android o Bluefy en iOS).');
+    setEstadoBLE(false, 'Navegador sin Bluetooth Web');
+    alert('Tu navegador no soporta Web Bluetooth.\n\n• En PC o Android: usá Google Chrome o Microsoft Edge.\n• En iPhone/iPad (iOS): usá la app Bluefy - Web BLE Browser.');
     return;
   }
   try {
@@ -2995,6 +3118,7 @@ async function conectar() {
     dispositivo.addEventListener('gattserverdisconnected', () => {
       setEstadoBLE(false, 'Se desconectó la paleta.');
       $('conectar').textContent = '⚡ Conectar';
+      mostrarAlertaDesconexion();
     });
     const servidor = await dispositivo.gatt.connect();
     const servicio = await servidor.getPrimaryService(SERVICIO_UART);
@@ -3003,11 +3127,37 @@ async function conectar() {
     await tx.startNotifications();
     setEstadoBLE(true, `Conectada a ${dispositivo.name}`);
     $('conectar').textContent = 'Conectada';
+    ocultarAlertaDesconexion();
   } catch (err) {
     setEstadoBLE(false, `Error BLE: ${err.message}`);
     $('conectar').textContent = '⚡ Conectar';
   }
 }
+
+function mostrarAlertaDesconexion() {
+  const el = $('alerta-desconexion-ble');
+  if (el) el.style.display = 'flex';
+  if (typeof sonarAlertaDesconexion === 'function') sonarAlertaDesconexion();
+  if (typeof decir === 'function') decir('Atención: conexión Bluetooth perdida.');
+}
+
+function ocultarAlertaDesconexion() {
+  const el = $('alerta-desconexion-ble');
+  if (el) el.style.display = 'none';
+}
+
+function verificarCompatibilidadBLE() {
+  if (!navigator.bluetooth) {
+    setEstadoBLE(false, 'Sin Bluetooth Web');
+    const badge = $('badge-compat-ble');
+    if (badge) badge.style.display = 'inline-flex';
+    const btnCon = $('conectar');
+    if (btnCon) {
+      btnCon.title = 'Navegador sin Web Bluetooth. Usá Chrome, Edge o Bluefy (iOS).';
+    }
+  }
+}
+verificarCompatibilidadBLE();
 
 // Simulador: genera eventos falsos con el mismo formato que la placa
 let simulador = null, nSim = 0;
@@ -3069,6 +3219,17 @@ const btnConectar = $('conectar');
 if (btnConectar) btnConectar.addEventListener('click', conectar);
 const btnSimular = $('simular');
 if (btnSimular) btnSimular.addEventListener('click', alternarSimulador);
+const btnReconectarBLE = $('btn-reconectar-ble');
+if (btnReconectarBLE) {
+  btnReconectarBLE.addEventListener('click', () => {
+    ocultarAlertaDesconexion();
+    conectar();
+  });
+}
+const btnCerrarAlertaBLE = $('btn-cerrar-alerta-ble');
+if (btnCerrarAlertaBLE) {
+  btnCerrarAlertaBLE.addEventListener('click', ocultarAlertaDesconexion);
+}
 
 
 
@@ -3197,6 +3358,38 @@ function sonarTensionAire(vol = 0.24) {
     noise.start(now);
     noise.stop(now + dur);
   } catch(e) {}
+}
+
+function sonarAlertaDesconexion() {
+  try {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+    // Bip descendente doble: 520Hz -> 300Hz, luego 380Hz -> 200Hz
+    const osc1 = ctx.createOscillator();
+    const g1 = ctx.createGain();
+    osc1.type = 'triangle';
+    osc1.frequency.setValueAtTime(520, now);
+    osc1.frequency.exponentialRampToValueAtTime(300, now + 0.16);
+    g1.gain.setValueAtTime(0.25, now);
+    g1.gain.exponentialRampToValueAtTime(0.001, now + 0.16);
+    osc1.connect(g1);
+    g1.connect(ctx.destination);
+    osc1.start(now);
+    osc1.stop(now + 0.17);
+
+    const osc2 = ctx.createOscillator();
+    const g2 = ctx.createGain();
+    osc2.type = 'triangle';
+    osc2.frequency.setValueAtTime(380, now + 0.20);
+    osc2.frequency.exponentialRampToValueAtTime(200, now + 0.38);
+    g2.gain.setValueAtTime(0.28, now + 0.20);
+    g2.gain.exponentialRampToValueAtTime(0.001, now + 0.38);
+    osc2.connect(g2);
+    g2.connect(ctx.destination);
+    osc2.start(now + 0.20);
+    osc2.stop(now + 0.39);
+  } catch (e) {}
 }
 
 // =========================================================================
@@ -3970,6 +4163,12 @@ if (brandLink) {
 window.addEventListener('keydown', (ev) => {
   if (!introActiva) {
     if (ev.key === 'Escape') {
+      const alerta = $('alerta-desconexion-ble');
+      if (alerta && alerta.style.display !== 'none') {
+        ev.preventDefault();
+        ocultarAlertaDesconexion();
+        return;
+      }
       ev.preventDefault();
       abrirIntro();
     }
