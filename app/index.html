@@ -970,6 +970,71 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 6px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+  }
+  .drill-streak-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.80rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    color: var(--fg-muted);
+    text-transform: uppercase;
+  }
+  .drill-streak-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #ff7700;
+    display: inline-block;
+  }
+  .drill-pips-container {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .drill-pips {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .drill-pip {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.07);
+    border: 1.5px solid rgba(255, 255, 255, 0.20);
+    box-sizing: border-box;
+    transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+                background 0.2s ease,
+                border-color 0.2s ease;
+  }
+  .drill-pip.activo {
+    background: radial-gradient(circle at 35% 35%, #ffaa55 0%, #ff7700 70%, #d95e00 100%);
+    border-color: #ffaa55;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
+    transform: scale(1.12);
+  }
+  .drill-pip.meta-alcanzada {
+    background: radial-gradient(circle at 35% 35%, #4ade80 0%, #22c55e 70%, #15803d 100%);
+    border-color: #86efac;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
+  }
+  .drill-pips.pips-break .drill-pip {
+    border-color: rgba(239, 68, 68, 0.6);
+    transition: border-color 0.15s ease;
+  }
+  .drill-pips-num {
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #e2e8f0;
+    font-variant-numeric: tabular-nums;
   }
 
   /* --- Separador y Feeds Limpios (Sin Viñetas) --- */
@@ -1689,7 +1754,20 @@
           </div>
 
           <div class="challenge-meta">
-            <span>Racha de aciertos: <b id="tut-racha" style="color:var(--warn)">0</b> 🔥</span>
+            <div class="drill-streak-label">
+              <span class="drill-streak-dot"></span>
+              <span>Consistencia en serie</span>
+            </div>
+            <div class="drill-pips-container">
+              <div class="drill-pips" id="tut-pips" aria-label="Racha de impactos seguidos" role="status">
+                <span class="drill-pip" aria-hidden="true"></span>
+                <span class="drill-pip" aria-hidden="true"></span>
+                <span class="drill-pip" aria-hidden="true"></span>
+                <span class="drill-pip" aria-hidden="true"></span>
+                <span class="drill-pip" aria-hidden="true"></span>
+              </div>
+              <span class="drill-pips-num"><b id="tut-racha">0</b> / <span id="tut-racha-meta">5</span></span>
+            </div>
           </div>
         </div>
 
@@ -2554,7 +2632,36 @@ function actualizarUITutorial() {
   const barra = $('tut-barra');
   barra.style.transform = `scaleX(${pct / 100})`;
   barra.classList.toggle('completo', tutorial.completados >= tutorial.meta);
-  $('tut-racha').textContent = tutorial.racha;
+
+  // Pips de consistencia deportiva (Drill Pips)
+  const elPips = $('tut-pips');
+  if (elPips) {
+    const totalPips = tutorial.meta || 5;
+    if (elPips.children.length !== totalPips) {
+      elPips.innerHTML = '';
+      for (let i = 0; i < totalPips; i++) {
+        const pip = document.createElement('span');
+        pip.className = 'drill-pip';
+        pip.setAttribute('aria-hidden', 'true');
+        elPips.appendChild(pip);
+      }
+    }
+    const currentRacha = Math.min(tutorial.racha, totalPips);
+    const metaAlcanzada = tutorial.racha >= totalPips;
+    Array.from(elPips.children).forEach((pip, idx) => {
+      pip.classList.toggle('activo', idx < currentRacha);
+      pip.classList.toggle('meta-alcanzada', metaAlcanzada);
+    });
+  }
+  const elRacha = $('tut-racha');
+  if (elRacha) {
+    elRacha.textContent = tutorial.racha;
+    elRacha.style.color = tutorial.racha >= (tutorial.meta || 5) ? 'var(--ok)' : (tutorial.racha > 0 ? '#ff7700' : 'var(--fg-muted)');
+  }
+  const elRachaMeta = $('tut-racha-meta');
+  if (elRachaMeta) {
+    elRachaMeta.textContent = tutorial.meta || 5;
+  }
 
   const btnSig = $('tut-btn-siguiente');
   const badgeEstado = $('tut-estado-paso');
@@ -2605,8 +2712,16 @@ function procesarTutorial(e) {
       if (tabActiva === 'tutorial') decir(res.msg);
     }
   } else {
+    const teniaRacha = tutorial.racha > 0;
     tutorial.racha = 0;
     if (tabActiva === 'tutorial') decir(res.msg);
+    if (teniaRacha) {
+      const elPips = $('tut-pips');
+      if (elPips) {
+        elPips.classList.add('pips-break');
+        setTimeout(() => elPips.classList.remove('pips-break'), 350);
+      }
+    }
   }
   actualizarUITutorial();
 }
