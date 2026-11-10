@@ -84,4 +84,6 @@ python -m http.server 8000
 
 Abrir `http://localhost:8000/app/` en Chrome y tocar **Simulador**. Para usarla en el celular con la placa real hace falta https: publicarla con GitHub Pages.
 
+La app cuenta con tres modos: **Modo Libre** (analisis golpe a golpe con visor 3D y consejos en voz alta), **Modo Tutorial** (entrenador biomecanico en 3 pasos segun PingSkills) y **Modo Benchmark** (validacion en vivo de la precision TinyML frente al hito del 80%).
+
 Como conectarla, que muestra cada parte y los criterios de los consejos: [`app/README.md`](app/README.md). Publicada en https://mateoherrera-dev.github.io/paleta-pingpong/app/.

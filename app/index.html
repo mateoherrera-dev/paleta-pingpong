@@ -3,101 +3,715 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Paleta</title>
+<title>DOC · Find your edge | Paleta Smart IMU</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%23ff7700'/%3E%3Ctext x='32' y='36' font-family='Arial Black,Impact,sans-serif' font-weight='900' font-size='20' fill='%23111111' text-anchor='middle' letter-spacing='-1'%3EDOC%3C/text%3E%3Ctext x='32' y='46' font-size='7' fill='%23111111' text-anchor='middle' font-weight='bold'%3E%E2%98%85%E2%98%85%E2%98%85%3C/text%3E%3C/svg%3E">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <style>
   :root {
-    --bg: #f4f7fa; --card: #ffffff; --fg: #121c28; --muted: #5a6778; --line: #d7dfe8;
-    --accent: #1b4f91; --ok: #1f7a4d; --bad: #c62f3a; --soft: #e5eef9;
+    --bg: #070d18;
+    --card: #0c1527;
+    --card-hover: #121e36;
+    --card-soft: rgba(30, 58, 138, 0.08);
+    --fg: #f8fafc;
+    --fg-muted: #94a3b8;
+    --muted: #94a3b8;
+    --line: rgba(255, 255, 255, 0.09);
+    --line-active: rgba(255, 119, 0, 0.55);
+    --accent: #ff7700;
+    --accent-glow: rgba(255, 119, 0, 0.35);
+    --accent-soft: rgba(255, 119, 0, 0.12);
+    --court-blue: #1e3a8a;
+    --court-glow: rgba(37, 99, 235, 0.22);
+    --ok: #10b981;
+    --ok-glow: rgba(16, 185, 129, 0.28);
+    --ok-soft: rgba(16, 185, 129, 0.12);
+    --warn: #f59e0b;
+    --warn-soft: rgba(245, 158, 11, 0.12);
+    --bad: #f43f5e;
+    --bad-soft: rgba(244, 63, 94, 0.12);
+    --rubber-red: #ef4444;
+    --rubber-black: #1e293b;
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 18px;
+    --radius-pill: 9999px;
+    --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+    --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+    --dur-fast: 140ms;
+    --dur-base: 220ms;
   }
-  @media (prefers-color-scheme: dark) {
-    :root { --bg: #0c131b; --card: #141e2a; --fg: #e6edf5; --muted: #9babbd; --line: #26364a;
-            --accent: #74abef; --ok: #55c792; --bad: #ff6f76; --soft: #15283f; color-scheme: dark; }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html {
+    height: 100%;
   }
-  * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.5 system-ui, sans-serif; }
-  main { max-width: 480px; margin: 0 auto; padding: 16px; display: grid; gap: 14px; }
-  header { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-  h1 { font-size: 1.3rem; margin: 0 auto 0 0; }
-  button { font: inherit; font-size: .9rem; padding: 8px 14px; border-radius: 8px; border: 1px solid var(--accent);
-           background: var(--accent); color: #fff; cursor: pointer; }
-  button.sec { background: transparent; color: var(--accent); }
-  .estado { font-size: .85rem; color: var(--muted); }
-  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: grid; gap: 10px; }
-  .golpe { font-size: 1.5rem; font-weight: 600; }
-  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-  .stat { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px; text-align: center; }
-  .stat small { display: block; color: var(--muted); font-size: .75rem; }
-  .stat b { font-size: 1.2rem; font-variant-numeric: tabular-nums; }
-  .certeza { font-size: .8rem; color: var(--muted); margin-top: -6px; }
-  .consejo { background: var(--soft); border-radius: 8px; padding: 10px; }
-  .consejo.ok { color: var(--ok); }
-  ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; font-size: .9rem; }
-  li { display: flex; justify-content: space-between; gap: 8px; border-bottom: 1px solid var(--line); padding: 4px 0; }
-  .conteo { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; font-size: .9rem; }
-  label { font-size: .9rem; display: flex; gap: 6px; align-items: center; }
-  .vacio { color: var(--muted); }
-  .card-debug {
-    font-size: 0.85rem;
-    border: 1px dashed var(--line);
-    background: var(--card);
+  body {
+    margin: 0;
+    background: var(--bg);
+    background-image:
+      radial-gradient(ellipse 75% 45% at 50% -5%, rgba(37, 99, 235, 0.16) 0%, transparent 65%),
+      radial-gradient(ellipse 55% 30% at 50% 20%, rgba(255, 119, 0, 0.05) 0%, transparent 60%);
+    background-attachment: fixed;
+    color: var(--fg);
+    font: 15px/1.5 var(--font);
+    letter-spacing: -0.01em;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
   }
-  .card-debug summary {
-    cursor: pointer;
-    font-weight: 600;
-    user-select: none;
-    color: var(--accent);
-    outline: none;
+
+  main#app-main {
+    width: min(1200px, calc(100vw - 32px));
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 14px 0 16px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    flex: 1;
+    min-height: 0;
+    box-sizing: border-box;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(20px);
+    transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: opacity, transform;
   }
-  .debug-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 6px;
-    margin-top: 10px;
-    font-size: 0.82rem;
+  main#app-main.visible {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
   }
-  @media (max-width: 400px) {
-    .debug-grid { grid-template-columns: 1fr; }
-  }
-  .debug-grid div {
+
+  /* --- Barra Superior (App Bar de Precisión) --- */
+  header.app-bar {
     display: flex;
     justify-content: space-between;
-    padding: 3px 6px;
-    background: var(--bg);
-    border-radius: 4px;
-    border: 1px solid var(--line);
+    align-items: center;
+    gap: 12px;
+    padding: 10px 18px;
+    background: rgba(11, 17, 30, 0.82);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    border-top: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 16px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
   }
-  .debug-grid span { color: var(--muted); }
-  .debug-grid b { font-variant-numeric: tabular-nums; }
-  .debug-log-wrap {
-    margin-top: 8px;
+
+  .app-bar-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
   }
-  .debug-log-wrap pre {
-    background: var(--bg);
-    border: 1px solid var(--line);
-    border-radius: 6px;
-    padding: 6px;
+
+  .app-bar-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  /* Botón Volver al Menú de Modos */
+  .btn-volver {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: var(--radius-pill);
+    color: var(--fg);
+    padding: 6px 14px;
+    font-size: 0.80rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+    user-select: none;
+  }
+  .btn-volver:hover {
+    background: rgba(255, 255, 255, 0.10);
+    border-color: rgba(255, 255, 255, 0.22);
+    transform: translateX(-2px);
+  }
+  .btn-volver:active {
+    transform: translateX(-1px) scale(0.97);
+  }
+  .btn-volver svg {
+    stroke: var(--accent);
+    transition: transform 0.15s ease;
+  }
+  .btn-volver:hover svg {
+    transform: translateX(-2px);
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+    transition: opacity 0.15s ease;
+  }
+  .brand:hover {
+    opacity: 0.85;
+  }
+  .brand-mode-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: -0.015em;
+    color: #ffffff;
+    line-height: 1;
+  }
+  .connection-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.76rem;
+    color: var(--fg-muted);
+    font-weight: 500;
+    margin-top: 1px;
+  }
+  .dot-status {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--fg-muted);
+    transition: background-color var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out);
+  }
+  .dot-status.conectado {
+    background: var(--ok);
+    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.25);
+  }
+
+  .badge-compat-ble {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(239, 68, 68, 0.15);
+    border: 1px solid rgba(239, 68, 68, 0.35);
+    color: #fca5a5;
     font-size: 0.72rem;
-    max-height: 120px;
-    overflow-y: auto;
-    font-family: monospace;
-    margin: 4px 0 0 0;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: var(--radius-pill);
+    cursor: help;
   }
-  .visor-wrap {
+
+  /* --- Banner de Desconexión BLE (Resiliencia en Cancha) --- */
+  .alerta-desconexion-ble {
+    position: fixed;
+    top: 18px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+    width: min(92vw, 640px);
+    background: rgba(12, 21, 39, 0.96);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(239, 68, 68, 0.45);
+    border-radius: var(--radius-md);
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.65);
+    animation: slideDownAlert 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  @keyframes slideDownAlert {
+    from {
+      opacity: 0;
+      transform: translate(-50%, -18px);
+    }
+    to {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+  }
+  .alerta-ble-content {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+  }
+  .alerta-ble-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    color: #f87171;
+    text-transform: uppercase;
+  }
+  .alerta-ble-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #ef4444;
+    display: inline-block;
+  }
+  .alerta-ble-msg {
+    font-size: 0.88rem;
+    color: #f8fafc;
+    line-height: 1.4;
+    font-weight: 500;
+  }
+  .alerta-ble-acciones {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+  .alerta-ble-btn {
+    padding: 8px 16px;
+    font-size: 0.84rem;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .alerta-ble-cerrar {
+    background: transparent;
+    border: none;
+    color: var(--fg-muted);
+    font-size: 1.1rem;
+    padding: 6px 10px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: color 0.15s ease, background 0.15s ease;
+  }
+  .alerta-ble-cerrar:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 8px;
+  }
+
+  /* --- Botones --- */
+  button {
+    font: inherit;
+    font-size: 0.82rem;
+    font-weight: 600;
+    padding: 8px 14px;
+    border-radius: var(--radius-sm);
+    border: 1px solid transparent;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: background-color var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out);
+    user-select: none;
+  }
+  button:active {
+    transform: scale(0.97);
+  }
+  button.btn-primary {
+    background: var(--accent);
+    color: #070d18;
+    font-weight: 800;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.40);
+  }
+  button.btn-primary:hover {
+    background: #ff881a;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.50);
+  }
+  button.btn-primary:active {
+    transform: scale(0.97);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.30);
+  }
+  button.btn-sec {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--fg);
+    border-color: var(--line);
+  }
+  button.btn-sec:hover {
+    background: var(--card-hover);
+    border-color: rgba(255, 255, 255, 0.15);
+  }
+
+  /* --- Contenedores por Modo (Single-Surface Cards) --- */
+  .vista-tab {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    flex: 1;
+    min-height: 0;
+    justify-content: center;
+  }
+  .vista-tab.oculta {
+    display: none !important;
+  }
+
+  /* --- Arquitectura Dual-Studio (Stage Visual + Panel Lateral Consolidado) --- */
+  .studio-grid {
+    display: grid;
+    grid-template-columns: minmax(340px, 1.25fr) minmax(320px, 1fr);
+    gap: 14px;
+    align-items: stretch;
+    flex: 1;
+    min-height: 0;
+  }
+
+  .studio-stage {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: rgba(11, 17, 30, 0.82);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    border-top: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 16px;
+    padding: 16px 18px;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+    height: 100%;
+    min-height: 0;
+    box-sizing: border-box;
+  }
+
+  .studio-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    background: rgba(11, 17, 30, 0.82);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    border-top: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 16px;
+    padding: 16px 18px;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+    height: 100%;
+    min-height: 0;
+    box-sizing: border-box;
+    justify-content: flex-start;
+  }
+
+  /* --- Modo Tutorial: Espaciado Generoso y Centrado --- */
+  #card-tutorial {
+    max-height: 540px;
+    margin: auto 0;
+    width: 100%;
+  }
+  #card-tutorial .studio-stage {
+    justify-content: space-between;
+    padding: 22px 24px;
+    gap: 16px;
+  }
+  #card-tutorial .tut-selectors-strip {
+    gap: 10px;
+  }
+  #card-tutorial .challenge-box {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 14px;
+    padding: 20px 22px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--radius-md);
+  }
+  #card-tutorial .challenge-consigna {
+    font-size: 0.98rem;
+    line-height: 1.5;
+    color: #ffffff;
+  }
+  #card-tutorial .challenge-count {
+    font-size: 1.35rem;
+    color: var(--accent);
+  }
+  #card-tutorial .barra-progreso-wrap {
+    height: 10px;
+    border-radius: 5px;
+    margin: 6px 0;
+    background: rgba(255, 255, 255, 0.08);
+  }
+  #card-tutorial .card-acciones {
+    gap: 10px;
+    padding-top: 4px;
+  }
+  #card-tutorial .card-acciones button {
+    padding: 10px 18px;
+  }
+  #card-tutorial .studio-panel {
+    justify-content: space-between;
+    padding: 22px 24px;
+    gap: 16px;
+  }
+  #card-tutorial .doc-card {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 22px 24px;
+    gap: 12px;
+  }
+  #card-tutorial .doc-bubble {
+    font-size: 0.94rem;
+    line-height: 1.5;
+  }
+  #card-tutorial .telemetry-grid {
+    gap: 10px;
+  }
+  #card-tutorial .telemetry-cell {
+    padding: 14px 12px;
+  }
+
+  /* --- Modo Benchmark: Espaciado Generoso y Centrado --- */
+  #card-benchmark {
+    max-height: 540px;
+    margin: auto 0;
+    width: 100%;
+  }
+  #card-benchmark .studio-stage {
+    justify-content: space-between;
+    padding: 22px 24px;
+    gap: 16px;
+  }
+  #card-benchmark .benchmark-hud {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 22px 24px;
+  }
+  #card-benchmark .studio-panel {
+    justify-content: flex-start;
+    padding: 22px 24px;
+    gap: 16px;
+  }
+
+  /* --- Responsive: Adaptación para Tablets y Celulares --- */
+  @media (max-width: 880px) {
+    main#app-main {
+      width: 100%;
+      padding: 10px 12px 28px 12px;
+      min-height: 100vh;
+      height: auto;
+    }
+    .vista-tab {
+      height: auto;
+      min-height: auto;
+      justify-content: flex-start;
+      gap: 14px;
+    }
+    .studio-grid {
+      grid-template-columns: 1fr;
+      gap: 14px;
+      flex: none;
+    }
+    #card-tutorial,
+    #card-benchmark {
+      max-height: none;
+      margin: 0;
+      width: 100%;
+    }
+    .studio-stage,
+    .studio-panel {
+      height: auto;
+      min-height: auto;
+    }
+    #card-tutorial .challenge-box,
+    #card-tutorial .doc-card,
+    #card-benchmark .benchmark-hud {
+      flex: none;
+    }
+  }
+
+  @media (max-width: 580px) {
+    header.app-bar {
+      padding: 8px 12px;
+    }
+    #card-tutorial .studio-stage,
+    #card-tutorial .studio-panel,
+    #card-benchmark .studio-stage,
+    #card-benchmark .studio-panel {
+      padding: 14px 14px;
+      gap: 12px;
+    }
+    #card-tutorial .challenge-box {
+      padding: 14px 14px;
+      gap: 12px;
+    }
+    #card-tutorial .challenge-top {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 6px;
+    }
+    #card-tutorial .challenge-count {
+      font-size: 1.15rem;
+    }
+    #card-tutorial .challenge-meta {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 8px;
+    }
+    .drill-pips-container {
+      width: 100%;
+      justify-content: space-between;
+    }
+    .card-acciones {
+      flex-direction: column;
+      gap: 8px;
+      width: 100%;
+    }
+    .card-acciones button {
+      width: 100%;
+      min-height: 44px;
+    }
+    #card-benchmark .benchmark-hud {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 10px;
+      padding: 16px 14px;
+      text-align: center;
+    }
+    #card-benchmark .benchmark-hud .hud-val {
+      font-size: 2.1rem;
+      text-align: center;
+    }
+    #card-benchmark .benchmark-hud div:last-child {
+      text-align: center;
+    }
+    .benchmark-config-strip {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 8px;
+    }
+    .benchmark-config-strip .chip-group {
+      min-width: 0;
+      width: 100%;
+    }
+    .tanda-select-wrap,
+    .select-clean {
+      width: 100%;
+    }
+    .chip-btn {
+      padding: 7px 8px;
+      font-size: 0.74rem;
+      min-width: 52px;
+    }
+    .unified-card-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+    }
+    .header-badges-row {
+      justify-content: flex-start;
+    }
+    #card-tutorial .telemetry-cell,
+    #card-benchmark .telemetry-cell {
+      padding: 10px 12px;
+    }
+  }
+
+  /* --- Secciones y Superficies Unificadas --- */
+  .card {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    background: rgba(11, 17, 30, 0.85);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    border-top: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 16px;
+    padding: 16px 18px;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+  }
+  .sub-heading {
+    font-size: 0.76rem;
+    font-weight: 800;
+    color: var(--fg-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    display: block;
+  }
+  .section-header {
+    font-size: 0.76rem;
+    font-weight: 800;
+    color: var(--fg-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding-top: 2px;
+  }
+
+  /* Cabeceras limpias unificadas */
+  .unified-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .unified-title {
+    margin: 2px 0 0 0;
+    font-size: 1.25rem;
+    font-weight: 900;
+    letter-spacing: -0.025em;
+    color: #fff;
+    line-height: 1.2;
+  }
+  .header-badges-row {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  /* --- Sección Golpe Principal --- */
+  .hero-strike-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    padding-bottom: 2px;
+  }
+  .strike-title {
+    font-size: 1.45rem;
+    font-weight: 900;
+    letter-spacing: -0.03em;
+    line-height: 1.15;
+    color: #fff;
+  }
+  .strike-conf-badge {
+    font-size: 0.72rem;
+    font-weight: 700;
+    font-family: var(--font-mono);
+    padding: 4px 10px;
+    border-radius: var(--radius-pill);
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--line);
+    color: var(--fg-muted);
+    white-space: nowrap;
+  }
+
+  /* --- Visor 3D Libre y Expansivo (Proporcional y sin scroll) --- */
+  .visor-stage {
     position: relative;
     width: 100%;
-    height: 200px;
-    background: radial-gradient(circle at center, rgba(27, 79, 145, 0.08) 0%, rgba(0, 0, 0, 0.03) 70%);
-    border-radius: 10px;
+    flex: 1;
+    min-height: 230px;
+    max-height: 480px;
+    border-radius: 14px;
+    background: radial-gradient(circle at 50% 40%, rgba(30, 64, 175, 0.22) 0%, rgba(12, 22, 42, 0.55) 45%, rgba(6, 11, 20, 0.96) 100%);
     overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 1px solid var(--line);
-    margin: 4px 0;
+    border: 1px solid rgba(59, 130, 246, 0.18);
+    box-shadow: inset 0 0 35px rgba(0, 0, 0, 0.5);
   }
-  @media (prefers-color-scheme: dark) {
-    .visor-wrap {
-      background: radial-gradient(circle at center, rgba(116, 171, 239, 0.12) 0%, rgba(0, 0, 0, 0.3) 70%);
+  @media (max-width: 600px) {
+    .visor-stage {
+      min-height: 200px;
     }
   }
   #canvas3d-container {
@@ -113,197 +727,1531 @@
     width: 100% !important;
     height: 100% !important;
   }
-  .visor-badge-cara {
-    position: absolute;
-    bottom: 8px;
-    left: 10px;
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    font-size: 0.8rem;
-    font-weight: 700;
-    padding: 3px 9px;
-    border-radius: 6px;
-    background: var(--card);
-    border: 1px solid var(--line);
-    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
-    cursor: pointer;
-    user-select: none;
-    z-index: 5;
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
-  }
-  .visor-badge-cara:hover {
-    transform: scale(1.04);
-    box-shadow: 0 3px 8px rgba(0,0,0,0.12);
-  }
-  .agarre-info {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    font-size: 0.78rem;
-    color: var(--muted);
-    margin-top: 10px;
-    padding: 6px 12px;
-    background: rgba(120, 130, 145, 0.08);
-    border: 1px solid var(--line);
-    border-radius: 6px;
-    text-align: center;
-  }
-  .agarre-info b {
-    color: var(--text);
-  }
-  .cara-roja {
-    color: #d32f2f;
-    border-color: rgba(211, 47, 47, 0.35);
-  }
-  .cara-negra {
-    color: #121c28;
-    border-color: rgba(50, 50, 50, 0.4);
-  }
-  @media (prefers-color-scheme: dark) {
-    .cara-negra {
-      color: #e6edf5;
-      border-color: rgba(180, 190, 205, 0.4);
-    }
-  }
-  .visor-indicador {
-    position: absolute;
-    bottom: 8px;
-    right: 10px;
-    background: var(--card);
-    border: 1px solid var(--line);
-    border-radius: 6px;
-    padding: 3px 8px;
-    text-align: right;
-    pointer-events: none;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
-  }
-  .visor-indicador span {
-    font-size: 1rem;
-    font-weight: 700;
-    display: block;
-    line-height: 1.1;
-  }
-  .visor-indicador small {
-    font-size: 0.7rem;
-    color: var(--muted);
-  }
-    .visor-selector {
-    position: absolute;
-    top: 6px;
-    right: 8px;
-    display: flex;
-    gap: 3px;
-    background: rgba(120, 130, 145, 0.15);
-    backdrop-filter: blur(6px);
-    border-radius: 6px;
-    padding: 2px;
-    z-index: 10;
-  }
-  .btn-m {
-    font-size: 0.72rem;
-    padding: 3px 8px;
-    border-radius: 4px;
-    border: none;
-    background: transparent;
-    color: var(--muted);
-    cursor: pointer;
-    font-weight: 500;
-  }
-  .btn-m.activo {
-    background: var(--card);
-    color: var(--fg);
-    font-weight: 700;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.12);
-  }
+
   .visor-ayuda {
     position: absolute;
     top: 8px;
-    left: 10px;
+    left: 50%;
+    transform: translateX(-50%);
     font-size: 0.72rem;
-    color: var(--muted);
-    pointer-events: none;
+    color: var(--fg-muted);
+    font-weight: 800;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.12em;
+    pointer-events: none;
+    background: rgba(0, 0, 0, 0.65);
+    padding: 2px 8px;
+    border-radius: var(--radius-pill);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(6px);
+    z-index: 5;
+    white-space: nowrap;
+  }
+
+  .visor-badge-cara {
+    position: absolute;
+    bottom: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: var(--radius-pill);
+    background: rgba(15, 22, 36, 0.94);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+    cursor: pointer;
+    user-select: none;
+    backdrop-filter: blur(8px);
+    z-index: 5;
+    white-space: nowrap;
+    transition: transform var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out);
+  }
+  .visor-badge-cara:hover {
+    transform: translateX(-50%) scale(1.05);
+    border-color: var(--accent);
+  }
+  .visor-badge-cara:active {
+    transform: translateX(-50%) scale(0.95);
+  }
+  .cara-roja { color: #f43f5e; }
+  .cara-negra { color: var(--fg); }
+
+  .visor-selector {
+    display: flex;
+    gap: 2px;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(8px);
+    border-radius: var(--radius-pill);
+    padding: 2px;
+    border: 1px solid rgba(255, 255, 255, 0.10);
+  }
+  .btn-m {
+    font-size: 0.68rem;
+    padding: 4px 9px;
+    border-radius: var(--radius-pill);
+    border: none;
+    background: transparent;
+    color: var(--fg-muted);
+    cursor: pointer;
+    font-weight: 700;
+    transition: background-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+  }
+  .btn-m.activo {
+    background: var(--accent);
+    color: #fff;
+  }
+
+  .visor-indicador {
+    position: absolute;
+    bottom: 10px;
+    right: 12px;
+    background: rgba(15, 22, 36, 0.90);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: var(--radius-sm);
+    padding: 6px 12px;
+    text-align: right;
+    pointer-events: none;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    backdrop-filter: blur(8px);
+    z-index: 5;
+  }
+  .visor-indicador span {
+    font-size: 1.15rem;
+    font-weight: 900;
+    font-family: var(--font-mono);
+    display: block;
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+    color: #fff;
+  }
+  .visor-indicador small {
+    font-size: 0.68rem;
+    color: var(--fg-muted);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .agarre-banner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    font-size: 0.74rem;
+    color: var(--fg-muted);
+    padding: 6px 14px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: var(--radius-pill);
+    text-align: center;
+  }
+  .agarre-tag-negra {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    color: #f1f5f9;
+    font-weight: 700;
+  }
+  .agarre-tag-roja {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    color: #f87171;
+    font-weight: 700;
+  }
+  .agarre-sep {
+    color: rgba(255, 255, 255, 0.22);
+  }
+
+  /* --- Instrumental de Métricas Consolidado (Grid 2x2 para Panel Lateral) --- */
+  .telemetry-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+  }
+
+  .telemetry-cell {
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    text-align: left;
+    background: rgba(255, 255, 255, 0.025);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: var(--radius-sm);
+    transition: background-color var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out);
+    position: relative;
+    overflow: hidden;
+  }
+  .telemetry-cell:hover {
+    background: rgba(255, 255, 255, 0.045);
+    border-color: rgba(255, 255, 255, 0.12);
+  }
+  .telemetry-label {
+    font-size: 0.76rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #cbd5e1;
+  }
+  .telemetry-val {
+    font-size: 1.5rem;
+    font-weight: 900;
+    letter-spacing: -0.03em;
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    margin-top: 4px;
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+    color: #fff;
+  }
+  .telemetry-unit {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--fg-muted);
+    font-family: var(--font);
+  }
+
+  /* --- Tarjeta del Coach DOC --- */
+  .doc-card {
+    background: linear-gradient(180deg, rgba(255, 119, 0, 0.05) 0%, rgba(12, 21, 38, 0.70) 100%);
+    border: 1px solid rgba(255, 119, 0, 0.22);
+    border-radius: var(--radius-md);
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: none;
+  }
+  .doc-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .doc-identity {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .doc-avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: rgba(255, 119, 0, 0.16);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.76rem;
+    border: 1px solid rgba(255, 119, 0, 0.40);
+  }
+  .doc-name {
+    font-weight: 800;
+    font-size: 0.86rem;
+    color: #fff;
+    line-height: 1.1;
+  }
+  .doc-role {
+    font-size: 0.76rem;
+    color: var(--accent);
+    font-weight: 700;
+  }
+  .doc-voice-toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.76rem;
+    color: var(--fg-muted);
+    cursor: pointer;
+    user-select: none;
+  }
+  .doc-voice-toggle input[type="checkbox"] {
+    accent-color: var(--accent);
+    cursor: pointer;
+    width: 14px;
+    height: 14px;
+  }
+  .doc-bubble {
+    font-size: 0.86rem;
+    line-height: 1.45;
+    color: rgba(248, 250, 252, 0.95);
+    transition: color 0.15s ease;
+  }
+  .doc-bubble.ok {
+    color: #34d399;
+  }
+
+  /* --- Badges Semánticos --- */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.76rem;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: var(--radius-pill);
+    letter-spacing: normal;
+  }
+  .badge-ok {
+    color: var(--ok);
+    background: var(--ok-soft);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+  }
+  .badge-bad {
+    color: var(--bad);
+    background: var(--bad-soft);
+    border: 1px solid rgba(244, 63, 94, 0.3);
+  }
+  .badge-warn {
+    color: var(--warn);
+    background: var(--warn-soft);
+    border: 1px solid rgba(245, 158, 11, 0.3);
+  }
+  .badge-neutral {
+    color: var(--fg-muted);
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .chip-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .chip-btn {
+    flex: 1;
+    min-width: 65px;
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--fg-muted);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-pill);
+    padding: 7px 12px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    cursor: pointer;
+    text-align: center;
+    transition: background-color var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out);
+  }
+  .chip-btn:hover {
+    border-color: rgba(255, 255, 255, 0.20);
+    color: var(--fg);
+    background: rgba(255, 255, 255, 0.07);
+  }
+  .chip-btn.activo {
+    background: rgba(255, 119, 0, 0.22);
+    color: #fff;
+    border-color: rgba(255, 119, 0, 0.65);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  }
+
+  /* --- Barra de Progreso --- */
+  .barra-progreso-wrap {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-pill);
+    height: 10px;
+    overflow: hidden;
+    position: relative;
+    margin: 4px 0;
+  }
+  .barra-progreso-fill {
+    height: 100%;
+    background: var(--accent);
+    width: 100%;
+    transform: scaleX(0);
+    transform-origin: left center;
+    will-change: transform;
+    transition: transform var(--dur-base) var(--ease-out), background-color var(--dur-base) var(--ease-out);
+  }
+  .barra-progreso-fill.completo {
+    background: var(--ok);
+  }
+
+  /* --- HUD de Benchmark (Test Mode) --- */
+  .benchmark-hud {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    background: linear-gradient(180deg, rgba(30, 64, 175, 0.10) 0%, rgba(8, 14, 26, 0.75) 100%);
+    border: 1px solid rgba(59, 130, 246, 0.18);
+    border-radius: var(--radius-md);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+    flex: none;
+  }
+  .benchmark-hud .hud-title {
+    font-size: 0.68rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--fg-muted);
+  }
+  .benchmark-hud .hud-val {
+    font-size: 2.4rem;
+    font-weight: 900;
+    letter-spacing: -0.04em;
+    line-height: 1.1;
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    color: #fff;
+  }
+
+  /* --- Selectores y Toolbars de Configuración --- */
+  .tut-selectors-strip {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .benchmark-config-strip {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .benchmark-config-strip .chip-group {
+    flex: 1;
+    min-width: 220px;
+  }
+  .tanda-select-wrap {
+    flex-shrink: 0;
+  }
+  .select-clean {
+    appearance: none;
+    -webkit-appearance: none;
+    padding: 7px 28px 7px 12px;
+    border-radius: var(--radius-pill);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    background: #0f172a;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    color: #ffffff;
+    font: inherit;
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    outline: none;
+    transition: border-color var(--dur-fast) var(--ease-out), background-color var(--dur-fast) var(--ease-out);
+  }
+  .select-clean:hover, .select-clean:focus {
+    border-color: var(--accent);
+    background-color: #1e293b;
+  }
+  .select-clean option {
+    background-color: #0b111e;
+    color: #ffffff;
+    font-weight: 600;
+    padding: 6px 10px;
+  }
+
+  /* --- Desafío Activo en Tutorial (Single Surface) --- */
+  .challenge-box {
+    background: rgba(255, 255, 255, 0.025);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: var(--radius-md);
+    padding: 14px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: none;
+  }
+  .challenge-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+  }
+  .challenge-consigna {
+    margin: 0;
+    font-size: 0.90rem;
+    color: rgba(248, 250, 252, 0.9);
+    line-height: 1.45;
+  }
+  .challenge-count {
+    font-weight: 900;
+    font-size: 1.15rem;
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    color: #fff;
+    white-space: nowrap;
+  }
+  .challenge-meta {
+    font-size: 0.82rem;
+    color: var(--fg-muted);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 6px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+  }
+  .drill-streak-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.80rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    color: var(--fg-muted);
+    text-transform: uppercase;
+  }
+  .drill-streak-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #ff7700;
+    display: inline-block;
+  }
+  .drill-pips-container {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .drill-pips {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .drill-pip {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.07);
+    border: 1.5px solid rgba(255, 255, 255, 0.20);
+    box-sizing: border-box;
+    transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+                background 0.2s ease,
+                border-color 0.2s ease;
+  }
+  .drill-pip.activo {
+    background: radial-gradient(circle at 35% 35%, #ffaa55 0%, #ff7700 70%, #d95e00 100%);
+    border-color: #ffaa55;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
+    transform: scale(1.12);
+  }
+  .drill-pip.meta-alcanzada {
+    background: radial-gradient(circle at 35% 35%, #4ade80 0%, #22c55e 70%, #15803d 100%);
+    border-color: #86efac;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
+  }
+  .drill-pips.pips-break .drill-pip {
+    border-color: rgba(239, 68, 68, 0.6);
+    transition: border-color 0.15s ease;
+  }
+  .drill-combo-badge {
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    font-weight: 800;
+    color: #ffaa55;
+    background: rgba(255, 119, 0, 0.12);
+    border: 1px solid rgba(255, 119, 0, 0.35);
+    padding: 3px 9px;
+    border-radius: var(--radius-pill);
+    letter-spacing: 0.03em;
+    font-variant-numeric: tabular-nums;
+    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+    white-space: nowrap;
+  }
+  .drill-combo-badge.combo-max {
+    color: #86efac;
+    background: rgba(34, 197, 94, 0.16);
+    border-color: rgba(34, 197, 94, 0.45);
+  }
+  .drill-breakdown-row {
+    margin-top: 4px;
+    padding-top: 4px;
+    font-size: 0.80rem;
+    color: var(--fg-muted);
+    line-height: 1.4;
+  }
+  .drill-breakdown-tag b {
+    color: #f8fafc;
+  }
+
+  /* --- Separador y Feeds Limpios (Sin Viñetas) --- */
+  .section-divider-clean {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.06);
+    margin: 2px 0;
+  }
+  .session-feed-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .conteo-inline {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+  }
+  .conteo-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: transparent;
+    border: none;
+    padding: 1px 4px;
+    font-size: 0.74rem;
+  }
+  .conteo-pill .c-lbl {
+    color: var(--fg-muted);
     font-weight: 600;
   }
-  .visor-sin-3d {
-    padding: 48px 16px;
+  .conteo-pill .c-val {
+    color: #fff;
+    font-family: var(--font-mono);
+    font-weight: 800;
+  }
+  .vacio-inline {
+    font-size: 0.78rem;
+    color: var(--fg-muted);
+    font-style: italic;
+  }
+
+  .feed-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  /* --- Navegador Compacto de Impactos (1 solo tiro visible con flechas para no scrollear) --- */
+  .impacto-nav-card {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: var(--radius-sm);
+    padding: 7px 10px;
+  }
+  .impacto-nav-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+  }
+  .impacto-nav-controls {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .btn-nav-impacto {
+    min-width: 34px;
+    height: 32px;
+    padding: 0 6px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #fff;
+    font-size: 1.15rem;
+    font-weight: 700;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+  }
+  .btn-nav-impacto:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.28);
+    transform: scale(1.05);
+  }
+  .btn-nav-impacto:active:not(:disabled) {
+    transform: scale(0.95);
+  }
+  .btn-nav-impacto:disabled {
+    opacity: 0.25;
+    cursor: default;
+  }
+  .impacto-nav-pos {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--fg-muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .impacto-single-row {
+    min-height: 32px;
+    display: flex;
+    align-items: center;
+  }
+
+  /* --- Tira de Peloteo: Últimos 5 Impactos (Rally Strip) --- */
+  .hist-rally-strip {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+    margin: 8px 0 6px 0;
+    padding-bottom: 6px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  }
+  .rally-chip {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    padding: 6px 3px;
+    background: rgba(255, 255, 255, 0.025);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+  }
+  .rally-chip:hover:not(.vacio) {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.22);
+  }
+  .rally-chip.activo {
+    background: rgba(255, 119, 0, 0.14);
+    border-color: #ff7700;
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.4);
+  }
+  .rally-chip.vacio {
+    opacity: 0.3;
+    cursor: default;
+    border-style: dashed;
+  }
+  .rally-chip-header {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 0.80rem;
+    font-weight: 800;
+    color: #ffffff;
+    line-height: 1;
+  }
+  .rally-chip-dot {
+    font-size: 0.72rem;
+    line-height: 1;
+  }
+  .rally-chip-score {
+    font-family: var(--font-mono);
+    font-size: 0.76rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    padding: 1px 5px;
+    border-radius: var(--radius-pill);
+    line-height: 1.1;
+  }
+  .rally-chip-score.score-good {
+    color: #86efac;
+    background: rgba(34, 197, 94, 0.15);
+  }
+  .rally-chip-score.score-mid {
+    color: #fde047;
+    background: rgba(245, 158, 11, 0.15);
+  }
+  .rally-chip-score.score-bad {
+    color: #fca5a5;
+    background: rgba(239, 68, 68, 0.15);
+  }
+  .rally-chip-score.score-none {
+    color: var(--fg-muted);
+    background: rgba(255, 255, 255, 0.05);
+  }
+  .rally-chip-num {
+    font-family: var(--font-mono);
+    font-size: 0.74rem;
+    color: var(--fg-muted);
+    font-weight: 600;
+  }
+  .impacto-single-row .hist-row {
+    width: 100%;
+    padding: 4px 6px;
+    background: transparent;
+    border: none;
+  }
+
+  /* --- Listas Compactas (Filas limpias fluidas sin viñetas) --- */
+  .lista-compacta {
     margin: 0;
-    text-align: center;
-    color: var(--muted);
-    font-size: 0.9rem;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 0.84rem;
+    max-height: 240px;
+    overflow-y: auto;
+  }
+  .lista-compacta li {
+    list-style: none;
+    margin: 0;
+  }
+  .lista-compacta li.vacio {
+    display: flex;
+    justify-content: center;
+    color: var(--fg-muted);
+    font-size: 0.8rem;
+    padding: 14px;
+    background: rgba(255, 255, 255, 0.015);
+    border: 1px dashed rgba(255, 255, 255, 0.08);
+    border-radius: var(--radius-sm);
+  }
+
+  .hist-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    border-radius: 8px;
+    padding: 8px 12px;
+    gap: 8px;
+    transition: background 0.15s ease, border-color 0.15s ease;
+  }
+  .hist-row:hover {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+  .hist-main {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+  .hist-num {
+    font-family: var(--font-mono);
+    font-size: 0.74rem;
+    color: var(--fg-muted);
+    font-weight: 700;
+  }
+  .hist-golpe {
+    font-weight: 700;
+    color: #fff;
+    white-space: nowrap;
+  }
+  .hist-cara {
+    font-size: 0.85rem;
+  }
+  .hist-metrics {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: 0.76rem;
+    color: var(--fg-muted);
+    white-space: nowrap;
+  }
+  .hist-score {
+    background: rgba(255, 119, 0, 0.15);
+    color: var(--accent);
+    padding: 2px 7px;
+    border-radius: var(--radius-pill);
+    font-weight: 700;
+  }
+  .hud-counter {
+    display: block;
+    color: var(--fg-muted);
+    margin-top: 4px;
+    font-variant-numeric: tabular-nums;
+    font-size: 0.82rem;
+  }
+
+  /* --- Panel de Diagnóstico BLE --- */
+  .card-debug {
+    font-size: 0.8rem;
+    background: rgba(11, 17, 30, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: var(--radius-md);
+    padding: 12px 16px;
+  }
+  .card-debug summary {
+    cursor: pointer;
+    font-weight: 700;
+    color: var(--fg-muted);
+    user-select: none;
+    outline: none;
+    transition: color 0.15s ease;
+  }
+  .card-debug summary:hover { color: var(--fg); }
+  .debug-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+    margin-top: 10px;
+    font-size: 0.78rem;
+  }
+  @media (max-width: 400px) {
+    .debug-grid { grid-template-columns: 1fr; }
+  }
+  .debug-grid div {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 8px;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 4px;
+    border: 1px solid var(--line);
+  }
+  .debug-grid span { color: var(--fg-muted); }
+  .debug-grid b { font-variant-numeric: tabular-nums; font-family: var(--font-mono); }
+  .debug-log-wrap pre {
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    padding: 8px;
+    font-size: 0.72rem;
+    max-height: 100px;
+    overflow-y: auto;
+    font-family: var(--font-mono);
+    margin: 6px 0 0 0;
+  }
+  .card-acciones {
+    display: flex;
+    gap: 8px;
+  }
+  .card-acciones button {
+    flex: 1;
+  }
+
+  /* --- Escena 3D: Plano que se curva en Pelota --- */
+  #intro-stage {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 100;
+    overflow: hidden;
+    background:
+      /* Halo cenital suave de iluminacion sobre la pelota */
+      radial-gradient(ellipse 760px 480px at 50% 38%, rgba(255, 119, 0, 0.08), transparent 65%),
+      /* Penumbra de mesa deportiva en la base */
+      radial-gradient(ellipse 960px 220px at 50% 92%, rgba(15, 23, 42, 0.65), transparent 70%),
+      /* Degrade profundo de estadio deportivo */
+      linear-gradient(180deg, #070a12 0%, #0a0f1c 55%, #050811 100%);
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    will-change: opacity;
+  }
+  #intro-stage.oculto {
+    opacity: 0;
+  }
+  #canvas-intro {
+    position: absolute;
+    inset: 0;
+    width: 100% !important;
+    height: 100% !important;
+    display: block;
+  }
+  #stage-landing {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 101;
+    overflow: hidden;
+  }
+  #stage-landing.oculto {
+    opacity: 0;
+  }
+
+  #intro-actions-wrap {
+    position: absolute;
+    bottom: clamp(32px, 7vh, 64px);
+    left: 0;
+    right: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    pointer-events: auto;
+    z-index: 10;
+    transition: opacity 0.15s ease, transform 0.15s ease;
+  }
+  #btn-comenzar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: #0f172a;
+    color: #ffffff;
+    font-size: 0.82rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 12px 28px;
+    border-radius: var(--radius-pill);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    box-shadow: 0 6px 20px rgba(15, 23, 42, 0.28), 0 2px 6px rgba(15, 23, 42, 0.16);
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  #btn-comenzar .btn-arrow {
+    display: inline-block;
+    transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  #btn-comenzar:hover {
+    background: #1e293b;
+    border-color: rgba(255, 255, 255, 0.32);
+    transform: translateY(-1px) scale(1.02);
+    box-shadow: 0 10px 26px rgba(15, 23, 42, 0.35);
+  }
+  #btn-comenzar:hover .btn-arrow {
+    transform: translateX(3px);
+  }
+  #btn-comenzar:active {
+    transform: translateY(0) scale(0.97);
+    box-shadow: 0 3px 10px rgba(15, 23, 42, 0.2);
+  }
+  .intro-hint {
+    font-size: 0.76rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: rgba(248, 250, 252, 0.70);
+    user-select: none;
+  }
+
+  /* --- DOCk Unificado de Selección de Modo (Pie de Página) --- */
+  .intro-menu-hub {
+    position: absolute;
+    bottom: clamp(24px, 4.5vh, 44px);
+    left: 50%;
+    transform: translateX(-50%) translateY(16px);
+    width: min(840px, calc(100vw - 32px));
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    z-index: 10;
+    pointer-events: none;
+    opacity: 0;
+    will-change: opacity, transform;
+    transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .intro-menu-hub.visible {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+    pointer-events: auto;
+  }
+  .dock-container {
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    width: 100%;
+    background: rgba(11, 17, 30, 0.88);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    border-top: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 16px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 1px 0 rgba(255, 255, 255, 0.08) inset;
+    padding: 6px;
+    gap: 4px;
+  }
+  .dock-segment {
+    flex: 1;
+    min-width: 0;
+    background: transparent;
+    border: none;
+    border-radius: 11px;
+    padding: 14px 18px;
+    text-align: left;
+    cursor: pointer;
+    color: #ffffff;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    transition: background 0.16s ease, transform 0.16s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.16s ease;
+    position: relative;
+  }
+  .dock-segment:hover {
+    background: rgba(255, 255, 255, 0.06);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+    transform: translateY(-2px);
+  }
+  .dock-segment.active {
+    background: rgba(255, 119, 0, 0.08);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3), inset 0 0 0 1px rgba(255, 119, 0, 0.35);
+    transform: translateY(-2px);
+  }
+  .dock-segment:active {
+    transform: translateY(0) scale(0.985);
+  }
+  .segment-idx {
+    font-family: var(--font-mono);
+    font-size: 0.70rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--accent, #ff7700);
+    margin-bottom: 2px;
+  }
+  .segment-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    letter-spacing: -0.015em;
+    color: rgba(248, 250, 252, 0.92);
+    transition: color 0.16s ease;
+  }
+  .dock-segment:hover .segment-title,
+  .dock-segment.active .segment-title {
+    color: #ffffff;
+  }
+  .segment-desc {
+    font-size: 0.72rem;
+    color: rgba(248, 250, 252, 0.55);
+    line-height: 1.35;
+    transition: color 0.16s ease;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .dock-segment:hover .segment-desc,
+  .dock-segment.active .segment-desc {
+    color: rgba(248, 250, 252, 0.85);
+  }
+  .dock-divider {
+    width: 1px;
+    align-self: stretch;
+    margin: 10px 0;
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  @media (max-width: 680px) {
+    .dock-container {
+      flex-direction: column;
+      gap: 4px;
+      padding: 6px;
+    }
+    .dock-divider {
+      display: none;
+    }
+    .dock-segment {
+      padding: 12px 14px;
+    }
+  }
+
+  /* --- Accesibilidad: Reducción de Movimiento (Apple HIG / WCAG) --- */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+    main#app-main {
+      opacity: 1 !important;
+      transform: none !important;
+      filter: none !important;
+      transition: none !important;
+    }
+    #stage-landing {
+      display: none !important;
+    }
   }
 </style>
 </head>
 <body>
-<main>
-  <header>
-    <h1>Paleta</h1>
-    <button id="conectar">Conectar paleta</button>
-    <button id="simular" class="sec">Simulador</button>
+
+<!-- Entorno 3D de la Pelota y Landing -->
+<div id="intro-stage">
+  <canvas id="canvas-intro"></canvas>
+</div>
+
+<!-- Overlay de Controles de Usuario -->
+<div id="stage-landing">
+  <div id="intro-actions-wrap">
+    <button id="btn-comenzar" type="button">
+      <span>ENTRENAR</span>
+      <svg class="btn-arrow" viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M3 8h10M9 4l4 4-4 4"/>
+      </svg>
+    </button>
+    <div class="intro-hint">Tocá para iniciar o presioná Espacio</div>
+  </div>
+
+  <!-- DOCk Unificado de Selección de Modo -->
+  <div id="intro-menu-hub" class="intro-menu-hub">
+    <div class="dock-container">
+      <button type="button" class="dock-segment active" data-modo="libre">
+        <span class="segment-idx">01</span>
+        <div class="segment-title">Modo Libre</div>
+        <div class="segment-desc">Orientación y telemetría de la paleta en vivo</div>
+      </button>
+
+      <div class="dock-divider" aria-hidden="true"></div>
+
+      <button type="button" class="dock-segment" data-modo="tutorial">
+        <span class="segment-idx">02</span>
+        <div class="segment-title">Tutorial</div>
+        <div class="segment-desc">Práctica de ángulo y contacto paso a paso</div>
+      </button>
+
+      <div class="dock-divider" aria-hidden="true"></div>
+
+      <button type="button" class="dock-segment" data-modo="test">
+        <span class="segment-idx">03</span>
+        <div class="segment-title">Benchmark</div>
+        <div class="segment-desc">Prueba de precisión y reconocimiento</div>
+      </button>
+    </div>
+  </div>
+</div>
+
+<main id="app-main">
+  <!-- Barra de Identidad y Conexión -->
+  <header class="app-bar">
+    <div class="app-bar-left">
+      <button id="btn-volver-intro" class="btn-volver" type="button" aria-label="Volver al menú de modos" title="Volver al menú de modos (Esc)">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M19 12H5M12 19l-7-7 7-7"/>
+        </svg>
+        <span>Menú</span>
+      </button>
+
+      <div class="brand" id="brand-link" title="Volver al menú de modos">
+        <span class="brand-mode-title" id="modo-actual-badge">Modo Libre</span>
+      </div>
+    </div>
+
+    <div class="app-bar-right">
+      <div id="badge-compat-ble" class="badge-compat-ble" style="display:none;" title="Web Bluetooth no soportado en este navegador. Usá Chrome, Edge o Bluefy en iPhone.">
+        <span>⚠️ Sin Web BLE</span>
+      </div>
+      <div class="connection-status">
+        <span class="dot-status" id="dot-ble"></span>
+        <span id="estado">Sin conectar</span>
+      </div>
+      <button id="conectar" class="btn-primary" type="button">Conectar</button>
+    </div>
   </header>
-  <div class="estado" id="estado">Sin conectar.</div>
 
-  <section class="card" id="ultimo">
-    <div class="golpe" id="golpe">Esperando un golpe…</div>
-    <div class="certeza" id="certeza"></div>
-
-    <div class="visor-wrap">
-      <div id="canvas3d-container"></div>
-      <div class="visor-ayuda">Orientación 3D del impacto</div>
-      <div class="visor-badge-cara cara-roja" id="visor-cara">🔴 Goma Roja</div>
-      <div class="visor-selector">
-        <button id="btn-m1" class="btn-m activo" type="button">8 KB</button>
-        <button id="btn-m2" class="btn-m" type="button">156 KB</button>
+  <!-- Banner Flotante de Desconexión BLE (Resiliencia en Cancha) -->
+  <div id="alerta-desconexion-ble" class="alerta-desconexion-ble" style="display:none;" role="alert" aria-live="assertive">
+    <div class="alerta-ble-content">
+      <div class="alerta-ble-badge">
+        <span class="alerta-ble-dot"></span>
+        <span>SEÑAL BLE PERDIDA</span>
       </div>
-      <div class="visor-indicador">
-        <span id="visor-angulo">–°</span>
-        <small id="visor-etiqueta">Cara vertical</small>
+      <div class="alerta-ble-msg">
+        Se interrumpió el enlace con la paleta. Acercate a la mesa o verificá la batería.
       </div>
     </div>
+    <div class="alerta-ble-acciones">
+      <button id="btn-reconectar-ble" class="btn-primary alerta-ble-btn" type="button">⚡ Reconectar</button>
+      <button id="btn-cerrar-alerta-ble" class="alerta-ble-cerrar" type="button" aria-label="Cerrar aviso">✕</button>
+    </div>
+  </div>
 
-    <div class="agarre-info">
-      <span>Agarre fijado (CONTRATOS.md):</span> <b>⚫ Negra en Derecha / 🔴 Roja en Revés</b>
+  <!-- ==================== VISTA 1: MODO LIBRE ==================== -->
+  <div id="vista-libre" class="vista-tab">
+    <div class="studio-grid" id="ultimo">
+      <!-- Columna Izquierda: Visor 3D de la Paleta -->
+      <section class="studio-stage">
+        <div class="hero-strike-header">
+          <div class="strike-title" id="golpe">Esperando golpe…</div>
+        </div>
+
+        <!-- Visor 3D Libre y Expansivo (Limpio y sin marcas de agua) -->
+        <div class="visor-stage">
+          <div id="canvas3d-container"></div>
+          <div class="visor-indicador" style="display:none;">
+            <span id="visor-angulo">–°</span>
+            <small id="visor-etiqueta">Cara vertical</small>
+          </div>
+        </div>
+
+        <div class="agarre-banner">
+          <span>Agarre de referencia:</span>
+          <span class="agarre-tag-negra">⚫ Negra (Derecha)</span>
+          <span class="agarre-sep">·</span>
+          <span class="agarre-tag-roja">🔴 Roja (Revés)</span>
+        </div>
+      </section>
+
+      <!-- Columna Derecha: Métricas, Feedback de DOC & Historial -->
+      <aside class="studio-panel">
+        <div>
+          <span class="sub-heading" style="margin-bottom:8px;">Métricas del impacto</span>
+          <div class="telemetry-grid">
+            <div class="telemetry-cell">
+              <div class="telemetry-label">Velocidad</div>
+              <div class="telemetry-val"><span id="vel">–</span> <small class="telemetry-unit">km/h</small></div>
+            </div>
+            <div class="telemetry-cell">
+              <div class="telemetry-label">Ángulo</div>
+              <div class="telemetry-val"><span id="ang">–</span> <small class="telemetry-unit">°</small></div>
+            </div>
+            <div class="telemetry-cell">
+              <div class="telemetry-label">Timing</div>
+              <div class="telemetry-val"><span id="pico">–</span></div>
+            </div>
+            <div class="telemetry-cell">
+              <div class="telemetry-label">Score Técnico</div>
+              <div class="telemetry-val"><span id="score-pts" style="color:var(--accent)">–</span> <small class="telemetry-unit">/100</small></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tarjeta del Coach DOC (aquí acompañando las métricas del tiro) -->
+        <div class="doc-card" id="coach-card">
+          <div class="doc-header">
+            <div class="doc-identity">
+              <div class="doc-avatar">🏓</div>
+              <div>
+                <div class="doc-name">DOC</div>
+                <div class="doc-role">Coach Biomecánico IA</div>
+              </div>
+            </div>
+            <label class="doc-voice-toggle">
+              <input type="checkbox" id="voz">
+              <span>🔊 Voz</span>
+            </label>
+          </div>
+          <div class="doc-bubble" id="consejo">
+            Pegá un golpe con la paleta para que DOC analice tu técnica.
+          </div>
+        </div>
+
+        <!-- Navegador de Impactos -->
+        <div class="feed-wrap">
+          <div class="impacto-nav-card">
+            <div class="impacto-nav-header">
+              <span class="sub-heading">Historial de impactos</span>
+              <div class="impacto-nav-controls">
+                <button type="button" class="btn-nav-impacto" id="btn-hist-ant" title="Impacto anterior" disabled>‹</button>
+                <span class="impacto-nav-pos" id="hist-pos">0 / 0</span>
+                <button type="button" class="btn-nav-impacto" id="btn-hist-sig" title="Impacto siguiente" disabled>›</button>
+              </div>
+            </div>
+            <div id="hist-rally-strip" class="hist-rally-strip" aria-label="Últimos impactos de la serie"></div>
+            <div id="historial" class="impacto-single-row">
+              <span class="vacio-inline">Todavía no hay golpes registrados.</span>
+            </div>
+          </div>
+        </div>
+      </aside>
     </div>
 
-    <div class="stats">
-      <div class="stat"><small>Velocidad</small><b id="vel">–</b></div>
-      <div class="stat"><small>Ángulo</small><b id="ang">–</b></div>
-      <div class="stat"><small>Timing (pico)</small><b id="pico">–</b></div>
+    <!-- Contenedor técnico oculto para telemetría cruda en memoria -->
+    <div id="panel-debug" style="display:none;" aria-hidden="true">
+      <span id="conteo"></span>
+      <span id="test-meta-badge"></span>
+      <span id="test-estado-badge"></span>
+      <span id="dbg-tam"></span><span id="dbg-tipo"></span><span id="dbg-conf"></span>
+      <span id="dbg-cara"></span><span id="dbg-vel"></span><span id="dbg-ang"></span>
+      <span id="dbg-pico"></span><span id="dbg-score"></span><span id="dbg-q"></span>
+      <span id="visor-cara"></span>
+      <span id="certeza"></span>
+      <pre id="dbg-log"></pre>
     </div>
-    <div class="consejo" id="consejo">Pegá un golpe para ver el análisis.</div>
-    <label><input type="checkbox" id="voz"> Leer los consejos en voz alta</label>
-  </section>
+  </div>
 
-  <section class="card">
-    <strong>Esta sesión</strong>
-    <div class="conteo" id="conteo"></div>
-  </section>
+  <!-- ==================== VISTA 2: MODO TUTORIAL ==================== -->
+  <div id="vista-tutorial" class="vista-tab oculta">
+    <div class="studio-grid" id="card-tutorial">
+      <!-- Columna Izquierda: Desafío de Entrenamiento -->
+      <section class="studio-stage">
+        <div class="unified-card-header">
+          <div>
+            <h2 class="unified-title" id="tut-titulo-paso">Paso 1: Ángulo de ataque</h2>
+          </div>
+          <div class="header-badges-row">
+            <span class="badge badge-neutral" id="tut-nivel-badge">Paso 1 / 3</span>
+            <span class="badge badge-neutral" id="tut-estado-paso">En curso</span>
+          </div>
+        </div>
 
-  <section class="card">
-    <strong>Últimos golpes</strong>
-    <ul id="historial"><li class="vacio">Todavía no hay golpes.</li></ul>
-  </section>
+        <!-- Selectores Compactos -->
+        <div class="tut-selectors-strip">
+          <div class="chip-group" id="tut-selector-golpe">
+            <button class="chip-btn activo" data-golpe="TD" type="button">Topspin Der.</button>
+            <button class="chip-btn" data-golpe="TR" type="button">Topspin Rev.</button>
+            <button class="chip-btn" data-golpe="ED" type="button">Empuje Der.</button>
+            <button class="chip-btn" data-golpe="ER" type="button">Empuje Rev.</button>
+          </div>
+          <div class="chip-group" id="tut-selector-paso">
+            <button class="chip-btn activo" data-paso="1" type="button">1. Ángulo</button>
+            <button class="chip-btn" data-paso="2" type="button">2. Brushing</button>
+            <button class="chip-btn" data-paso="3" type="button">3. Timing</button>
+          </div>
+        </div>
 
-  <details class="card card-debug" id="panel-debug">
-    <summary>🛠️ Diagnóstico y Telemetría en vivo (BLE)</summary>
-    <div class="debug-grid">
-      <div><span>Paquete BLE:</span> <b id="dbg-tam">–</b></div>
-      <div><span>Tipo crudo:</span> <b id="dbg-tipo">–</b></div>
-      <div><span>Confianza IA:</span> <b id="dbg-conf">–</b></div>
-      <div><span>Goma (física):</span> <b id="dbg-cara">–</b></div>
-      <div><span>Velocidad:</span> <b id="dbg-vel">–</b></div>
-      <div><span>Ángulo cara:</span> <b id="dbg-ang">–</b></div>
-      <div><span>Pico giro:</span> <b id="dbg-pico">–</b></div>
-      <div><span>Cuaternión q:</span> <b id="dbg-q">–</b></div>
+        <!-- Desafío Activo -->
+        <div class="challenge-box">
+          <div class="challenge-top">
+            <p id="tut-consigna" class="challenge-consigna">
+              Alcanzá 500 pts con la cara en rango óptimo (-25° a -5°). La racha multiplica tu puntaje.
+            </p>
+            <span id="tut-progreso-txt" class="challenge-count">0 / 500 PTS</span>
+          </div>
+
+          <div class="barra-progreso-wrap">
+            <div class="barra-progreso-fill" id="tut-barra"></div>
+          </div>
+
+          <div class="challenge-meta">
+            <div class="drill-streak-label">
+              <span class="drill-streak-dot"></span>
+              <span>Multiplicador de racha</span>
+            </div>
+            <div class="drill-pips-container">
+              <div class="drill-pips" id="tut-pips" aria-label="Multiplicador de racha" role="status">
+                <span class="drill-pip" aria-hidden="true"></span>
+                <span class="drill-pip" aria-hidden="true"></span>
+                <span class="drill-pip" aria-hidden="true"></span>
+                <span class="drill-pip" aria-hidden="true"></span>
+                <span class="drill-pip" aria-hidden="true"></span>
+              </div>
+              <span class="drill-combo-badge" id="tut-combo-badge">1x MULTIPLICADOR</span>
+            </div>
+          </div>
+
+          <div class="drill-breakdown-row">
+            <span id="tut-breakdown" class="drill-breakdown-tag">Pegá un golpe para iniciar el drill y activar multiplicadores.</span>
+          </div>
+        </div>
+
+        <div class="card-acciones">
+          <button id="tut-btn-reiniciar" class="btn-sec" type="button">Reiniciar paso</button>
+          <button id="tut-btn-siguiente" class="btn-primary" type="button" disabled>Siguiente paso ➔</button>
+        </div>
+      </section>
+
+      <!-- Columna Derecha: Feedback de DOC y Métricas de Validación -->
+      <aside class="studio-panel">
+        <div class="doc-card">
+          <div class="doc-header">
+            <div class="doc-identity">
+              <div class="doc-avatar">🏓</div>
+              <div>
+                <div class="doc-name">DOC</div>
+                <div class="doc-role">Evaluación en tiempo real</div>
+              </div>
+            </div>
+          </div>
+          <div class="doc-bubble" id="tut-feedback">
+            Pegá un golpe para iniciar el desafío del tutorial.
+          </div>
+        </div>
+
+        <div>
+          <span class="sub-heading" style="margin-bottom:8px;">Telemetría del último intento</span>
+          <div class="telemetry-grid">
+            <div class="telemetry-cell">
+              <div class="telemetry-label">Ángulo</div>
+              <div class="telemetry-val"><span id="tut-stat-ang">–</span></div>
+            </div>
+            <div class="telemetry-cell">
+              <div class="telemetry-label">Velocidad</div>
+              <div class="telemetry-val"><span id="tut-stat-vel">–</span></div>
+            </div>
+            <div class="telemetry-cell">
+              <div class="telemetry-label">Timing</div>
+              <div class="telemetry-val"><span id="tut-stat-pico">–</span></div>
+            </div>
+            <div class="telemetry-cell">
+              <div class="telemetry-label">Score</div>
+              <div class="telemetry-val"><span id="tut-stat-score" style="color:var(--accent)">–</span></div>
+            </div>
+          </div>
+        </div>
+      </aside>
     </div>
-    <div class="debug-log-wrap">
-      <small style="color:var(--muted)">Historial de impactos crudos (últimos 10):</small>
-      <pre id="dbg-log">Esperando impactos por BLE o simulador…</pre>
+  </div>
+
+  <!-- ==================== VISTA 3: MODO BENCHMARK (TEST) ==================== -->
+  <div id="vista-test" class="vista-tab oculta">
+    <div class="studio-grid" id="card-benchmark">
+      <!-- Columna Izquierda: Configuración y HUD de Acierto -->
+      <section class="studio-stage">
+        <div class="unified-card-header">
+          <div>
+            <h2 class="unified-title">Precisión de Reconocimiento</h2>
+          </div>
+        </div>
+
+        <!-- Configuración de la Tanda -->
+        <div class="benchmark-config-strip">
+          <div class="chip-group" id="test-selector-golpe">
+            <button class="chip-btn activo" data-golpe="TD" type="button">Topspin Der.</button>
+            <button class="chip-btn" data-golpe="TR" type="button">Topspin Rev.</button>
+            <button class="chip-btn" data-golpe="ED" type="button">Empuje Der.</button>
+            <button class="chip-btn" data-golpe="ER" type="button">Empuje Rev.</button>
+          </div>
+          <div class="tanda-select-wrap">
+            <select id="test-cant-tiros" class="select-clean">
+              <option value="10" selected>10 pelotas</option>
+              <option value="12">12 pelotas</option>
+              <option value="20">20 pelotas</option>
+              <option value="0">Libre</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- HUD Heroico de Acierto -->
+        <div class="benchmark-hud">
+          <div>
+            <div class="hud-title">Tasa de Acierto en vivo</div>
+            <div class="hud-val" id="test-porcentaje">– %</div>
+          </div>
+          <div style="text-align:right;">
+            <small id="test-conteo-tiros" class="hud-counter">0 / 10 tiros</small>
+          </div>
+        </div>
+
+        <!-- Acciones de la Tanda -->
+        <div class="card-acciones">
+          <button id="test-btn-reiniciar" class="btn-sec" type="button">Reiniciar tanda</button>
+          <button id="test-btn-copiar" class="btn-primary" type="button">📋 Copiar reporte</button>
+        </div>
+      </section>
+
+      <!-- Columna Derecha: Desglose de Tiros y Matriz de Resultados -->
+      <aside class="studio-panel">
+        <div class="impacto-nav-card">
+          <div class="impacto-nav-header">
+            <span class="sub-heading">Desglose de tiros</span>
+            <div class="impacto-nav-controls">
+              <button type="button" class="btn-nav-impacto" id="btn-test-ant" title="Tiro anterior" disabled>‹</button>
+              <span class="impacto-nav-pos" id="test-pos">0 / 0</span>
+              <button type="button" class="btn-nav-impacto" id="btn-test-sig" title="Tiro siguiente" disabled>›</button>
+            </div>
+          </div>
+          <div id="test-historial" class="impacto-single-row">
+            <span class="vacio-inline">Todavía no hay tiros registrados.</span>
+          </div>
+        </div>
+
+        <div>
+          <span class="sub-heading" style="margin-bottom:8px;">Matriz de clasificación</span>
+          <div class="telemetry-grid">
+            <div class="telemetry-cell">
+              <div class="telemetry-label">Aciertos</div>
+              <div class="telemetry-val" style="color:var(--ok)"><span id="test-cant-ok">0</span></div>
+            </div>
+            <div class="telemetry-cell">
+              <div class="telemetry-label">Confusión</div>
+              <div class="telemetry-val" style="color:var(--bad)"><span id="test-cant-conf">0</span></div>
+            </div>
+            <div class="telemetry-cell">
+              <div class="telemetry-label">Ruido/Desc.</div>
+              <div class="telemetry-val" style="color:var(--warn)"><span id="test-cant-ruido">0</span></div>
+            </div>
+            <div class="telemetry-cell">
+              <div class="telemetry-label">Certeza IA</div>
+              <div class="telemetry-val"><span id="test-conf-prom">–</span></div>
+            </div>
+          </div>
+        </div>
+      </aside>
     </div>
-  </details>
+  </div>
 </main>
 
 <script>
@@ -315,18 +2263,87 @@ const TIPOS = ['TD', 'TR', 'ED', 'ER'];  // tipo_golpe del struct; 4 (desconocid
 const TAM_EVENTO = 14;
 
 // Rangos de ángulo de la cara en el impacto (negativo = cerrada, positivo = abierta),
-// sacados de docs/GOLPES.md. Hay que ajustarlos con el jugador de referencia.
+// sacados de docs/GOLPES.md. Rangos óptimos y fallas críticas actualizados el 6/11.
 const CRITERIOS = {
-  // Topspin ajustado con lo medido en la mesa el 6/11: nadie pega tan cerrado como pedia
-  // GOLPES.md (-50 a -30). Derecha normal de -11 a +10; exagerando, derecha -8 y reves -17.
-  TD: { angulo: [-25, 5], pico: true },
-  TR: { angulo: [-30, 0], pico: true },
-  ED: { angulo: [30, 50], pico: false },
-  ER: { angulo: [25, 45], pico: false },
+  TD: { angulo: [-25, -5], fallaMin: -35, fallaMax: 0, pico: true },
+  TR: { angulo: [-25, -5], fallaMin: -35, fallaMax: 0, pico: true },
+  ED: { angulo: [25, 45], fallaMin: 15, fallaMax: 55, pico: false },
+  ER: { angulo: [25, 45], fallaMin: 15, fallaMax: 55, pico: false },
 };
 const PICO_ANTES_MS = -25;  // si el pico de giro llega antes que esto, el jugador frena antes de pegar
 // El 6/11 muchos golpes buenos tuvieron el pico de +20 a +50 ms: con +5 casi todos decían "tarde".
 const PICO_TARDE_MS = 30;
+
+// Configuración de Score Técnico Continuo (1 a 100 pts):
+// Penalización gaussiana en ángulo (mu centro ideal, sigma tolerancia a 75 pts) + dinámica + timing
+const SCORE_CONFIG = {
+  TD: { mu: -15, sigma: 9.2, velMin: 18, velMax: 55, fallaMin: -35, fallaMax: 0, requierePico: true },
+  TR: { mu: -15, sigma: 9.2, velMin: 15, velMax: 50, fallaMin: -35, fallaMax: 0, requierePico: true },
+  ED: { mu: 35,  sigma: 9.2, velMin: 10, velMax: 30, fallaMin: 15,  fallaMax: 55, requierePico: false },
+  ER: { mu: 35,  sigma: 9.2, velMin: 10, velMax: 30, fallaMin: 15,  fallaMax: 55, requierePico: false },
+};
+
+function calcularScore(e) {
+  const cfg = SCORE_CONFIG[e.golpe];
+  if (!cfg || e.ang === null) return null;
+
+  // 1. Score de Ángulo (Curva Gaussiana normalizada a 100)
+  const dTheta = e.ang - cfg.mu;
+  const sAng = 100 * Math.exp(-(dTheta * dTheta) / (2 * cfg.sigma * cfg.sigma));
+
+  // 2. Score de Dinámica (Velocidad tangencial)
+  let sDin = 80;
+  if (e.vel !== null) {
+    if (e.golpe.startsWith('T')) {
+      if (e.vel < cfg.velMin) {
+        sDin = Math.max(10, (e.vel / cfg.velMin) * 65);
+      } else if (e.vel <= cfg.velMax) {
+        sDin = 85 + Math.min(15, ((e.vel - cfg.velMin) / (cfg.velMax - cfg.velMin)) * 15);
+      } else {
+        sDin = 90;
+      }
+    } else {
+      if (e.vel < cfg.velMin) sDin = 70;
+      else if (e.vel <= cfg.velMax) sDin = 100;
+      else if (e.vel > 35) sDin = Math.max(20, 100 - (e.vel - 35) * 5);
+      else sDin = 85;
+    }
+  }
+
+  // 3. Score de Timing (Pico de aceleración angular respecto al choque)
+  let sTim = 85;
+  if (cfg.requierePico && e.pico !== null) {
+    if (e.pico >= -15 && e.pico <= 20) {
+      sTim = 100;
+    } else if (e.pico < -15) {
+      const diff = -15 - e.pico;
+      sTim = Math.max(10, 100 - diff * 3.5);
+    } else {
+      const diff = e.pico - 20;
+      sTim = Math.max(10, 100 - diff * 2.5);
+    }
+  }
+
+  // 4. Ponderación
+  let scoreTotal = cfg.requierePico
+    ? (0.55 * sAng + 0.30 * sDin + 0.15 * sTim)
+    : (0.70 * sAng + 0.30 * sDin);
+
+  // 5. Penalización dura si entra en zona de falla crítica
+  const esCritica = (cfg.fallaMin !== undefined && e.ang < cfg.fallaMin) ||
+                    (cfg.fallaMax !== undefined && e.ang > cfg.fallaMax);
+  if (esCritica) {
+    scoreTotal = Math.min(scoreTotal, 35);
+  }
+
+  return {
+    total: Math.max(1, Math.min(100, Math.round(scoreTotal))),
+    sAng: Math.round(sAng),
+    sDin: Math.round(sDin),
+    sTim: Math.round(sTim),
+    esCritica
+  };
+}
 
 const sesion = { golpes: [], conteo: {} };
 const $ = (id) => document.getElementById(id);
@@ -433,24 +2450,8 @@ function iniciarVisor3D() {
   paletaGroup = new THREE.Group();
   scene3d.add(paletaGroup);
 
-  // Cargar por defecto la paleta deportiva limpia de 8 KB
+  // Cargar la paleta deportiva limpia de 8 KB
   cargarModelo('paleta.glb');
-
-  // Botones de selección de modelo
-  const b1 = $('btn-m1');
-  const b2 = $('btn-m2');
-  if (b1 && b2) {
-    b1.addEventListener('click', () => {
-      b1.classList.add('activo');
-      b2.classList.remove('activo');
-      cargarModelo('paleta.glb');
-    });
-    b2.addEventListener('click', () => {
-      b2.classList.add('activo');
-      b1.classList.remove('activo');
-      cargarModelo('paleta2.glb');
-    });
-  }
 
   // Interacción táctil / mouse para girar levemente en Y
   container.addEventListener('pointerdown', (ev) => {
@@ -465,14 +2466,21 @@ function iniciarVisor3D() {
   });
   window.addEventListener('pointerup', () => { isDragging = false; });
 
-  window.addEventListener('resize', () => {
+  const redimensionarVisor = () => {
     if (!container || !renderer3d || !camera3d) return;
     const nw = container.clientWidth;
     const nh = container.clientHeight;
-    camera3d.aspect = nw / nh;
-    camera3d.updateProjectionMatrix();
-    renderer3d.setSize(nw, nh);
-  });
+    if (nw > 0 && nh > 0) {
+      camera3d.aspect = nw / nh;
+      camera3d.updateProjectionMatrix();
+      renderer3d.setSize(nw, nh);
+    }
+  };
+  window.addEventListener('resize', redimensionarVisor);
+  if (window.ResizeObserver) {
+    const ro = new ResizeObserver(redimensionarVisor);
+    ro.observe(container);
+  }
 
   animarVisor();
 }
@@ -610,10 +2618,10 @@ function actualizarVisor3D(ang, golpe, q = null, caraOverride = null) {
   const c = CRITERIOS[golpe];
   if (c && c.angulo) {
     if (ang < c.angulo[0]) {
-      elVisorEtiqueta.textContent = 'Demasiado cerrada';
+      elVisorEtiqueta.textContent = (c.fallaMin !== undefined && ang < c.fallaMin) ? 'Muy tapada / cerrada' : 'Cerrada';
       elVisorEtiqueta.style.color = 'var(--bad)';
     } else if (ang > c.angulo[1]) {
-      elVisorEtiqueta.textContent = 'Demasiado abierta';
+      elVisorEtiqueta.textContent = (c.fallaMax !== undefined && ang > c.fallaMax) ? 'Muy abierta' : 'Abierta';
       elVisorEtiqueta.style.color = 'var(--bad)';
     } else {
       elVisorEtiqueta.textContent = 'Ángulo ideal';
@@ -679,14 +2687,19 @@ function consejo(e) {
   if (!c) return { texto: 'No se reconoció el golpe.', ok: false };
   const avisos = [];
   if (e.ang !== null) {
-    if (e.ang < c.angulo[0]) avisos.push('Paleta demasiado cerrada: abrila un poco al pegar.');
-    if (e.ang > c.angulo[1]) avisos.push('Paleta demasiado abierta: cerrala un poco al pegar.');
+    if (e.ang < c.angulo[0]) {
+      if (c.fallaMin !== undefined && e.ang < c.fallaMin) avisos.push('Paleta muy tapada: abrila hacia la vertical para superar la red.');
+      else avisos.push('Paleta cerrada: abrila un poco al pegar.');
+    } else if (e.ang > c.angulo[1]) {
+      if (c.fallaMax !== undefined && e.ang > c.fallaMax) avisos.push('Paleta abierta: cerrala hacia la mesa para que no vuele larga.');
+      else avisos.push('Paleta ligeramente abierta: cerrala un poco al pegar.');
+    }
   }
   if (c.pico && e.pico !== null) {
     if (e.pico < PICO_ANTES_MS) avisos.push('Estás frenando antes de la pelota: acelerá a través del golpe.');
     else if (e.pico > PICO_TARDE_MS) avisos.push('Aceleraste tarde: el latigazo debe ser justo antes del contacto.');
   }
-  return avisos.length ? { texto: avisos.join(' '), ok: false } : { texto: 'Buen golpe.', ok: true };
+  return avisos.length ? { texto: avisos.join(' '), ok: false } : { texto: 'Buen golpe: ángulo y timing en rango óptimo.', ok: true };
 }
 
 function decir(texto) {
@@ -699,6 +2712,7 @@ function decir(texto) {
 
 function mostrar(e, registrarSesion = true) {
   ultimoEvento = e;
+  e.score = calcularScore(e);
   if (registrarSesion) {
     sesion.golpes.unshift(e);
     sesion.conteo[e.golpe] = (sesion.conteo[e.golpe] || 0) + 1;
@@ -709,35 +2723,703 @@ function mostrar(e, registrarSesion = true) {
   $('vel').textContent = e.vel === null ? '–' : `${e.vel} km/h`;
   $('ang').textContent = e.ang === null ? '–' : `${e.ang}°`;
   $('pico').textContent = formatearPico(e.pico);
+
+  const elScore = $('score-pts');
+  if (elScore) {
+    if (e.score) {
+      elScore.textContent = `${e.score.total}`;
+      if (e.score.total >= 75) elScore.style.color = 'var(--ok)';
+      else if (e.score.total >= 40) elScore.style.color = '#b87800';
+      else elScore.style.color = 'var(--bad)';
+    } else {
+      elScore.textContent = '–';
+      elScore.style.color = '';
+    }
+  }
+
   actualizarVisor3D(e.ang, e.golpe, e.q);
-  $('certeza').textContent = e.conf !== null ? `Certeza del modelo: ${e.conf} %` : '';
+  if (typeof acelerarSpinPelotaHeader === 'function') acelerarSpinPelotaHeader();
+  if (typeof reaccionarImpactoPelota === 'function') reaccionarImpactoPelota();
+  const elCerteza = $('certeza');
+  if (elCerteza) elCerteza.textContent = e.conf !== null ? `${e.conf} %` : '';
   $('consejo').textContent = c.texto;
   $('consejo').classList.toggle('ok', c.ok);
   if (registrarSesion) decir(c.texto);
 
-  // Actualizar panel de diagnóstico en vivo (telemetría BLE sin cables)
+  // Actualizar panel de diagnóstico si está disponible
   const caraCalculada = determinarCara(e.golpe, e.ang, e.q);
-  $('dbg-tam').textContent = `${e.tam ?? 14} bytes`;
-  $('dbg-tipo').textContent = `${e.tipo_raw ?? '–'} (${GOLPES[e.golpe] ?? e.golpe})`;
-  $('dbg-conf').textContent = e.conf !== null ? `${e.conf} %` : '–';
-  $('dbg-cara').textContent = caraCalculada === 'roja' ? '🔴 Roja' : '⚫ Negra';
-  $('dbg-vel').textContent = e.vel !== null ? `${e.vel} km/h` : '–';
-  $('dbg-ang').textContent = e.ang !== null ? `${e.ang}°` : '–';
-  $('dbg-pico').textContent = formatearPico(e.pico);
-  $('dbg-q').textContent = e.q ? `(${e.q.w.toFixed(2)}, ${e.q.x.toFixed(2)}, ${e.q.y.toFixed(2)}, ${e.q.z.toFixed(2)})` : 'No presente (14B)';
+  const setTxt = (id, val) => { const el = $(id); if (el) el.textContent = val; };
+  setTxt('dbg-tam', `${e.tam ?? 14} bytes`);
+  setTxt('dbg-tipo', `${e.tipo_raw ?? '–'} (${GOLPES[e.golpe] ?? e.golpe})`);
+  setTxt('dbg-conf', e.conf !== null ? `${e.conf} %` : '–');
+  setTxt('dbg-cara', caraCalculada === 'roja' ? '🔴 Roja' : '⚫ Negra');
+  setTxt('dbg-vel', e.vel !== null ? `${e.vel} km/h` : '–');
+  setTxt('dbg-ang', e.ang !== null ? `${e.ang}°` : '–');
+  setTxt('dbg-pico', formatearPico(e.pico));
+  setTxt('dbg-score', e.score ? `${e.score.total} pts` : '–');
+  setTxt('dbg-q', e.q ? `(${e.q.w.toFixed(2)}, ${e.q.x.toFixed(2)}, ${e.q.y.toFixed(2)}, ${e.q.z.toFixed(2)})` : 'No presente (14B)');
 
   const dbgLog = $('dbg-log');
   if (dbgLog) {
     if (dbgLog.textContent.startsWith('Esperando')) dbgLog.textContent = '';
-    const lineaLog = `#${e.n} [${e.golpe}] conf=${e.conf}% cara=${caraCalculada} ang=${e.ang}° vel=${e.vel}km/h pico=${e.pico}ms\n`;
+    const scoreTxt = e.score ? ` score=${e.score.total}pts` : '';
+    const lineaLog = `#${e.n} [${e.golpe}]${scoreTxt} conf=${e.conf}% cara=${caraCalculada} ang=${e.ang}° vel=${e.vel}km/h pico=${e.pico}ms\n`;
     dbgLog.textContent = lineaLog + dbgLog.textContent.split('\n').slice(0, 9).join('\n');
   }
 
-  $('conteo').innerHTML = Object.keys(GOLPES)
-    .filter((k) => sesion.conteo[k])
-    .map((k) => `<span>${GOLPES[k]}</span><b>${sesion.conteo[k]}</b>`).join('');
-  $('historial').innerHTML = sesion.golpes.slice(0, 15)
-    .map((g) => `<li><span>#${g.n} ${GOLPES[g.golpe]}</span><span>${determinarCara(g.golpe, g.ang, g.q) === 'roja' ? '🔴 Roja' : '⚫ Negra'} · ${g.vel ?? '–'} km/h · ${g.ang ?? '–'}° · ${formatearPico(g.pico)}</span></li>`).join('');
+  const conteoKeys = Object.keys(GOLPES).filter((k) => sesion.conteo[k]);
+  const conteoEl = $('conteo');
+  if (conteoEl) {
+    if (conteoKeys.length === 0) {
+      conteoEl.innerHTML = '<span class="vacio-inline">Esperando primeros golpes…</span>';
+    } else {
+      conteoEl.innerHTML = conteoKeys
+        .map((k) => `<span class="conteo-pill"><span class="c-lbl">${GOLPES[k]}</span><span class="c-val">${sesion.conteo[k]}</span></span>`)
+        .join('');
+    }
+  }
+
+  // Actualizar navegador de impacto reciente (1 solo tiro visible con flechas para no scrollear)
+  idxHistorial = 0;
+  renderImpactoPaginado();
+
+  // Actualizar modos interactivos (Tutorial y Benchmark de Modelo)
+  if (registrarSesion) {
+    procesarTutorial(e);
+    procesarTest(e);
+  }
+}
+
+// --- Navegador de Historial Paginado (Modo Libre) ---
+let idxHistorial = 0; // 0 = impacto más reciente
+
+function renderImpactoPaginado() {
+  const histEl = $('historial');
+  const posEl = $('hist-pos');
+  const btnAnt = $('btn-hist-ant');
+  const btnSig = $('btn-hist-sig');
+  const stripEl = $('hist-rally-strip');
+
+  const total = sesion.golpes.length;
+  if (total === 0) {
+    if (histEl) histEl.innerHTML = '<span class="vacio-inline">Todavía no hay golpes registrados.</span>';
+    if (posEl) posEl.textContent = '0 / 0';
+    if (btnAnt) btnAnt.disabled = true;
+    if (btnSig) btnSig.disabled = true;
+    if (stripEl) {
+      stripEl.innerHTML = Array(5).fill(0).map(() => `
+        <div class="rally-chip vacio" aria-hidden="true">
+          <div class="rally-chip-header"><span>–</span></div>
+          <span class="rally-chip-score score-none">–</span>
+          <span class="rally-chip-num">#–</span>
+        </div>
+      `).join('');
+    }
+    return;
+  }
+
+  if (idxHistorial < 0) idxHistorial = 0;
+  if (idxHistorial >= total) idxHistorial = total - 1;
+
+  const g = sesion.golpes[idxHistorial];
+  if (posEl) posEl.textContent = `${total - idxHistorial} / ${total}`;
+  if (btnAnt) btnAnt.disabled = (idxHistorial >= total - 1);
+  if (btnSig) btnSig.disabled = (idxHistorial <= 0);
+
+  // Renderizar la tira de peloteo (Rally Strip con ventana de 5 impactos)
+  if (stripEl) {
+    let inicioIdx = Math.max(0, idxHistorial - 2);
+    let finIdx = inicioIdx + 4;
+    if (finIdx >= total) {
+      finIdx = total - 1;
+      inicioIdx = Math.max(0, finIdx - 4);
+    }
+
+    const chipsHtml = [];
+    for (let i = finIdx; i >= inicioIdx; i--) {
+      const gItem = sesion.golpes[i];
+      const esActivo = (i === idxHistorial);
+      const scoreVal = gItem.score ? gItem.score.total : null;
+      let scoreClass = 'score-none';
+      if (scoreVal !== null) {
+        if (scoreVal >= 75) scoreClass = 'score-good';
+        else if (scoreVal >= 40) scoreClass = 'score-mid';
+        else scoreClass = 'score-bad';
+      }
+      const caraIcon = determinarCara(gItem.golpe, gItem.ang, gItem.q) === 'roja' ? '🔴' : '⚫';
+      chipsHtml.push(`
+        <div class="rally-chip ${esActivo ? 'activo' : ''}" data-idx="${i}" role="button" tabindex="0" title="Impacto #${gItem.n}: ${GOLPES[gItem.golpe]} (${scoreVal !== null ? scoreVal + ' pts' : '–'})">
+          <div class="rally-chip-header">
+            <span>${gItem.golpe}</span>
+            <span class="rally-chip-dot">${caraIcon}</span>
+          </div>
+          <span class="rally-chip-score ${scoreClass}">${scoreVal !== null ? scoreVal : '–'}</span>
+          <span class="rally-chip-num">#${gItem.n}</span>
+        </div>
+      `);
+    }
+    while (chipsHtml.length < 5) {
+      chipsHtml.push(`
+        <div class="rally-chip vacio" aria-hidden="true">
+          <div class="rally-chip-header"><span>–</span></div>
+          <span class="rally-chip-score score-none">–</span>
+          <span class="rally-chip-num">#–</span>
+        </div>
+      `);
+    }
+    stripEl.innerHTML = chipsHtml.join('');
+  }
+
+  if (histEl && g) {
+    const scoreBadge = g.score ? `<span class="hist-score">${g.score.total} pts</span>` : '';
+    const caraIcon = determinarCara(g.golpe, g.ang, g.q) === 'roja' ? '🔴' : '⚫';
+    histEl.innerHTML = `<div class="hist-row">
+      <div class="hist-main">
+        <span class="hist-num">#${g.n}</span>
+        <span class="hist-golpe">${GOLPES[g.golpe]}</span>
+        <span class="hist-cara">${caraIcon}</span>
+      </div>
+      <div class="hist-metrics">
+        <span>${g.vel ?? '–'} km/h</span>
+        <span>${g.ang ?? '–'}°</span>
+        <span>${formatearPico(g.pico)}</span>
+        ${scoreBadge}
+      </div>
+    </div>`;
+
+    // Sincronizar DOC y métricas con el golpe seleccionado en el historial
+    const c = consejo(g);
+    const elConsejo = $('consejo');
+    if (elConsejo) {
+      elConsejo.textContent = c.texto;
+      elConsejo.classList.toggle('ok', c.ok);
+    }
+    if ($('vel')) $('vel').textContent = g.vel === null ? '–' : `${g.vel} km/h`;
+    if ($('ang')) $('ang').textContent = g.ang === null ? '–' : `${g.ang}°`;
+    if ($('pico')) $('pico').textContent = formatearPico(g.pico);
+    if ($('golpe')) $('golpe').textContent = GOLPES[g.golpe];
+    const elScore = $('score-pts');
+    if (elScore) {
+      if (g.score) {
+        elScore.textContent = `${g.score.total}`;
+        if (g.score.total >= 75) elScore.style.color = 'var(--ok)';
+        else if (g.score.total >= 40) elScore.style.color = '#b87800';
+        else elScore.style.color = 'var(--bad)';
+      } else {
+        elScore.textContent = '–';
+        elScore.style.color = '';
+      }
+    }
+    if (g.q) actualizarVisor3D(g.ang, g.golpe, g.q);
+  }
+}
+
+const btnHistAnt = $('btn-hist-ant');
+if (btnHistAnt) {
+  btnHistAnt.addEventListener('click', () => {
+    if (idxHistorial < sesion.golpes.length - 1) {
+      idxHistorial++;
+      renderImpactoPaginado();
+    }
+  });
+}
+const btnHistSig = $('btn-hist-sig');
+if (btnHistSig) {
+  btnHistSig.addEventListener('click', () => {
+    if (idxHistorial > 0) {
+      idxHistorial--;
+      renderImpactoPaginado();
+    }
+  });
+}
+
+const stripRallyEl = $('hist-rally-strip');
+if (stripRallyEl) {
+  stripRallyEl.addEventListener('click', (ev) => {
+    const chip = ev.target.closest('.rally-chip[data-idx]');
+    if (!chip) return;
+    const targetIdx = parseInt(chip.getAttribute('data-idx'), 10);
+    if (!isNaN(targetIdx)) {
+      idxHistorial = targetIdx;
+      renderImpactoPaginado();
+    }
+  });
+  stripRallyEl.addEventListener('keydown', (ev) => {
+    if (ev.key === 'Enter' || ev.key === ' ') {
+      const chip = ev.target.closest('.rally-chip[data-idx]');
+      if (!chip) return;
+      ev.preventDefault();
+      const targetIdx = parseInt(chip.getAttribute('data-idx'), 10);
+      if (!isNaN(targetIdx)) {
+        idxHistorial = targetIdx;
+        renderImpactoPaginado();
+      }
+    }
+  });
+}
+
+// --- Control de Modos de la App ---
+let tabActiva = 'libre';
+
+const MODOS_METADATA = {
+  libre: { badge: 'Modo Libre' },
+  tutorial: { badge: 'Tutorial' },
+  test: { badge: 'Benchmark' },
+};
+
+function cambiarTab(nuevoModo) {
+  if (!nuevoModo) return;
+  tabActiva = nuevoModo;
+
+  const meta = MODOS_METADATA[nuevoModo];
+  const badgeEl = $('modo-actual-badge');
+  if (badgeEl && meta) {
+    badgeEl.textContent = meta.badge;
+  }
+
+  document.querySelectorAll('.vista-tab').forEach((v) => {
+    v.classList.toggle('oculta', v.id !== `vista-${nuevoModo}`);
+  });
+
+  sonarPique(0.18);
+
+  if (nuevoModo === 'libre') {
+    setTimeout(() => {
+      if (typeof onResizeVisor === 'function') onResizeVisor();
+    }, 50);
+  }
+}
+
+// --- MODO TUTORIAL (ENTRENADOR BIOMECÁNICO CON MULTIPLICADOR DE RACHA) ---
+const tutorial = {
+  golpe: 'TD',
+  paso: 1,
+  metaPts: 500,
+  puntos: 0,
+  racha: 0,
+  ultimoPuntaje: null,
+};
+
+const TUTORIAL_CONSIGNAS = {
+  1: {
+    titulo: 'Paso 1: Ángulo de ataque',
+    consigna: (g) => `Alcanzá 500 pts con la cara en rango óptimo (${CRITERIOS[g].angulo[0]}° a ${CRITERIOS[g].angulo[1]}°). La racha multiplica tu puntaje.`,
+    evaluar: (e, g) => {
+      const crit = CRITERIOS[g];
+      if (e.ang === null) return { ok: false, msg: 'Sin lectura de ángulo.' };
+      if (e.ang < crit.angulo[0]) {
+        return { ok: false, msg: (crit.fallaMin !== undefined && e.ang < crit.fallaMin) ? `Cara muy tapada (${e.ang}°): abrila un poco hacia la vertical.` : `Cara cerrada (${e.ang}°): abrila un poco al pegar.` };
+      }
+      if (e.ang > crit.angulo[1]) {
+        return { ok: false, msg: (crit.fallaMax !== undefined && e.ang > crit.fallaMax) ? `Cara abierta (${e.ang}°): cerrala hacia la mesa para que no vuele larga.` : `Cara ligeramente abierta (${e.ang}°): cerrala un poco.` };
+      }
+      return { ok: true, msg: `¡Ángulo ideal! (${e.ang}° en rango óptimo).` };
+    }
+  },
+  2: {
+    titulo: 'Paso 2: Brushing y Potencia',
+    consigna: (g) => g.startsWith('T') ? `Alcanzá 500 pts superando 15 km/h con Topspin. La racha multiplica tu puntaje.` : `Alcanzá 500 pts con empuje rasante y controlado hacia la red sin cruzar el brazo.`,
+    evaluar: (e, g) => {
+      if (e.golpe !== g) {
+        return { ok: false, msg: `La IA detectó ${GOLPES[e.golpe] ?? e.golpe}. ${g.startsWith('T') ? 'Hacé un arco ascendente de abajo hacia arriba.' : 'Empujá recto hacia la red sin cortar la pelota hacia arriba.'}` };
+      }
+      if (g.startsWith('T') && e.vel !== null && e.vel < 15) {
+        return { ok: false, msg: `Velocidad baja (${e.vel} km/h): acelerá más el antebrazo para imprimir comba.` };
+      }
+      return { ok: true, msg: `¡Excelente aceleración y raspado! (${e.vel ?? '–'} km/h clasificado correctamente).` };
+    }
+  },
+  3: {
+    titulo: 'Paso 3: Timing del látigo',
+    consigna: (g) => `Alcanzá 500 pts acelerando justo antes del choque (${PICO_ANTES_MS} ms a +${PICO_TARDE_MS} ms). La racha multiplica tu puntaje.`,
+    evaluar: (e, g) => {
+      if (e.pico === null) return { ok: false, msg: 'Sin lectura de timing.' };
+      if (e.pico < PICO_ANTES_MS) {
+        return { ok: false, msg: `Frenaste antes de impactar (${formatearPico(e.pico)}): acelerá a través de la pelota.` };
+      }
+      if (e.pico > PICO_TARDE_MS) {
+        return { ok: false, msg: `Aceleraste tarde (${formatearPico(e.pico)}): el latigazo debe ser justo antes del contacto.` };
+      }
+      return { ok: true, msg: `¡Timing impecable! (${formatearPico(e.pico)}: máxima aceleración en el choque).` };
+    }
+  }
+};
+
+function actualizarUITutorial() {
+  const g = tutorial.golpe;
+  const p = tutorial.paso;
+  const cfg = TUTORIAL_CONSIGNAS[p];
+  $('tut-nivel-badge').textContent = `Paso ${p} / 3`;
+  $('tut-titulo-paso').textContent = cfg.titulo;
+  $('tut-consigna').textContent = cfg.consigna(g);
+
+  // Progreso de puntos hacia la meta
+  const meta = tutorial.metaPts || 500;
+  const pts = Math.min(meta, tutorial.puntos);
+  $('tut-progreso-txt').textContent = `${pts} / ${meta} PTS`;
+  const pct = Math.min(100, Math.round((pts / meta) * 100));
+  const barra = $('tut-barra');
+  barra.style.transform = `scaleX(${pct / 100})`;
+  barra.classList.toggle('completo', pts >= meta);
+
+  // Pips de consistencia deportiva (máximo 5x de combo)
+  const elPips = $('tut-pips');
+  const maxPips = 5;
+  if (elPips) {
+    if (elPips.children.length !== maxPips) {
+      elPips.innerHTML = '';
+      for (let i = 0; i < maxPips; i++) {
+        const pip = document.createElement('span');
+        pip.className = 'drill-pip';
+        pip.setAttribute('aria-hidden', 'true');
+        elPips.appendChild(pip);
+      }
+    }
+    const currentRacha = Math.min(tutorial.racha, maxPips);
+    const metaAlcanzada = tutorial.racha >= maxPips;
+    Array.from(elPips.children).forEach((pip, idx) => {
+      pip.classList.toggle('activo', idx < currentRacha);
+      pip.classList.toggle('meta-alcanzada', metaAlcanzada);
+    });
+  }
+
+  // Multiplicador Combo Badge
+  const elCombo = $('tut-combo-badge');
+  if (elCombo) {
+    const mult = Math.min(5, Math.max(1, tutorial.racha));
+    elCombo.textContent = `${mult}x MULTIPLICADOR`;
+    elCombo.classList.toggle('combo-max', tutorial.racha >= 5);
+  }
+
+  // Breakdown del último tiro
+  const elBreakdown = $('tut-breakdown');
+  if (elBreakdown) {
+    if (tutorial.ultimoPuntaje) {
+      const u = tutorial.ultimoPuntaje;
+      if (u.ok) {
+        elBreakdown.innerHTML = `Último impacto: <b>+${u.base} pts</b> × ${u.mult} (Racha) = <b style="color:var(--ok)">+${u.total} pts</b>`;
+      } else {
+        elBreakdown.innerHTML = `<span style="color:#f87171">Gesto fuera de rango · Multiplicador reiniciado a 1x</span>`;
+      }
+    } else {
+      elBreakdown.textContent = 'Pegá un golpe para iniciar el drill y activar multiplicadores.';
+    }
+  }
+
+  const btnSig = $('tut-btn-siguiente');
+  const badgeEstado = $('tut-estado-paso');
+  if (pts >= meta) {
+    badgeEstado.className = 'badge badge-ok';
+    badgeEstado.textContent = '¡Paso completado! 🎉';
+    btnSig.disabled = (p >= 3);
+  } else {
+    badgeEstado.className = 'badge badge-neutral';
+    badgeEstado.textContent = 'En curso';
+    btnSig.disabled = true;
+  }
+}
+
+function procesarTutorial(e) {
+  const cfg = TUTORIAL_CONSIGNAS[tutorial.paso];
+  const res = cfg.evaluar(e, tutorial.golpe);
+
+  $('tut-stat-ang').textContent = e.ang !== null ? `${e.ang}°` : '–';
+  $('tut-stat-vel').textContent = e.vel !== null ? `${e.vel} km/h` : '–';
+  $('tut-stat-pico').textContent = formatearPico(e.pico);
+
+  const elTutScore = $('tut-stat-score');
+  if (elTutScore) {
+    if (e.score) {
+      elTutScore.textContent = `${e.score.total}`;
+      if (e.score.total >= 75) elTutScore.style.color = 'var(--ok)';
+      else if (e.score.total >= 40) elTutScore.style.color = '#b87800';
+      else elTutScore.style.color = 'var(--bad)';
+    } else {
+      elTutScore.textContent = '–';
+      elTutScore.style.color = '';
+    }
+  }
+
+  const fbEl = $('tut-feedback');
+  fbEl.textContent = res.msg;
+  fbEl.classList.toggle('ok', res.ok);
+
+  if (res.ok) {
+    tutorial.racha++;
+    const mult = Math.min(5, tutorial.racha);
+    const scoreBase = e.score && e.score.total ? Math.max(35, e.score.total) : 80;
+    const ptsGanados = scoreBase * mult;
+    const yaCompleto = tutorial.puntos >= tutorial.metaPts;
+    tutorial.puntos = Math.min(tutorial.metaPts, tutorial.puntos + ptsGanados);
+    tutorial.ultimoPuntaje = {
+      ok: true,
+      base: scoreBase,
+      mult: mult,
+      total: ptsGanados,
+    };
+    if (tutorial.puntos >= tutorial.metaPts && !yaCompleto) {
+      if (tabActiva === 'tutorial') decir('¡Felicitaciones! Objetivo de 500 puntos completado.');
+    } else {
+      if (tabActiva === 'tutorial') decir(res.msg);
+    }
+  } else {
+    const teniaRacha = tutorial.racha > 0;
+    tutorial.racha = 0;
+    tutorial.ultimoPuntaje = { ok: false };
+    if (tabActiva === 'tutorial') decir(res.msg);
+    if (teniaRacha) {
+      const elPips = $('tut-pips');
+      if (elPips) {
+        elPips.classList.add('pips-break');
+        setTimeout(() => elPips.classList.remove('pips-break'), 350);
+      }
+    }
+  }
+  actualizarUITutorial();
+}
+
+$('tut-selector-golpe').addEventListener('click', (ev) => {
+  const btn = ev.target.closest('button[data-golpe]');
+  if (!btn) return;
+  $('tut-selector-golpe').querySelectorAll('.chip-btn').forEach((b) => b.classList.remove('activo'));
+  btn.classList.add('activo');
+  tutorial.golpe = btn.getAttribute('data-golpe');
+  tutorial.puntos = 0;
+  tutorial.racha = 0;
+  tutorial.ultimoPuntaje = null;
+  $('tut-feedback').textContent = 'Pegá un golpe para iniciar el desafío del tutorial.';
+  $('tut-feedback').classList.remove('ok');
+  actualizarUITutorial();
+});
+
+$('tut-selector-paso').addEventListener('click', (ev) => {
+  const btn = ev.target.closest('button[data-paso]');
+  if (!btn) return;
+  $('tut-selector-paso').querySelectorAll('.chip-btn').forEach((b) => b.classList.remove('activo'));
+  btn.classList.add('activo');
+  tutorial.paso = parseInt(btn.getAttribute('data-paso'), 10);
+  tutorial.puntos = 0;
+  tutorial.racha = 0;
+  tutorial.ultimoPuntaje = null;
+  $('tut-feedback').textContent = 'Pegá un golpe para iniciar el desafío del tutorial.';
+  $('tut-feedback').classList.remove('ok');
+  actualizarUITutorial();
+});
+
+$('tut-btn-reiniciar').addEventListener('click', () => {
+  tutorial.puntos = 0;
+  tutorial.racha = 0;
+  tutorial.ultimoPuntaje = null;
+  $('tut-feedback').textContent = 'Paso reiniciado. ¡A tirar de nuevo!';
+  $('tut-feedback').classList.remove('ok');
+  actualizarUITutorial();
+});
+
+$('tut-btn-siguiente').addEventListener('click', () => {
+  if (tutorial.paso < 3) {
+    tutorial.paso++;
+    tutorial.puntos = 0;
+    tutorial.racha = 0;
+    tutorial.ultimoPuntaje = null;
+    $('tut-selector-paso').querySelectorAll('.chip-btn').forEach((b) => {
+      b.classList.toggle('activo', parseInt(b.getAttribute('data-paso'), 10) === tutorial.paso);
+    });
+    $('tut-feedback').textContent = '¡Nuevo paso activado!';
+    $('tut-feedback').classList.remove('ok');
+    actualizarUITutorial();
+  }
+});
+
+// --- MODO TEST DE MODELO (BENCHMARK EN VIVO) ---
+const testBenchmark = {
+  golpeEsperado: 'TD',
+  metaTiros: 10,
+  tiros: [],
+};
+
+function actualizarUITest() {
+  const total = testBenchmark.tiros.length;
+  const meta = testBenchmark.metaTiros;
+  const metaTxt = meta > 0 ? `Meta: ${meta} pelotas` : 'Modo libre';
+  $('test-meta-badge').textContent = metaTxt;
+  $('test-conteo-tiros').textContent = meta > 0 ? `${total} / ${meta} tiros` : `${total} tiros`;
+
+  const okCount = testBenchmark.tiros.filter((t) => t.resultado === 'ok').length;
+  const confCount = testBenchmark.tiros.filter((t) => t.resultado === 'error').length;
+  const ruidoCount = testBenchmark.tiros.filter((t) => t.resultado === 'ruido').length;
+
+  $('test-cant-ok').textContent = okCount;
+  $('test-cant-conf').textContent = confCount;
+  $('test-cant-ruido').textContent = ruidoCount;
+
+  if (total === 0) {
+    $('test-porcentaje').textContent = '– %';
+    $('test-conf-prom').textContent = '–';
+    const badge = $('test-estado-badge');
+    badge.className = 'badge badge-neutral';
+    badge.textContent = 'Esperando tiros…';
+    idxTestHistorial = 0;
+    renderTestPaginado();
+    return;
+  }
+
+  const porcentaje = Math.round((okCount / total) * 100);
+  $('test-porcentaje').textContent = `${porcentaje} %`;
+
+  const sumaConf = testBenchmark.tiros.reduce((acc, t) => acc + (t.conf || 0), 0);
+  $('test-conf-prom').textContent = `${Math.round(sumaConf / total)} %`;
+
+  const badge = $('test-estado-badge');
+  if (porcentaje >= 80) {
+    badge.className = 'badge badge-ok';
+    badge.textContent = '🟢 Aprobado (≥ 80% MVP)';
+  } else if (porcentaje >= 60) {
+    badge.className = 'badge badge-warn';
+    badge.textContent = '🟡 Aceptable (60-79%)';
+  } else {
+    badge.className = 'badge badge-bad';
+    badge.textContent = '🔴 Insuficiente (< 60%)';
+  }
+
+  idxTestHistorial = 0;
+  renderTestPaginado();
+}
+
+// --- Navegador de Historial Paginado (Modo Benchmark) ---
+let idxTestHistorial = 0; // 0 = tiro más reciente
+
+function renderTestPaginado() {
+  const testHistEl = $('test-historial');
+  const posEl = $('test-pos');
+  const btnAnt = $('btn-test-ant');
+  const btnSig = $('btn-test-sig');
+
+  const total = testBenchmark.tiros.length;
+  if (total === 0) {
+    if (testHistEl) testHistEl.innerHTML = '<span class="vacio-inline">Todavía no hay tiros registrados.</span>';
+    if (posEl) posEl.textContent = '0 / 0';
+    if (btnAnt) btnAnt.disabled = true;
+    if (btnSig) btnSig.disabled = true;
+    return;
+  }
+
+  if (idxTestHistorial < 0) idxTestHistorial = 0;
+  if (idxTestHistorial >= total) idxTestHistorial = total - 1;
+
+  const t = testBenchmark.tiros[idxTestHistorial];
+  if (posEl) posEl.textContent = `${total - idxTestHistorial} / ${total}`;
+  if (btnAnt) btnAnt.disabled = (idxTestHistorial >= total - 1);
+  if (btnSig) btnSig.disabled = (idxTestHistorial <= 0);
+
+  if (testHistEl && t) {
+    let tag = '';
+    if (t.resultado === 'ok') tag = '<b style="color:var(--ok)">✅ Acierto</b>';
+    else if (t.resultado === 'ruido') tag = '<b style="color:var(--warn)">⚠️ Ruido</b>';
+    else tag = `<b style="color:var(--bad)">❌ Error (${t.obtenido})</b>`;
+
+    testHistEl.innerHTML = `<div class="hist-row">
+      <div class="hist-main">
+        <span class="hist-num">#${total - idxTestHistorial}</span>
+        <span class="hist-golpe">${t.obtenido}</span>
+        <span style="color:var(--fg-muted); font-size:0.75rem;">(${t.conf}%)</span>
+        <span style="color:var(--fg-muted); font-size:0.75rem; margin-left:4px;">${t.ang !== null ? t.ang + '°' : '–'} · ${t.vel !== null ? t.vel + ' km/h' : '–'}</span>
+      </div>
+      <div>${tag}</div>
+    </div>`;
+  }
+}
+
+const btnTestAnt = $('btn-test-ant');
+if (btnTestAnt) {
+  btnTestAnt.addEventListener('click', () => {
+    if (idxTestHistorial < testBenchmark.tiros.length - 1) {
+      idxTestHistorial++;
+      renderTestPaginado();
+    }
+  });
+}
+const btnTestSig = $('btn-test-sig');
+if (btnTestSig) {
+  btnTestSig.addEventListener('click', () => {
+    if (idxTestHistorial > 0) {
+      idxTestHistorial--;
+      renderTestPaginado();
+    }
+  });
+}
+
+function procesarTest(e) {
+  let res = 'error';
+  if (e.golpe === testBenchmark.golpeEsperado) res = 'ok';
+  else if (e.golpe === '??') res = 'ruido';
+
+  testBenchmark.tiros.unshift({
+    obtenido: e.golpe,
+    conf: e.conf ?? 0,
+    ang: e.ang,
+    vel: e.vel,
+    pico: e.pico,
+    resultado: res,
+  });
+
+  actualizarUITest();
+}
+
+$('test-selector-golpe').addEventListener('click', (ev) => {
+  const btn = ev.target.closest('button[data-golpe]');
+  if (!btn) return;
+  $('test-selector-golpe').querySelectorAll('.chip-btn').forEach((b) => b.classList.remove('activo'));
+  btn.classList.add('activo');
+  testBenchmark.golpeEsperado = btn.getAttribute('data-golpe');
+  testBenchmark.tiros = [];
+  actualizarUITest();
+});
+
+$('test-cant-tiros').addEventListener('change', (ev) => {
+  testBenchmark.metaTiros = parseInt(ev.target.value, 10);
+  actualizarUITest();
+});
+
+$('test-btn-reiniciar').addEventListener('click', () => {
+  testBenchmark.tiros = [];
+  actualizarUITest();
+});
+
+$('test-btn-copiar').addEventListener('click', async () => {
+  const total = testBenchmark.tiros.length;
+  if (total === 0) {
+    alert('No hay tiros grabados para copiar.');
+    return;
+  }
+  const okCount = testBenchmark.tiros.filter((t) => t.resultado === 'ok').length;
+  const pct = Math.round((okCount / total) * 100);
+  const esperado = testBenchmark.golpeEsperado;
+  let reporte = `Reporte Validación Modelo - Golpe pedido: ${esperado} (${GOLPES[esperado]})\n`;
+  reporte += `Total: ${total} tiros | Aciertos: ${okCount} (${pct}%) | Hito: ${pct >= 80 ? 'APROBADO (>=80%)' : 'NO ALCANZADO'}\n\n`;
+  reporte += `Detalle de tiros:\n`;
+  testBenchmark.tiros.slice().reverse().forEach((t, i) => {
+    reporte += `#${i+1}: IA=${t.obtenido} (${t.conf}%) -> ${t.resultado.toUpperCase()} | ang=${t.ang}° vel=${t.vel}km/h pico=${t.pico}ms\n`;
+  });
+  try {
+    await navigator.clipboard.writeText(reporte);
+    const btn = $('test-btn-copiar');
+    const txtOrig = btn.textContent;
+    btn.textContent = '✅ ¡Copiado!';
+    setTimeout(() => { btn.textContent = txtOrig; }, 2000);
+  } catch (err) {
+    prompt('Copiá el reporte:', reporte);
+  }
+});
+
+// Inicializar vistas secundarias
+actualizarUITutorial();
+actualizarUITest();
+
+function setEstadoBLE(conectado, texto) {
+  const dot = $('dot-ble');
+  if (dot) dot.classList.toggle('conectado', conectado);
+  const el = $('estado');
+  if (el) el.textContent = texto;
 }
 
 // Bluetooth: cada notificación trae un struct de 14 bytes (entra entero en un paquete).
@@ -750,57 +3432,107 @@ function recibir(evento) {
     mostrar(parsearEvento(datos, i, tam));
   }
   if (datos.byteLength % tam !== 0) {
-    $('estado').textContent = `Llegó un mensaje de ${datos.byteLength} bytes: revisar el struct del firmware.`;
+    setEstadoBLE(true, `Paquete ${datos.byteLength} B: revisar struct firmware`);
   } else {
-    $('estado').textContent = `Conectada (${tam} B${tam === 20 ? ' · Cuaternión 3D' : ''}).`;
+    setEstadoBLE(true, `Conectada (${tam} B${tam === 20 ? ' · Cuaternión 3D' : ''})`);
   }
 }
 
 async function conectar() {
   if (!navigator.bluetooth) {
-    $('estado').textContent = 'Este navegador no tiene Bluetooth web. Usá Chrome en Android o en la compu (con https o localhost).';
+    setEstadoBLE(false, 'Navegador sin Bluetooth Web');
+    alert('Tu navegador no soporta Web Bluetooth.\n\n• En PC o Android: usá Google Chrome o Microsoft Edge.\n• En iPhone/iPad (iOS): usá la app Bluefy - Web BLE Browser.');
     return;
   }
   try {
-    $('estado').textContent = 'Buscando la paleta…';
+    setEstadoBLE(false, 'Buscando paleta BLE…');
     const dispositivo = await navigator.bluetooth.requestDevice({
       filters: [{ namePrefix: 'Paleta' }], optionalServices: [SERVICIO_UART],
     });
-    dispositivo.addEventListener('gattserverdisconnected', () => { $('estado').textContent = 'Se desconectó la paleta.'; });
+    dispositivo.addEventListener('gattserverdisconnected', () => {
+      setEstadoBLE(false, 'Se desconectó la paleta.');
+      $('conectar').textContent = '⚡ Conectar';
+      mostrarAlertaDesconexion();
+    });
     const servidor = await dispositivo.gatt.connect();
     const servicio = await servidor.getPrimaryService(SERVICIO_UART);
     const tx = await servicio.getCharacteristic(CARACT_TX);
     tx.addEventListener('characteristicvaluechanged', recibir);
     await tx.startNotifications();
-    $('estado').textContent = `Conectada a ${dispositivo.name}.`;
+    setEstadoBLE(true, `Conectada a ${dispositivo.name}`);
+    $('conectar').textContent = 'Conectada';
+    ocultarAlertaDesconexion();
   } catch (err) {
-    $('estado').textContent = `No se pudo conectar: ${err.message}`;
+    setEstadoBLE(false, `Error BLE: ${err.message}`);
+    $('conectar').textContent = '⚡ Conectar';
   }
 }
+
+function mostrarAlertaDesconexion() {
+  const el = $('alerta-desconexion-ble');
+  if (el) el.style.display = 'flex';
+  if (typeof sonarAlertaDesconexion === 'function') sonarAlertaDesconexion();
+  if (typeof decir === 'function') decir('Atención: conexión Bluetooth perdida.');
+}
+
+function ocultarAlertaDesconexion() {
+  const el = $('alerta-desconexion-ble');
+  if (el) el.style.display = 'none';
+}
+
+function verificarCompatibilidadBLE() {
+  if (!navigator.bluetooth) {
+    setEstadoBLE(false, 'Sin Bluetooth Web');
+    const badge = $('badge-compat-ble');
+    if (badge) badge.style.display = 'inline-flex';
+    const btnCon = $('conectar');
+    if (btnCon) {
+      btnCon.title = 'Navegador sin Web Bluetooth. Usá Chrome, Edge o Bluefy (iOS).';
+    }
+  }
+}
+verificarCompatibilidadBLE();
 
 // Simulador: genera eventos falsos con el mismo formato que la placa
 let simulador = null, nSim = 0;
 function alternarSimulador() {
+  const btnSim = $('simular');
   if (simulador) {
     clearInterval(simulador); simulador = null;
-    $('simular').textContent = 'Simulador';
-    $('estado').textContent = 'Simulador detenido.';
+    if (btnSim) btnSim.textContent = 'Simulador';
+    setEstadoBLE(false, 'Simulador detenido.');
     return;
   }
   const azar = (a, b) => Math.round(a + Math.random() * (b - a));
   const inicio = Date.now();
+  setEstadoBLE(true, 'Simulador activo (golpe c/ 2,5 s)');
+  if (btnSim) btnSim.textContent = '⏹ Detener';
   simulador = setInterval(() => {
-    const tipo = Math.random() < 0.1 ? 4 : azar(0, 3);
+    let tipo;
+    if (tabActiva === 'test') {
+      const idxEsp = TIPOS.indexOf(testBenchmark.golpeEsperado);
+      const r = Math.random();
+      if (r < 0.80 && idxEsp !== -1) tipo = idxEsp;      // 80% acierto
+      else if (r < 0.90) tipo = azar(0, 3);               // 10% confusión
+      else tipo = 4;                                      // 10% ruido
+    } else if (tabActiva === 'tutorial') {
+      const idxTut = TIPOS.indexOf(tutorial.golpe);
+      tipo = (Math.random() < 0.85 && idxTut !== -1) ? idxTut : azar(0, 3);
+    } else {
+      tipo = Math.random() < 0.1 ? 4 : azar(0, 3);
+    }
+
     const topspin = tipo < 2;
-    const anguloSim = topspin ? azar(-55, -25) : azar(20, 50);
+    // Rangos ajustados el 6/11: topspin [-25, -5], empuje [25, 45]
+    const anguloSim = topspin ? azar(-25, -5) : azar(25, 45);
     const datos = new DataView(new ArrayBuffer(TAM_COMPLETO));
     datos.setUint32(0, Date.now() - inicio, true);
     datos.setUint16(4, ++nSim, true);
     datos.setUint8(6, tipo);
-    datos.setUint8(7, azar(60, 99));
-    datos.setInt16(8, topspin ? azar(30, 60) : azar(10, 25), true);
+    datos.setUint8(7, azar(75, 99));
+    datos.setInt16(8, topspin ? azar(25, 48) : azar(12, 22), true);
     datos.setInt16(10, anguloSim, true);
-    datos.setInt16(12, azar(-60, 10), true);
+    datos.setInt16(12, azar(-15, 25), true);
 
     // Cuaternión simulado en 3 ejes: q1 (pitch), q2 (yaw), q3 (roll)
     const pitchRad = (-anguloSim * Math.PI) / 360;
@@ -813,32 +3545,32 @@ function alternarSimulador() {
 
     recibir({ target: { value: datos } });
   }, 2500);
-  $('simular').textContent = 'Detener simulador';
+  if (btnSim) btnSim.textContent = 'Detener simulador';
   $('estado').textContent = 'Simulador: golpes inventados cada 2,5 s.';
 }
 
-$('conectar').addEventListener('click', conectar);
-$('simular').addEventListener('click', alternarSimulador);
-
-
-
-const badgeEl = $('visor-cara');
-if (badgeEl) {
-  badgeEl.title = 'Hacé clic para alternar goma';
-  badgeEl.addEventListener('click', () => {
-    caraForzadaManual = (caraActual === 'roja') ? 'negra' : 'roja';
-    if (ultimoEvento) {
-      actualizarVisor3D(ultimoEvento.ang, ultimoEvento.golpe, ultimoEvento.q, caraForzadaManual);
-      const dbgCara = $('dbg-cara');
-      if (dbgCara) dbgCara.textContent = caraForzadaManual === 'roja' ? '🔴 Roja (manual)' : '⚫ Negra (manual)';
-    }
+const btnConectar = $('conectar');
+if (btnConectar) btnConectar.addEventListener('click', conectar);
+const btnSimular = $('simular');
+if (btnSimular) btnSimular.addEventListener('click', alternarSimulador);
+const btnReconectarBLE = $('btn-reconectar-ble');
+if (btnReconectarBLE) {
+  btnReconectarBLE.addEventListener('click', () => {
+    ocultarAlertaDesconexion();
+    conectar();
   });
 }
+const btnCerrarAlertaBLE = $('btn-cerrar-alerta-ble');
+if (btnCerrarAlertaBLE) {
+  btnCerrarAlertaBLE.addEventListener('click', ocultarAlertaDesconexion);
+}
 
-// Three.js se baja recién cuando la página terminó de cargar y sin frenarla: si la red no deja
-// llegar a cdnjs o jsdelivr, la app anda igual (Bluetooth, golpe, ángulo, consejo) sin el visor.
+
+
+
+
+// Three.js principal está en <head>. El GLTFLoader para el visor 3D de la paleta se baja dinámicamente.
 const LIBRERIAS_3D = [
-  'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js',
   'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js',
 ];
 
@@ -878,8 +3610,956 @@ async function cargarVisor3D() {
   }
 }
 
+// =========================================================================
+// INTRO CINEMATOGRÁFICA: LA PELOTA DE PING PONG (THREE.JS PROCEDURAL)
+// =========================================================================
+let sharedAudioCtx = null;
+
+function getAudioContext() {
+  if (!sharedAudioCtx) {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (AudioCtx) sharedAudioCtx = new AudioCtx();
+  }
+  if (sharedAudioCtx && sharedAudioCtx.state === 'suspended') {
+    sharedAudioCtx.resume();
+  }
+  return sharedAudioCtx;
+}
+
+function sonarPique(vol = 0.25) {
+  try {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(820, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(320, ctx.currentTime + 0.035);
+    gain.gain.setValueAtTime(vol, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.045);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.05);
+  } catch(e) {}
+}
+
+function sonarTensionAire(vol = 0.24) {
+  try {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+    const dur = 0.25;
+
+    // 1. Tono oscilante ascendente: sensación elástica / tensión de aire
+    const osc = ctx.createOscillator();
+    const oscGain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(140, now);
+    osc.frequency.exponentialRampToValueAtTime(460, now + dur);
+    oscGain.gain.setValueAtTime(0.001, now);
+    oscGain.gain.linearRampToValueAtTime(vol * 0.7, now + 0.07);
+    oscGain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+    osc.connect(oscGain);
+    oscGain.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + dur);
+
+    // 2. Whoosh aerodinámico filtrado (ruido con barrido paso-banda)
+    const bufferSize = Math.floor(ctx.sampleRate * dur);
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = Math.random() * 2 - 1;
+    }
+    const noise = ctx.createBufferSource();
+    noise.buffer = buffer;
+
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(260, now);
+    filter.frequency.exponentialRampToValueAtTime(1400, now + dur);
+    filter.Q.setValueAtTime(2.2, now);
+
+    const noiseGain = ctx.createGain();
+    noiseGain.gain.setValueAtTime(0.001, now);
+    noiseGain.gain.linearRampToValueAtTime(vol * 0.9, now + 0.07);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+
+    noise.connect(filter);
+    filter.connect(noiseGain);
+    noiseGain.connect(ctx.destination);
+    noise.start(now);
+    noise.stop(now + dur);
+  } catch(e) {}
+}
+
+function sonarAlertaDesconexion() {
+  try {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+    // Bip descendente doble: 520Hz -> 300Hz, luego 380Hz -> 200Hz
+    const osc1 = ctx.createOscillator();
+    const g1 = ctx.createGain();
+    osc1.type = 'triangle';
+    osc1.frequency.setValueAtTime(520, now);
+    osc1.frequency.exponentialRampToValueAtTime(300, now + 0.16);
+    g1.gain.setValueAtTime(0.25, now);
+    g1.gain.exponentialRampToValueAtTime(0.001, now + 0.16);
+    osc1.connect(g1);
+    g1.connect(ctx.destination);
+    osc1.start(now);
+    osc1.stop(now + 0.17);
+
+    const osc2 = ctx.createOscillator();
+    const g2 = ctx.createGain();
+    osc2.type = 'triangle';
+    osc2.frequency.setValueAtTime(380, now + 0.20);
+    osc2.frequency.exponentialRampToValueAtTime(200, now + 0.38);
+    g2.gain.setValueAtTime(0.28, now + 0.20);
+    g2.gain.exponentialRampToValueAtTime(0.001, now + 0.38);
+    osc2.connect(g2);
+    g2.connect(ctx.destination);
+    osc2.start(now + 0.20);
+    osc2.stop(now + 0.39);
+  } catch (e) {}
+}
+
+// =========================================================================
+// INTRO CINEMATOGRÁFICA 3D: LANDING PLANA -> CURVADO -> ZOOM OUT Y MENÚ DE MODOS
+// =========================================================================
+let introScene, introCamera, introRenderer, introMesh, introBallGroup, introTableMesh, introShadowMesh;
+let uvsFlat = null;
+let uvsSphLanding = null;
+let uvsSphBall = null;
+let currentCurvatura = 0.0;
+let currentZoom = 0.0;
+let introAnimId = null;
+let animandoCinematica = false;
+let introActiva = true;
+
+// Dimensiones físicas y de cámara calculadas para cobertura total sin distorsión
+const R_BALL_CLOSE = 0.0784; // Radio en reposo/curvado (subtiende 36.9° > esquina 28.7° para cubrir 100% la pantalla)
+const R_BALL_FAR = 0.0245;   // Radio heroico calibrado (~45% alto de pantalla en reposo)
+const Z_CAM_CLOSE = 0.1306;  // Distancia cercana a la superficie (sin efecto micro-lupa ni pixelación)
+const Z_CAM_FAR = 0.2200;    // Distancia lejana (pelota en el centro de la pantalla)
+
+let introCanvasTex = null;
+
+function renderIntroFrame() {
+  if (introRenderer && introScene && introCamera) {
+    introRenderer.render(introScene, introCamera);
+  }
+}
+
+// Textura única generada al inicio: todo el texto es 100% recto y nítido (sin re-subidas a VRAM por cuadro)
+function crearTexturaPelotaIntro() {
+  const w = 2048;
+  const h = 2048;
+  const c = document.createElement('canvas');
+  c.width = w;
+  c.height = h;
+  const ctx = c.getContext('2d');
+
+  // 1. Base naranja oficial de competición ITTF
+  ctx.fillStyle = '#ff7700';
+  ctx.fillRect(0, 0, w, h);
+
+  const cx = w / 2;
+  const cy = h / 2;
+
+  // Tinta profunda slate
+  ctx.fillStyle = '#0f172a';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  // 2. Tres estrellas ITTF (★★★) en fila horizontal
+  const starSize = 56;
+  ctx.font = `bold ${starSize}px sans-serif`;
+  const starSpacing = 76;
+  const starsY = cy - 146;
+  ctx.fillText('★', cx - starSpacing, starsY);
+  ctx.fillText('★', cx, starsY);
+  ctx.fillText('★', cx + starSpacing, starsY);
+
+  // 3. Marca principal "DOC"
+  const docSize = 168;
+  ctx.font = `900 ${docSize}px -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif`;
+  ctx.fillText('DOC', cx, cy - 26);
+
+  // 4. Calibre oficial "40+"
+  const specSize = 68;
+  ctx.font = `800 ${specSize}px -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif`;
+  ctx.fillText('40+', cx, cy + 72);
+
+  // 5. Lema "FIND YOUR EDGE" - 100% RECTO, horizontal con tracking generoso (sin deformaciones cóncavas)
+  const tagSize = 27;
+  ctx.font = `900 ${tagSize}px -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif`;
+  const tag = 'FIND YOUR EDGE';
+  const chars = Array.from(tag);
+  const n = chars.length;
+  const tracking = 10;
+  const charWidths = chars.map(ch => ctx.measureText(ch).width);
+  const totalFlatW = charWidths.reduce((a, b) => a + b, 0) + (n - 1) * tracking;
+
+  let startX = cx - totalFlatW / 2;
+  const tagY = cy + 140;
+  for (let i = 0; i < n; i++) {
+    ctx.fillText(chars[i], startX + charWidths[i] / 2, tagY);
+    startX += charWidths[i] + tracking;
+  }
+
+  const tex = new THREE.CanvasTexture(c);
+  tex.generateMipmaps = true;
+  tex.minFilter = THREE.LinearMipmapLinearFilter;
+  tex.magFilter = THREE.LinearFilter;
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+
+function crearTexturaMesaIntro() {
+  const w = 1024;
+  const h = 2048;
+  const c = document.createElement('canvas');
+  c.width = w;
+  c.height = h;
+  const ctx = c.getContext('2d');
+
+  // Superficie de mesa reglamentaria ITTF: Azul torneo mate profundo
+  const grad = ctx.createLinearGradient(0, 0, 0, h);
+  grad.addColorStop(0, '#060d16'); // Horizonte en penumbra
+  grad.addColorStop(0.35, '#0a1726');
+  grad.addColorStop(1, '#0e2238'); // Primer plano
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, w, h);
+
+  // 1. Línea blanca central reglamentaria de saque (3 mm)
+  // En la zona de juego (horizonte y bajo la pelota) es nítida y reglamentaria;
+  // hacia el primer plano se atenúa suavemente en la penumbra para no competir ni transparentarse en el dock
+  const lineGrad = ctx.createLinearGradient(0, 0, 0, h);
+  lineGrad.addColorStop(0, 'rgba(255, 255, 255, 0.85)');
+  lineGrad.addColorStop(0.68, 'rgba(255, 255, 255, 0.85)');
+  lineGrad.addColorStop(0.86, 'rgba(255, 255, 255, 0.15)');
+  lineGrad.addColorStop(1.0, 'rgba(255, 255, 255, 0.0)');
+  ctx.fillStyle = lineGrad;
+  const lineW = 10;
+  ctx.fillRect((w - lineW) / 2, 0, lineW, h);
+
+  // 2. Líneas laterales perimetrales reglamentarias (20 mm)
+  const sideGrad = ctx.createLinearGradient(0, 0, 0, h);
+  sideGrad.addColorStop(0, 'rgba(255, 255, 255, 0.80)');
+  sideGrad.addColorStop(0.70, 'rgba(255, 255, 255, 0.80)');
+  sideGrad.addColorStop(0.88, 'rgba(255, 255, 255, 0.15)');
+  sideGrad.addColorStop(1.0, 'rgba(255, 255, 255, 0.0)');
+  ctx.fillStyle = sideGrad;
+  const borderW = 20;
+  ctx.fillRect(0, 0, borderW, h);
+  ctx.fillRect(w - borderW, 0, borderW, h);
+
+  // 3. Línea de fondo en el primer plano (borde del jugador)
+  const borderH = 26;
+  const bottomGrad = ctx.createLinearGradient(0, h - borderH, 0, h);
+  bottomGrad.addColorStop(0, 'rgba(255, 255, 255, 0.18)');
+  bottomGrad.addColorStop(1.0, 'rgba(255, 255, 255, 0.0)');
+  ctx.fillStyle = bottomGrad;
+  ctx.fillRect(0, h - borderH, w, borderH);
+
+  // 4. Línea del fondo reglamentaria bien marcada y nítida en el horizonte
+  const farLineH = 34;
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, w, farLineH);
+
+  // Sutil relieve de sombra bajo la línea del fondo para definir la profundidad
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
+  ctx.fillRect(0, farLineH, w, 10);
+
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+
+function crearTexturaSombraIntro() {
+  const s = 256;
+  const c = document.createElement('canvas');
+  c.width = s;
+  c.height = s;
+  const ctx = c.getContext('2d');
+
+  // Contacto oclusivo: núcleo oscuro directamente debajo de la pelota que eclipsa la línea central
+  const g = ctx.createRadialGradient(s / 2, s / 2, 0, s / 2, s / 2, s / 2);
+  g.addColorStop(0, 'rgba(0, 0, 0, 0.90)');
+  g.addColorStop(0.28, 'rgba(2, 6, 14, 0.65)');
+  g.addColorStop(0.65, 'rgba(4, 10, 20, 0.22)');
+  g.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, s, s);
+
+  const tex = new THREE.CanvasTexture(c);
+  return tex;
+}
+
+function initIntroBall() {
+  if (!window.THREE) return;
+  const canvas = $('canvas-intro');
+  if (!canvas) return;
+
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  const aspect = w / h;
+
+  introScene = new THREE.Scene();
+  introCamera = new THREE.PerspectiveCamera(30, aspect, 0.001, 10);
+  introCamera.position.set(0, 0, Z_CAM_CLOSE);
+
+  introRenderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  introRenderer.setSize(w, h);
+  introRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2.5));
+  introRenderer.outputColorSpace = THREE.SRGBColorSpace;
+
+  // Iluminación
+  const amb = new THREE.AmbientLight(0xffffff, 1.0);
+  introScene.add(amb);
+  introScene.userData.ambLight = amb;
+
+  const dir = new THREE.DirectionalLight(0xffffff, 0.0);
+  dir.position.set(0.20, 0.35, 0.50);
+  introScene.add(dir);
+  introScene.userData.dirLight = dir;
+
+  // Luz de contra (rim light) naranja que separa la pelota del estadio al hacer zoom out
+  const rim = new THREE.DirectionalLight(0xff7700, 0.0);
+  rim.position.set(-0.35, -0.45, -0.25);
+  introScene.add(rim);
+  introScene.userData.rimLight = rim;
+
+  // Esfera 3D 100% CERRADA (polos curvos y continuos, sin cortes planos)
+  const sphereGeo = new THREE.SphereGeometry(1.0, 64, 48);
+  const pos = sphereGeo.attributes.position;
+  const count = pos.count;
+  const thetaMax = 35 * Math.PI / 180;
+  const zCamUnit = Z_CAM_CLOSE / R_BALL_CLOSE;
+  const scaleFlat = (zCamUnit - 1.0) / thetaMax;
+
+  uvsFlat = new Float32Array(count * 2);
+  uvsSphLanding = new Float32Array(count * 2);
+  uvsSphBall = new Float32Array(count * 2);
+
+  // Calibración de curvatura armónica en dos fases ('curvado a medias' y completado con zoom out):
+  // - En Landing (scaleLanding = 0.82): tipografía plana 2D al ~33% de la pantalla, limpia y espaciosa.
+  // - Estado 1 (scaleCurva1 = 0.55): curvado intermedio a medias (~10.1° de arco, ~49% de alto en pantalla),
+  //   muestra volumen y luz 3D visible sin agrandarse de golpe ni salirse de cuadro.
+  // - Estado 2 / Menú (scaleBall = 0.16): curvatura completa (~34.7° de arco, sello oficial ITTF ~30% de la esfera),
+  //   completándose de forma sincronizada con el alejamiento de la cámara para que en pantalla el tamaño sea siempre suave.
+  const scaleLanding = 0.82;
+  const scaleCurva1 = 0.55;
+  const scaleBall = 0.16;
+
+  for (let i = 0; i < count; i++) {
+    const x = pos.getX(i);
+    const y = pos.getY(i);
+    const z = pos.getZ(i);
+
+    const zc = Math.max(-1, Math.min(1, z));
+    const rxy = Math.hypot(x, y);
+    const distCam = Math.max(0.1, zCamUnit - z);
+
+    // 1. uvFlat (Landing plana 2D: escala descansada, tipografía aireada)
+    const rFlat = (scaleFlat / distCam) * scaleLanding;
+    const uF = 0.5 + x * rFlat;
+    const vF = 0.5 + y * rFlat;
+    uvsFlat[i * 2] = Math.max(0.02, Math.min(0.98, uF));
+    uvsFlat[i * 2 + 1] = Math.max(0.02, Math.min(0.98, vF));
+
+    // 2. uvSphLanding: Curvado intermedio 'a medias' (volumen visible sin agrandarse desproporcionadamente)
+    // 3. uvSphBall: Esfera completa en zoom out con proporción oficial ITTF
+    let uSL = 0.5, vSL = 0.5;
+    let uSB = 0.5, vSB = 0.5;
+    if (rxy < 1e-6) {
+      if (zc > 0) {
+        uSL = 0.5; vSL = 0.5;
+        uSB = 0.5; vSB = 0.5;
+      } else {
+        uSL = 0.04; vSL = 0.04;
+        uSB = 0.04; vSB = 0.04;
+      }
+    } else {
+      const theta = Math.acos(zc);
+      let r_uv_L, r_uv_B;
+      if (theta <= thetaMax) {
+        r_uv_L = (theta / thetaMax) * scaleCurva1;
+        r_uv_B = (theta / thetaMax) * scaleBall;
+      } else {
+        const frac = Math.min(1.0, (theta - thetaMax) / (Math.PI / 2 - thetaMax));
+        r_uv_L = scaleCurva1 + frac * (0.45 - scaleCurva1);
+        r_uv_B = scaleBall + frac * (0.45 - scaleBall);
+      }
+
+      uSL = Math.max(0.02, Math.min(0.98, 0.5 + (x / rxy) * r_uv_L));
+      vSL = Math.max(0.02, Math.min(0.98, 0.5 + (y / rxy) * r_uv_L));
+      uSB = Math.max(0.02, Math.min(0.98, 0.5 + (x / rxy) * r_uv_B));
+      vSB = Math.max(0.02, Math.min(0.98, 0.5 + (y / rxy) * r_uv_B));
+    }
+    uvsSphLanding[i * 2] = uSL;
+    uvsSphLanding[i * 2 + 1] = vSL;
+    uvsSphBall[i * 2] = uSB;
+    uvsSphBall[i * 2 + 1] = vSB;
+  }
+
+  introCanvasTex = crearTexturaPelotaIntro();
+  if (introRenderer) {
+    introCanvasTex.anisotropy = Math.min(16, introRenderer.capabilities.getMaxAnisotropy());
+  }
+
+  const material = new THREE.MeshStandardMaterial({
+    map: introCanvasTex,
+    roughness: 0.52,
+    metalness: 0.02,
+  });
+
+  introMesh = new THREE.Mesh(sphereGeo, material);
+
+  // Mesa de Ping Pong reglamentaria en perspectiva física
+  const tableGeo = new THREE.PlaneGeometry(0.38, 0.90);
+  tableGeo.rotateX(-Math.PI / 2);
+  const tableMat = new THREE.MeshStandardMaterial({
+    map: crearTexturaMesaIntro(),
+    roughness: 0.85,
+    metalness: 0.05,
+    transparent: true,
+    opacity: 0.0,
+    depthWrite: false
+  });
+  introTableMesh = new THREE.Mesh(tableGeo, tableMat);
+  introTableMesh.position.set(0, -0.0305, -0.16);
+  introScene.add(introTableMesh);
+
+  // Sombra de contacto suave sobre el tablero justo bajo la pelota
+  const shadowGeo = new THREE.PlaneGeometry(0.046, 0.032);
+  shadowGeo.rotateX(-Math.PI / 2);
+  const shadowMat = new THREE.MeshBasicMaterial({
+    map: crearTexturaSombraIntro(),
+    transparent: true,
+    opacity: 0.0,
+    depthWrite: false
+  });
+  introShadowMesh = new THREE.Mesh(shadowGeo, shadowMat);
+  introShadowMesh.position.set(0, -0.0302, 0);
+  introScene.add(introShadowMesh);
+
+  // Grupo centrado para rotaciones y escala física
+  introBallGroup = new THREE.Group();
+  introBallGroup.position.set(0, 0, 0);
+  introBallGroup.scale.set(R_BALL_CLOSE, R_BALL_CLOSE, R_BALL_CLOSE);
+  introBallGroup.add(introMesh);
+  introScene.add(introBallGroup);
+
+  setCurvatura(0.0);
+  setZoom(0.0);
+
+  window.addEventListener('resize', () => {
+    if (!introRenderer || !introCamera) return;
+    const nw = window.innerWidth;
+    const nh = window.innerHeight;
+    introCamera.aspect = nw / nh;
+    introCamera.updateProjectionMatrix();
+    introRenderer.setSize(nw, nh);
+    setCurvatura(currentCurvatura);
+    setZoom(currentZoom);
+  });
+}
+
+function actualizarUVs() {
+  if (!introMesh || !uvsFlat || !uvsSphLanding || !uvsSphBall) return;
+  const uvs = introMesh.geometry.attributes.uv;
+  const count = uvs.count;
+  const c = currentCurvatura;
+  const z = currentZoom;
+
+  for (let i = 0; i < count; i++) {
+    const uF = uvsFlat[i * 2];
+    const vF = uvsFlat[i * 2 + 1];
+    const uSL = uvsSphLanding[i * 2];
+    const vSL = uvsSphLanding[i * 2 + 1];
+    const uSB = uvsSphBall[i * 2];
+    const vSB = uvsSphBall[i * 2 + 1];
+
+    const u0 = uF + (uSL - uF) * c;
+    const v0 = vF + (vSL - vF) * c;
+
+    uvs.setXY(i,
+      u0 + (uSB - uSL) * z * c,
+      v0 + (vSB - vSL) * z * c
+    );
+  }
+  uvs.needsUpdate = true;
+}
+
+function setCurvatura(t) {
+  currentCurvatura = Math.max(0, Math.min(1, t));
+  actualizarUVs();
+
+  if (introScene && introScene.userData.dirLight) {
+    introScene.userData.dirLight.intensity = currentCurvatura * 0.85;
+  }
+  if (introScene && introScene.userData.ambLight) {
+    introScene.userData.ambLight.intensity = 1.0 - currentCurvatura * 0.20;
+  }
+
+  renderIntroFrame();
+}
+
+let idleSpinActivo = false;
+let idleSpinStartTime = performance.now();
+
+function iniciarIdleSpin() {
+  if (idleSpinActivo) return;
+  idleSpinActivo = true;
+  idleSpinStartTime = performance.now();
+
+  function loopSpin(now) {
+    if (!idleSpinActivo || !introActiva) return;
+    const t = (now - idleSpinStartTime) / 1000;
+    if (introBallGroup) {
+      // Giro sutil en un solo eje horizontal (Y): paneo zen de ±15° en un ciclo calmo de ~9.7s.
+      // Ejes X y Z anclados de forma fija (sin oscilación multi-eje) para eliminar 100% el mareo.
+      const swayY = Math.sin(t * 0.65) * 0.26; // ±14.9° en Y (sello siempre en foco y centrado)
+
+      introBallGroup.rotation.y = swayY;
+      introBallGroup.rotation.x = 0.08; // Inclinación fija estable
+      introBallGroup.rotation.z = 0.0;
+    }
+    renderIntroFrame();
+    introAnimId = requestAnimationFrame(loopSpin);
+  }
+  introAnimId = requestAnimationFrame(loopSpin);
+}
+
+function detenerIdleSpin() {
+  idleSpinActivo = false;
+}
+
+function setZoom(t) {
+  currentZoom = Math.max(0, Math.min(1, t));
+  if (!introCamera || !introBallGroup) return;
+
+  const R = R_BALL_CLOSE + (R_BALL_FAR - R_BALL_CLOSE) * currentZoom;
+  const zCam = Z_CAM_CLOSE + (Z_CAM_FAR - Z_CAM_CLOSE) * currentZoom;
+  const ballY = currentZoom * 0.0038;
+
+  introBallGroup.scale.set(R, R, R);
+  introBallGroup.position.set(0, ballY, 0); // Despeje milimétrico sutil sobre la mesa
+  introCamera.position.z = zCam;
+
+  if (introScene && introScene.userData.rimLight) {
+    introScene.userData.rimLight.intensity = currentZoom * 0.55;
+  }
+
+  // Revelado cinematográfico de la mesa ("encendido de reflectores"):
+  // Al principio la mesa permanece oculta en la penumbra para evitar cualquier intersección.
+  // Emerge con un fade in suave a partir del 62% del zoom, cuando la pelota ya alcanzó su escala real.
+  const pTable = Math.max(0, Math.min(1, (currentZoom - 0.62) / 0.38));
+  const easeTable = pTable * pTable * (3 - 2 * pTable); // smoothstep para encendido orgánico de reflectores
+
+  // Posición segura en Y: garantiza que la mesa nunca intersecte la base de la pelota en ningún fotograma
+  const yMesaFinal = -0.0305;
+  const yBasePelota = ballY - R;
+  const yMesaSegura = Math.min(yMesaFinal, yBasePelota - 0.0035);
+
+  if (introTableMesh) {
+    introTableMesh.position.y = yMesaSegura;
+    introTableMesh.material.opacity = easeTable * 0.94;
+    introTableMesh.visible = easeTable > 0.001;
+  }
+  if (introShadowMesh) {
+    introShadowMesh.position.y = yMesaSegura + 0.0003;
+    introShadowMesh.material.opacity = easeTable * 0.88;
+    introShadowMesh.visible = easeTable > 0.001;
+  }
+
+  actualizarUVs();
+
+  renderIntroFrame();
+}
+
+function cancelarAnimacionActual() {
+  if (introAnimId) {
+    cancelAnimationFrame(introAnimId);
+    introAnimId = null;
+  }
+  animandoCinematica = false;
+}
+
+function ejecutarEtapa(etapa) {
+  cancelarAnimacionActual();
+  detenerIdleSpin();
+  introActiva = true;
+
+  const stageLanding = $('stage-landing');
+  const actionsWrap = $('intro-actions-wrap');
+  const menuHub = $('intro-menu-hub');
+  const stage = $('intro-stage');
+
+  if (stage) {
+    stage.style.display = 'block';
+    stage.style.opacity = '1';
+  }
+  if (stageLanding) {
+    stageLanding.style.display = 'block';
+    stageLanding.style.opacity = '1';
+  }
+
+  if (etapa === 0) {
+    // -----------------------------------------------------------------
+    // ESTADO 0: Landing 2D Plana en reposo
+    // -----------------------------------------------------------------
+    setCurvatura(0.0);
+    setZoom(0.0);
+    if (introBallGroup) {
+      introBallGroup.position.set(0, 0, 0);
+      introBallGroup.rotation.set(0, 0, 0);
+    }
+    if (actionsWrap) {
+      actionsWrap.style.opacity = '1';
+      actionsWrap.style.transform = '';
+      actionsWrap.style.pointerEvents = 'auto';
+    }
+    if (menuHub) {
+      menuHub.classList.remove('visible');
+    }
+    renderIntroFrame();
+  } else if (etapa === 1) {
+    // -----------------------------------------------------------------
+    // ESTADO 1: Curvado de tipografía e iluminación 3D
+    // -----------------------------------------------------------------
+    if (actionsWrap) {
+      actionsWrap.style.opacity = '0';
+      actionsWrap.style.pointerEvents = 'none';
+    }
+    if (menuHub) {
+      menuHub.classList.remove('visible');
+    }
+    if (introBallGroup) {
+      introBallGroup.position.set(0, 0, 0);
+      introBallGroup.rotation.set(0, 0, 0);
+    }
+    setZoom(0.0);
+    const startC = currentCurvatura;
+    const dur = 380;
+    const startTime = performance.now();
+
+    function loopCurvar(now) {
+      const p = Math.min(1, (now - startTime) / dur);
+      const ease = p * p * (3 - 2 * p);
+      setCurvatura(startC + (1.0 - startC) * ease);
+      if (p < 1) {
+        introAnimId = requestAnimationFrame(loopCurvar);
+      } else {
+        introAnimId = null;
+      }
+    }
+    introAnimId = requestAnimationFrame(loopCurvar);
+  } else if (etapa === 2) {
+    // -----------------------------------------------------------------
+    // ESTADO 2: Zoom Out hacia el Menú de Modos (Pelota girando)
+    // -----------------------------------------------------------------
+    setCurvatura(1.0);
+    if (actionsWrap) {
+      actionsWrap.style.opacity = '0';
+      actionsWrap.style.pointerEvents = 'none';
+    }
+    const startZ = currentZoom;
+    const dur = 420;
+    const startTime = performance.now();
+
+    function loopZoom(now) {
+      const p = Math.min(1, (now - startTime) / dur);
+      const ease = 1 - Math.pow(1 - p, 3);
+      setZoom(startZ + (1.0 - startZ) * ease);
+      if (p < 1) {
+        introAnimId = requestAnimationFrame(loopZoom);
+      } else {
+        introAnimId = null;
+        if (menuHub) menuHub.classList.add('visible');
+        activarModoHub(0, false);
+        iniciarIdleSpin();
+        if (typeof sonarPique === 'function') sonarPique(0.20);
+      }
+    }
+    introAnimId = requestAnimationFrame(loopZoom);
+  } else if (etapa === 'play') {
+    // -----------------------------------------------------------------
+    // PLAY: Curvado -> Zoom Out fluido -> Menú de Modos interactivo
+    // -----------------------------------------------------------------
+    animandoCinematica = true;
+    sonarTensionAire(0.18);
+
+    if (actionsWrap) {
+      actionsWrap.style.transition = 'opacity 70ms ease, transform 70ms ease';
+      actionsWrap.style.opacity = '0';
+      actionsWrap.style.transform = 'translateY(12px) scale(0.97)';
+      actionsWrap.style.pointerEvents = 'none';
+    }
+    if (menuHub) {
+      menuHub.classList.remove('visible');
+    }
+
+    const durCurva = 240;
+    const durZoom = 360;
+    const zoomStart = 100; // Curvado arranca primero (~100ms) y el zoom se acopla rápido (total 460ms, ágil y sin lag)
+    const durTotal = zoomStart + durZoom;
+    const startTime = performance.now();
+
+    function loopPlay(now) {
+      const elapsed = now - startTime;
+
+      // Fase 1: Curvatura (inicia primero curvando a medias con luz 3D suave)
+      const pCurva = Math.min(1, elapsed / durCurva);
+      const easeCurva = Math.sin(pCurva * Math.PI / 2);
+      setCurvatura(easeCurva);
+
+      // Fase 2: Zoom (arranca a medias y acompaña el resto de la curvatura en un solo movimiento fluido)
+      if (elapsed >= zoomStart) {
+        const pZoom = Math.min(1, (elapsed - zoomStart) / durZoom);
+        const easeZoom = 1 - Math.pow(1 - pZoom, 3);
+        setZoom(easeZoom);
+      } else {
+        setZoom(0.0);
+      }
+
+      if (elapsed < durTotal) {
+        introAnimId = requestAnimationFrame(loopPlay);
+      } else {
+        introAnimId = null;
+        animandoCinematica = false;
+        setCurvatura(1.0);
+        setZoom(1.0);
+        if (menuHub) menuHub.classList.add('visible');
+        activarModoHub(0, false);
+        iniciarIdleSpin();
+        if (typeof sonarPique === 'function') sonarPique(0.20);
+      }
+    }
+    introAnimId = requestAnimationFrame(loopPlay);
+  }
+}
+
+const MODOS_HUB_DATA = [
+  { modo: 'libre' },
+  { modo: 'tutorial' },
+  { modo: 'test' }
+];
+
+let modoHubActivoIdx = 0;
+
+function activarModoHub(idx, conSonido = true) {
+  if (idx < 0 || idx >= MODOS_HUB_DATA.length) return;
+  modoHubActivoIdx = idx;
+  const segments = document.querySelectorAll('.dock-segment');
+  segments.forEach((btn, i) => {
+    if (i === idx) btn.classList.add('active');
+    else btn.classList.remove('active');
+  });
+  if (conSonido && typeof sonarPique === 'function') {
+    sonarPique(0.06);
+  }
+}
+
+function initIntroMenu() {
+  const menuHub = $('intro-menu-hub');
+  if (menuHub) {
+    menuHub.addEventListener('click', (e) => {
+      e.stopPropagation();
+    });
+  }
+
+  document.querySelectorAll('.dock-segment').forEach((btn, idx) => {
+    btn.addEventListener('mouseenter', () => {
+      activarModoHub(idx, false);
+    });
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const modo = btn.dataset.modo;
+      seleccionarModoDesdeIntro(modo);
+    });
+  });
+}
+
+function seleccionarModoDesdeIntro(modo) {
+  sonarPique(0.22);
+  cambiarTab(modo);
+  cerrarIntro();
+}
+
+function deslizarYComenzar() {
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    cerrarIntro();
+    return;
+  }
+  if (!introActiva || animandoCinematica) return;
+  const menuHub = $('intro-menu-hub');
+  // Si el menú ya está visible, no repetir la animación de entrada
+  if (menuHub && menuHub.classList.contains('visible')) return;
+  ejecutarEtapa('play');
+}
+
+function cerrarIntro() {
+  introActiva = false;
+  animandoCinematica = false;
+  detenerIdleSpin();
+  cancelarAnimacionActual();
+  const stage = $('intro-stage');
+  const stageLanding = $('stage-landing');
+  if (stage) stage.style.display = 'none';
+  if (stageLanding) stageLanding.style.display = 'none';
+  const appMain = $('app-main');
+  if (appMain && !appMain.classList.contains('visible')) {
+    appMain.classList.add('visible');
+  }
+  if (typeof onResizeVisor === 'function') onResizeVisor();
+}
+
+function abrirIntro(modo) {
+  introActiva = true;
+  animandoCinematica = false;
+  cancelarAnimacionActual();
+
+  const appMain = $('app-main');
+  if (appMain) appMain.classList.remove('visible');
+
+  const stage = $('intro-stage');
+  const stageLanding = $('stage-landing');
+  if (stage) {
+    stage.style.display = 'block';
+    stage.style.opacity = '1';
+  }
+  if (stageLanding) {
+    stageLanding.style.display = 'block';
+    stageLanding.style.opacity = '1';
+  }
+
+  const actionsWrap = $('intro-actions-wrap');
+  if (actionsWrap) {
+    actionsWrap.style.display = 'none';
+    actionsWrap.style.opacity = '0';
+    actionsWrap.style.pointerEvents = 'none';
+  }
+
+  const menuHub = $('intro-menu-hub');
+  if (menuHub) {
+    menuHub.classList.add('visible');
+  }
+
+  const modoObjetivo = modo || tabActiva || 'libre';
+  const idx = MODOS_HUB_DATA.findIndex(m => m.modo === modoObjetivo);
+  activarModoHub(idx >= 0 ? idx : 0, false);
+
+  setCurvatura(1.0);
+  setZoom(1.0);
+  iniciarIdleSpin();
+  renderIntroFrame();
+
+  if (typeof sonarPique === 'function') sonarPique(0.14);
+}
+
+
+
+const btnComenzar = $('btn-comenzar');
+if (btnComenzar) {
+  btnComenzar.addEventListener('click', (e) => {
+    e.stopPropagation();
+    deslizarYComenzar();
+  });
+}
+
+const stageLanding = $('stage-landing');
+if (stageLanding) {
+  stageLanding.addEventListener('click', deslizarYComenzar);
+}
+
+const btnVolverIntro = $('btn-volver-intro');
+if (btnVolverIntro) {
+  btnVolverIntro.addEventListener('click', (e) => {
+    e.stopPropagation();
+    abrirIntro();
+  });
+}
+
+const brandLink = $('brand-link');
+if (brandLink) {
+  brandLink.addEventListener('click', (e) => {
+    e.stopPropagation();
+    abrirIntro();
+  });
+}
+
+window.addEventListener('keydown', (ev) => {
+  if (!introActiva) {
+    if (ev.key === 'Escape') {
+      const alerta = $('alerta-desconexion-ble');
+      if (alerta && alerta.style.display !== 'none') {
+        ev.preventDefault();
+        ocultarAlertaDesconexion();
+        return;
+      }
+      ev.preventDefault();
+      abrirIntro();
+    }
+    return;
+  }
+  const menuHub = $('intro-menu-hub');
+  const menuVisible = menuHub && menuHub.classList.contains('visible');
+
+  if (menuVisible) {
+    if (ev.key === 'ArrowLeft' || ev.key === 'a' || ev.key === 'A') {
+      ev.preventDefault();
+      const nuevoIdx = (modoHubActivoIdx - 1 + MODOS_HUB_DATA.length) % MODOS_HUB_DATA.length;
+      activarModoHub(nuevoIdx);
+    } else if (ev.key === 'ArrowRight' || ev.key === 'd' || ev.key === 'D') {
+      ev.preventDefault();
+      const nuevoIdx = (modoHubActivoIdx + 1) % MODOS_HUB_DATA.length;
+      activarModoHub(nuevoIdx);
+    } else if (ev.key === '1') {
+      ev.preventDefault();
+      activarModoHub(0);
+    } else if (ev.key === '2') {
+      ev.preventDefault();
+      activarModoHub(1);
+    } else if (ev.key === '3') {
+      ev.preventDefault();
+      activarModoHub(2);
+    } else if (ev.key === 'Enter' || ev.key === ' ') {
+      ev.preventDefault();
+      const modoSel = MODOS_HUB_DATA[modoHubActivoIdx].modo;
+      seleccionarModoDesdeIntro(modoSel);
+    } else if (ev.key === 'Escape') {
+      cerrarIntro();
+    }
+  } else {
+    // Pantalla de landing inicial (Stage 0)
+    if (ev.key === ' ' || ev.key === 'Enter') {
+      ev.preventDefault();
+      deslizarYComenzar();
+    } else if (ev.key === 'Escape') {
+      cerrarIntro();
+    }
+  }
+});
+
+function iniciarTodoThree() {
+  if (window.THREE) {
+    initIntroBall();
+    initIntroMenu();
+  }
+}
+
+if (window.THREE) iniciarTodoThree();
+else window.addEventListener('load', () => { if (window.THREE) iniciarTodoThree(); });
+
 if (document.readyState === 'complete') cargarVisor3D();
 else window.addEventListener('load', cargarVisor3D);
+
 </script>
 </body>
 </html>
