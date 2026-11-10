@@ -1341,6 +1341,7 @@
     z-index: 10;
     pointer-events: none;
     opacity: 0;
+    will-change: opacity, transform;
     transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
   }
   .intro-menu-hub.visible {
@@ -1353,7 +1354,7 @@
     flex-direction: row;
     align-items: stretch;
     width: 100%;
-    background: rgba(11, 17, 30, 0.92);
+    background: rgba(11, 17, 30, 0.88);
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
     border: 1px solid rgba(255, 255, 255, 0.10);
@@ -3188,19 +3189,34 @@ function crearTexturaMesaIntro() {
   ctx.fillRect(0, 0, w, h);
 
   // 1. Línea blanca central reglamentaria de saque (3 mm)
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+  // En la zona de juego (horizonte y bajo la pelota) es nítida y reglamentaria;
+  // hacia el primer plano se atenúa suavemente en la penumbra para no competir ni transparentarse en el dock
+  const lineGrad = ctx.createLinearGradient(0, 0, 0, h);
+  lineGrad.addColorStop(0, 'rgba(255, 255, 255, 0.85)');
+  lineGrad.addColorStop(0.68, 'rgba(255, 255, 255, 0.85)');
+  lineGrad.addColorStop(0.86, 'rgba(255, 255, 255, 0.15)');
+  lineGrad.addColorStop(1.0, 'rgba(255, 255, 255, 0.0)');
+  ctx.fillStyle = lineGrad;
   const lineW = 10;
-  const borderH = 26;
-  ctx.fillRect((w - lineW) / 2, 0, lineW, h - borderH);
+  ctx.fillRect((w - lineW) / 2, 0, lineW, h);
 
   // 2. Líneas laterales perimetrales reglamentarias (20 mm)
+  const sideGrad = ctx.createLinearGradient(0, 0, 0, h);
+  sideGrad.addColorStop(0, 'rgba(255, 255, 255, 0.80)');
+  sideGrad.addColorStop(0.70, 'rgba(255, 255, 255, 0.80)');
+  sideGrad.addColorStop(0.88, 'rgba(255, 255, 255, 0.15)');
+  sideGrad.addColorStop(1.0, 'rgba(255, 255, 255, 0.0)');
+  ctx.fillStyle = sideGrad;
   const borderW = 20;
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.80)';
   ctx.fillRect(0, 0, borderW, h);
   ctx.fillRect(w - borderW, 0, borderW, h);
 
   // 3. Línea de fondo en el primer plano (borde del jugador)
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+  const borderH = 26;
+  const bottomGrad = ctx.createLinearGradient(0, h - borderH, 0, h);
+  bottomGrad.addColorStop(0, 'rgba(255, 255, 255, 0.18)');
+  bottomGrad.addColorStop(1.0, 'rgba(255, 255, 255, 0.0)');
+  ctx.fillStyle = bottomGrad;
   ctx.fillRect(0, h - borderH, w, borderH);
 
   // 4. Línea del fondo reglamentaria bien marcada y nítida en el horizonte
@@ -3358,8 +3374,8 @@ function initIntroBall() {
 
   introMesh = new THREE.Mesh(sphereGeo, material);
 
-  // Mesa de Ping Pong reglamentaria en perspectiva física (longitud calibrada para terminar con holgura sobre el dock)
-  const tableGeo = new THREE.PlaneGeometry(0.38, 0.46);
+  // Mesa de Ping Pong reglamentaria en perspectiva física
+  const tableGeo = new THREE.PlaneGeometry(0.38, 0.90);
   tableGeo.rotateX(-Math.PI / 2);
   const tableMat = new THREE.MeshStandardMaterial({
     map: crearTexturaMesaIntro(),
@@ -3370,7 +3386,7 @@ function initIntroBall() {
     depthWrite: false
   });
   introTableMesh = new THREE.Mesh(tableGeo, tableMat);
-  introTableMesh.position.set(0, -0.0305, -0.21);
+  introTableMesh.position.set(0, -0.0305, -0.16);
   introScene.add(introTableMesh);
 
   // Sombra de contacto suave sobre el tablero justo bajo la pelota
