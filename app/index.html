@@ -1131,12 +1131,34 @@
     border-color: rgba(239, 68, 68, 0.6);
     transition: border-color 0.15s ease;
   }
-  .drill-pips-num {
+  .drill-combo-badge {
     font-family: var(--font-mono);
-    font-size: 0.82rem;
-    font-weight: 700;
-    color: #e2e8f0;
+    font-size: 0.78rem;
+    font-weight: 800;
+    color: #ffaa55;
+    background: rgba(255, 119, 0, 0.12);
+    border: 1px solid rgba(255, 119, 0, 0.35);
+    padding: 3px 9px;
+    border-radius: var(--radius-pill);
+    letter-spacing: 0.03em;
     font-variant-numeric: tabular-nums;
+    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+    white-space: nowrap;
+  }
+  .drill-combo-badge.combo-max {
+    color: #86efac;
+    background: rgba(34, 197, 94, 0.16);
+    border-color: rgba(34, 197, 94, 0.45);
+  }
+  .drill-breakdown-row {
+    margin-top: 4px;
+    padding-top: 4px;
+    font-size: 0.80rem;
+    color: var(--fg-muted);
+    line-height: 1.4;
+  }
+  .drill-breakdown-tag b {
+    color: #f8fafc;
   }
 
   /* --- Separador y Feeds Limpios (Sin Viñetas) --- */
@@ -1866,9 +1888,9 @@
         <div class="challenge-box">
           <div class="challenge-top">
             <p id="tut-consigna" class="challenge-consigna">
-              Lográ 5 golpes seguidos con la cara cerrada en rango óptimo (-25° a -5°).
+              Alcanzá 500 pts con la cara en rango óptimo (-25° a -5°). La racha multiplica tu puntaje.
             </p>
-            <span id="tut-progreso-txt" class="challenge-count">0 / 5</span>
+            <span id="tut-progreso-txt" class="challenge-count">0 / 500 PTS</span>
           </div>
 
           <div class="barra-progreso-wrap">
@@ -1878,18 +1900,22 @@
           <div class="challenge-meta">
             <div class="drill-streak-label">
               <span class="drill-streak-dot"></span>
-              <span>Racha</span>
+              <span>Multiplicador de racha</span>
             </div>
             <div class="drill-pips-container">
-              <div class="drill-pips" id="tut-pips" aria-label="Racha de impactos seguidos" role="status">
+              <div class="drill-pips" id="tut-pips" aria-label="Multiplicador de racha" role="status">
                 <span class="drill-pip" aria-hidden="true"></span>
                 <span class="drill-pip" aria-hidden="true"></span>
                 <span class="drill-pip" aria-hidden="true"></span>
                 <span class="drill-pip" aria-hidden="true"></span>
                 <span class="drill-pip" aria-hidden="true"></span>
               </div>
-              <span class="drill-pips-num"><b id="tut-racha">0</b> / <span id="tut-racha-meta">5</span></span>
+              <span class="drill-combo-badge" id="tut-combo-badge">1x MULTIPLICADOR</span>
             </div>
+          </div>
+
+          <div class="drill-breakdown-row">
+            <span id="tut-breakdown" class="drill-breakdown-tag">Pegá un golpe para iniciar el drill y activar multiplicadores.</span>
           </div>
         </div>
 
@@ -2688,19 +2714,20 @@ function cambiarTab(nuevoModo) {
   }
 }
 
-// --- MODO TUTORIAL (ENTRENADOR BIOMECÁNICO) ---
+// --- MODO TUTORIAL (ENTRENADOR BIOMECÁNICO CON MULTIPLICADOR DE RACHA) ---
 const tutorial = {
   golpe: 'TD',
   paso: 1,
-  meta: 5,
-  completados: 0,
+  metaPts: 500,
+  puntos: 0,
   racha: 0,
+  ultimoPuntaje: null,
 };
 
 const TUTORIAL_CONSIGNAS = {
   1: {
     titulo: 'Paso 1: Ángulo de ataque',
-    consigna: (g) => `Lográ 5 golpes con la cara en rango óptimo (${CRITERIOS[g].angulo[0]}° a ${CRITERIOS[g].angulo[1]}°).`,
+    consigna: (g) => `Alcanzá 500 pts con la cara en rango óptimo (${CRITERIOS[g].angulo[0]}° a ${CRITERIOS[g].angulo[1]}°). La racha multiplica tu puntaje.`,
     evaluar: (e, g) => {
       const crit = CRITERIOS[g];
       if (e.ang === null) return { ok: false, msg: 'Sin lectura de ángulo.' };
@@ -2715,7 +2742,7 @@ const TUTORIAL_CONSIGNAS = {
   },
   2: {
     titulo: 'Paso 2: Brushing y Potencia',
-    consigna: (g) => g.startsWith('T') ? `Superá los 15 km/h asegurando que la IA clasifique el Topspin.` : `Empuje rasante y controlado hacia la red sin cruzar el brazo.`,
+    consigna: (g) => g.startsWith('T') ? `Alcanzá 500 pts superando 15 km/h con Topspin. La racha multiplica tu puntaje.` : `Alcanzá 500 pts con empuje rasante y controlado hacia la red sin cruzar el brazo.`,
     evaluar: (e, g) => {
       if (e.golpe !== g) {
         return { ok: false, msg: `La IA detectó ${GOLPES[e.golpe] ?? e.golpe}. ${g.startsWith('T') ? 'Hacé un arco ascendente de abajo hacia arriba.' : 'Empujá recto hacia la red sin cortar la pelota hacia arriba.'}` };
@@ -2728,7 +2755,7 @@ const TUTORIAL_CONSIGNAS = {
   },
   3: {
     titulo: 'Paso 3: Timing del látigo',
-    consigna: (g) => `El pico de giro debe ocurrir justo antes o al impacto (${PICO_ANTES_MS} ms a +${PICO_TARDE_MS} ms).`,
+    consigna: (g) => `Alcanzá 500 pts acelerando justo antes del choque (${PICO_ANTES_MS} ms a +${PICO_TARDE_MS} ms). La racha multiplica tu puntaje.`,
     evaluar: (e, g) => {
       if (e.pico === null) return { ok: false, msg: 'Sin lectura de timing.' };
       if (e.pico < PICO_ANTES_MS) {
@@ -2749,45 +2776,63 @@ function actualizarUITutorial() {
   $('tut-nivel-badge').textContent = `Paso ${p} / 3`;
   $('tut-titulo-paso').textContent = cfg.titulo;
   $('tut-consigna').textContent = cfg.consigna(g);
-  $('tut-progreso-txt').textContent = `${tutorial.completados} / ${tutorial.meta}`;
-  const pct = Math.min(100, Math.round((tutorial.completados / tutorial.meta) * 100));
+
+  // Progreso de puntos hacia la meta
+  const meta = tutorial.metaPts || 500;
+  const pts = Math.min(meta, tutorial.puntos);
+  $('tut-progreso-txt').textContent = `${pts} / ${meta} PTS`;
+  const pct = Math.min(100, Math.round((pts / meta) * 100));
   const barra = $('tut-barra');
   barra.style.transform = `scaleX(${pct / 100})`;
-  barra.classList.toggle('completo', tutorial.completados >= tutorial.meta);
+  barra.classList.toggle('completo', pts >= meta);
 
-  // Pips de consistencia deportiva (Drill Pips)
+  // Pips de consistencia deportiva (máximo 5x de combo)
   const elPips = $('tut-pips');
+  const maxPips = 5;
   if (elPips) {
-    const totalPips = tutorial.meta || 5;
-    if (elPips.children.length !== totalPips) {
+    if (elPips.children.length !== maxPips) {
       elPips.innerHTML = '';
-      for (let i = 0; i < totalPips; i++) {
+      for (let i = 0; i < maxPips; i++) {
         const pip = document.createElement('span');
         pip.className = 'drill-pip';
         pip.setAttribute('aria-hidden', 'true');
         elPips.appendChild(pip);
       }
     }
-    const currentRacha = Math.min(tutorial.racha, totalPips);
-    const metaAlcanzada = tutorial.racha >= totalPips;
+    const currentRacha = Math.min(tutorial.racha, maxPips);
+    const metaAlcanzada = tutorial.racha >= maxPips;
     Array.from(elPips.children).forEach((pip, idx) => {
       pip.classList.toggle('activo', idx < currentRacha);
       pip.classList.toggle('meta-alcanzada', metaAlcanzada);
     });
   }
-  const elRacha = $('tut-racha');
-  if (elRacha) {
-    elRacha.textContent = tutorial.racha;
-    elRacha.style.color = tutorial.racha >= (tutorial.meta || 5) ? 'var(--ok)' : (tutorial.racha > 0 ? '#ff7700' : 'var(--fg-muted)');
+
+  // Multiplicador Combo Badge
+  const elCombo = $('tut-combo-badge');
+  if (elCombo) {
+    const mult = Math.min(5, Math.max(1, tutorial.racha));
+    elCombo.textContent = `${mult}x MULTIPLICADOR`;
+    elCombo.classList.toggle('combo-max', tutorial.racha >= 5);
   }
-  const elRachaMeta = $('tut-racha-meta');
-  if (elRachaMeta) {
-    elRachaMeta.textContent = tutorial.meta || 5;
+
+  // Breakdown del último tiro
+  const elBreakdown = $('tut-breakdown');
+  if (elBreakdown) {
+    if (tutorial.ultimoPuntaje) {
+      const u = tutorial.ultimoPuntaje;
+      if (u.ok) {
+        elBreakdown.innerHTML = `Último impacto: <b>+${u.base} pts</b> × ${u.mult} (Racha) = <b style="color:var(--ok)">+${u.total} pts</b>`;
+      } else {
+        elBreakdown.innerHTML = `<span style="color:#f87171">Gesto fuera de rango · Multiplicador reiniciado a 1x</span>`;
+      }
+    } else {
+      elBreakdown.textContent = 'Pegá un golpe para iniciar el drill y activar multiplicadores.';
+    }
   }
 
   const btnSig = $('tut-btn-siguiente');
   const badgeEstado = $('tut-estado-paso');
-  if (tutorial.completados >= tutorial.meta) {
+  if (pts >= meta) {
     badgeEstado.className = 'badge badge-ok';
     badgeEstado.textContent = '¡Paso completado! 🎉';
     btnSig.disabled = (p >= 3);
@@ -2825,17 +2870,26 @@ function procesarTutorial(e) {
 
   if (res.ok) {
     tutorial.racha++;
-    if (tutorial.completados < tutorial.meta) {
-      tutorial.completados++;
-    }
-    if (tutorial.completados === tutorial.meta) {
-      if (tabActiva === 'tutorial') decir('¡Felicitaciones! Paso completado.');
+    const mult = Math.min(5, tutorial.racha);
+    const scoreBase = e.score && e.score.total ? Math.max(35, e.score.total) : 80;
+    const ptsGanados = scoreBase * mult;
+    const yaCompleto = tutorial.puntos >= tutorial.metaPts;
+    tutorial.puntos = Math.min(tutorial.metaPts, tutorial.puntos + ptsGanados);
+    tutorial.ultimoPuntaje = {
+      ok: true,
+      base: scoreBase,
+      mult: mult,
+      total: ptsGanados,
+    };
+    if (tutorial.puntos >= tutorial.metaPts && !yaCompleto) {
+      if (tabActiva === 'tutorial') decir('¡Felicitaciones! Objetivo de 500 puntos completado.');
     } else {
       if (tabActiva === 'tutorial') decir(res.msg);
     }
   } else {
     const teniaRacha = tutorial.racha > 0;
     tutorial.racha = 0;
+    tutorial.ultimoPuntaje = { ok: false };
     if (tabActiva === 'tutorial') decir(res.msg);
     if (teniaRacha) {
       const elPips = $('tut-pips');
@@ -2854,8 +2908,9 @@ $('tut-selector-golpe').addEventListener('click', (ev) => {
   $('tut-selector-golpe').querySelectorAll('.chip-btn').forEach((b) => b.classList.remove('activo'));
   btn.classList.add('activo');
   tutorial.golpe = btn.getAttribute('data-golpe');
-  tutorial.completados = 0;
+  tutorial.puntos = 0;
   tutorial.racha = 0;
+  tutorial.ultimoPuntaje = null;
   $('tut-feedback').textContent = 'Pegá un golpe para iniciar el desafío del tutorial.';
   $('tut-feedback').classList.remove('ok');
   actualizarUITutorial();
@@ -2867,16 +2922,18 @@ $('tut-selector-paso').addEventListener('click', (ev) => {
   $('tut-selector-paso').querySelectorAll('.chip-btn').forEach((b) => b.classList.remove('activo'));
   btn.classList.add('activo');
   tutorial.paso = parseInt(btn.getAttribute('data-paso'), 10);
-  tutorial.completados = 0;
+  tutorial.puntos = 0;
   tutorial.racha = 0;
+  tutorial.ultimoPuntaje = null;
   $('tut-feedback').textContent = 'Pegá un golpe para iniciar el desafío del tutorial.';
   $('tut-feedback').classList.remove('ok');
   actualizarUITutorial();
 });
 
 $('tut-btn-reiniciar').addEventListener('click', () => {
-  tutorial.completados = 0;
+  tutorial.puntos = 0;
   tutorial.racha = 0;
+  tutorial.ultimoPuntaje = null;
   $('tut-feedback').textContent = 'Paso reiniciado. ¡A tirar de nuevo!';
   $('tut-feedback').classList.remove('ok');
   actualizarUITutorial();
@@ -2885,8 +2942,9 @@ $('tut-btn-reiniciar').addEventListener('click', () => {
 $('tut-btn-siguiente').addEventListener('click', () => {
   if (tutorial.paso < 3) {
     tutorial.paso++;
-    tutorial.completados = 0;
+    tutorial.puntos = 0;
     tutorial.racha = 0;
+    tutorial.ultimoPuntaje = null;
     $('tut-selector-paso').querySelectorAll('.chip-btn').forEach((b) => {
       b.classList.toggle('activo', parseInt(b.getAttribute('data-paso'), 10) === tutorial.paso);
     });
