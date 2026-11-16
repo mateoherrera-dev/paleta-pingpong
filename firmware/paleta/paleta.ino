@@ -69,6 +69,7 @@ const float CALIBRAR_GIRO_QUIETA_DPS = 5;  // si alguna muestra se aleja más qu
 // provisorio del 16/10 (dupont colgando) los swings llegaban a 1,02 g y se usaba 1,5.
 // Revisarlo con herramientas/ver.py --umbral si cambia el montaje.
 const float UMBRAL_JERK_G = 1.0f;
+const float UMBRAL_SWING_DPS = 240.0f;
 const uint32_t REFRACTARIO_US = 300000;  // después de un impacto, ignorar 300 ms
 
 // Falsos positivos (tirones del cable, roces con la mesa o la mano): su Jerk se superpone con el de
@@ -117,7 +118,9 @@ uint32_t usAngulo = 0;         // cuánto tardó angulo_en_impacto()
 // BLE: mismo servicio y característica que espera la app (app/index.html, filtro por nombre "Paleta")
 const char *NOMBRE_BLE = "Paleta";
 const char *UUID_SERVICIO = "6e400001-b5a3-f393-e0a9-e50e24dcca9e";
+const char *UUID_RX = "6e400002-b5a3-f393-e0a9-e50e24dcca9e";
 const char *UUID_NOTIFY = "6e400003-b5a3-f393-e0a9-e50e24dcca9e";
+volatile bool modoJuego = false;
 
 // Evento de golpe (docs/CONTRATOS.md, sección 5): 20 bytes, little-endian (el ESP32 ya lo es).
 // Los primeros 14 son los de siempre; el cuaternión va al final para que una app que lea 14 siga andando.
@@ -176,11 +179,14 @@ class AlConectar : public BLEServerCallbacks {
     if (usadas < MAX_CONEXIONES) BLEDevice::startAdvertising();  // NimBLE deja de anunciar al conectarse
   }
   void onDisconnect(BLEServer *s, ble_gap_conn_desc *conexion) override {
+    int usadas = 0;
     portENTER_CRITICAL(&muxConexiones);
     for (Conexion &c : conexiones) {
       if (c.usada && c.id == conexion->conn_handle) c.usada = false;
+      usadas += c.usada;
     }
     portEXIT_CRITICAL(&muxConexiones);
+    if (usadas == 0) modoJuego = false;
     BLEDevice::startAdvertising();
     Serial.println("# BLE: se desconectó uno; anunciando");
   }
@@ -195,6 +201,21 @@ class AlSuscribirse : public BLECharacteristicCallbacks {
     portEXIT_CRITICAL(&muxConexiones);
     Serial.printf("# BLE: la conexión %u %s a los golpes\n", conexion->conn_handle,
                   (valor & 1) ? "se suscribió" : "se desuscribió");
+  }
+};
+
+class AlEscribirRX : public BLECharacteristicCallbacks {
+  void onWrite(BLECharacteristic *car) override {
+    auto val = car->getValue();
+    if (val.length() == 0) return;
+    uint8_t cmd = (uint8_t)val[0];
+    if (cmd == 0x01) {
+      modoJuego = true;
+      Serial.println("# BLE: modoJuego = true");
+    } else if (cmd == 0x00) {
+      modoJuego = false;
+      Serial.println("# BLE: modoJuego = false");
+    }
   }
 };
 
@@ -361,6 +382,9 @@ void iniciarBLE() {
   caracteristica = servicio->createCharacteristic(UUID_NOTIFY, BLECharacteristic::PROPERTY_NOTIFY);
   caracteristica->setCallbacks(new AlSuscribirse());
   caracteristica->addDescriptor(new BLE2902());  // lo que escribe el celular para suscribirse
+  BLECharacteristic *carRX = servicio->createCharacteristic(
+      UUID_RX, BLECharacteristic::PROPERTY_WRITE | BLECharacteristic::PROPERTY_WRITE_NR);
+  carRX->setCallbacks(new AlEscribirRX());
   servicio->start();
   BLEAdvertising *anuncio = BLEDevice::getAdvertising();
   anuncio->addServiceUUID(UUID_SERVICIO);
@@ -542,19 +566,31 @@ void loop() {
   angulo_actualizar(ax, ay, az, gx, gy, gz);  // Madgwick en cada muestra (angulo.cpp de Mateo)
 
   int impacto = 0;
-  if (hayAnterior) {
-    float dx = ax - axAnterior, dy = ay - ayAnterior, dz = az - azAnterior;
-    float jerk = sqrtf(dx * dx + dy * dy + dz * dz);
-    // un impacto en los primeros 200 ms no tiene de dónde sacar el pico de giro: se ignora
-    if (jerk > UMBRAL_JERK_G && ahora - ultimoImpacto > REFRACTARIO_US && muestras > PICO_ANTES + 2) {
-      impacto = 1;
-      ultimoImpacto = ahora;
-      muestraImpacto = muestras;
-      golpePendiente = true;
-      uint32_t t0 = micros();
-      anguloImpacto = angulo_en_impacto();  // justo después de procesar la muestra del impacto
-      usAngulo = micros() - t0;  // tiene que ser bastante menos que 1000 µs: si no, se pierden muestras de la ventana
+  bool disparar = false;
+  if (!modoJuego) {
+    if (hayAnterior) {
+      float dx = ax - axAnterior, dy = ay - ayAnterior, dz = az - azAnterior;
+      float jerk = sqrtf(dx * dx + dy * dy + dz * dz);
+      // un impacto en los primeros 200 ms no tiene de dónde sacar el pico de giro: se ignora
+      if (jerk > UMBRAL_JERK_G && ahora - ultimoImpacto > REFRACTARIO_US && muestras > PICO_ANTES + 2) {
+        disparar = true;
+      }
     }
+  } else if (muestras > PICO_ANTES + 4 && ahora - ultimoImpacto > REFRACTARIO_US) {
+    float wAct = omegaSuave(muestras - 2);
+    float wAnt = omegaSuave(muestras - 3);
+    if (wAnt > UMBRAL_SWING_DPS && wAct < wAnt) {
+      disparar = true;
+    }
+  }
+  if (disparar) {
+    impacto = 1;
+    ultimoImpacto = ahora;
+    muestraImpacto = muestras;
+    golpePendiente = true;
+    uint32_t t0 = micros();
+    anguloImpacto = angulo_en_impacto();  // justo después de procesar la muestra del impacto
+    usAngulo = micros() - t0;  // tiene que ser bastante menos que 1000 µs: si no, se pierden muestras de la ventana
   }
   axAnterior = ax;
   ayAnterior = ay;
