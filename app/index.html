@@ -2450,6 +2450,10 @@
     color: #ffffff;
     border-color: rgba(255, 255, 255, 0.25);
   }
+  .setup-mode-btn:active,
+  .setup-pill-btn:active {
+    transform: scale(0.98);
+  }
   .setup-mode-btn.active {
     background: rgba(255, 119, 0, 0.14);
     border-color: var(--accent);
@@ -2514,6 +2518,9 @@
     justify-content: space-between;
     gap: 12px;
   }
+  .partido-controls button {
+    white-space: nowrap;
+  }
   .partido-racha-bar-wrap {
     display: flex;
     align-items: center;
@@ -2552,7 +2559,6 @@
     border-radius: var(--radius-md);
     overflow: hidden;
     background: radial-gradient(ellipse 80% 60% at 50% 25%, rgba(30, 58, 138, 0.25) 0%, #070d18 85%);
-    border: 1px solid var(--line);
   }
   #canvas-partido {
     position: absolute;
