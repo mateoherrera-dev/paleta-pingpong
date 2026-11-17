@@ -6831,7 +6831,12 @@ const PartidoEngine = (() => {
           if (typeof h.timingMs === 'number' && !Number.isNaN(h.timingMs)) {
             stats[clave].timingFallas.push(h.timingMs);
           }
-        } else if (h.golpeEjecutado && h.golpeEjecutado !== clave) {
+        } else if (
+          h.resultado === 'Lado equivocado' ||
+          h.resultado === 'Golpe equivocado' ||
+          (h.golpeEsperado && h.golpeEjecutado && h.golpeEjecutado !== h.golpeEsperado) ||
+          (h.efectoEntrante === 'corte' && h.resultado === 'A la red' && h.golpeEjecutado && h.golpeEjecutado.startsWith('T') && typeof h.angulo === 'number' && h.angulo >= -18 && h.angulo <= 0)
+        ) {
           stats[clave].errTactico += 1;
         } else {
           stats[clave].errAngulo += 1;
@@ -6915,7 +6920,9 @@ const PartidoEngine = (() => {
     }
 
     // 3. Consigna accionable + rutina sugerida acorde a la causa real
-    let consigna = 'Excelente nivel: probá subir la dificultad en el próximo set.';
+    let consigna = state.dificultad === 'pro'
+      ? 'Excelente nivel en Pro: mantené esa consistencia en todos los golpes.'
+      : 'Excelente nivel: probá subir la dificultad en el próximo set.';
     let rutinaSugerida = null;
     let rutinaLabel = '';
     if (causaPrincipal === 'timing' || (errores['Tarde'] || 0) + (errores['Anticipado'] || 0) >= 2) {
