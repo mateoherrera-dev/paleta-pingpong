@@ -6754,7 +6754,7 @@ const PartidoEngine = (() => {
     state.playerSwingMs = performance.now();
     state.playerSwingAng = angDeg ?? -15;
 
-    const bolaCorta = Boolean(esCorto && !desenlaceBot);
+    const bolaCorta = Boolean(esCorto && (!desenlaceBot || desenlaceBot === 'winner_corto'));
     state.bola.x0 = startX;
     state.bola.z0 = startZ;
     state.bola.y0 = startY;
@@ -7313,10 +7313,14 @@ const PartidoEngine = (() => {
         // Chop defensivo ante topspin: absorbe el ataque sin chance de winner directo (0%)
         desenlaceBot = null;
       } else if (esEmpuje) {
-        // Empuje es seguro pero rara vez gana el punto directo (riesgo/recompensa)
-        const probEmpuje = Math.min(0.06, 0.02 + cfg.botError * 0.25);
-        if (Math.random() < probEmpuje) {
-          desenlaceBot = Math.random() < 0.35 ? 'winner' : 'bot_red';
+        // Empuje es seguro con minima chance de error, salvo dejada corta sorpresa con el bot atras
+        if (empujeCorto && state.botZ >= 0.95 && Math.random() < 0.10) {
+          desenlaceBot = 'winner_corto';
+        } else {
+          const probEmpuje = Math.min(0.06, 0.02 + cfg.botError * 0.25);
+          if (Math.random() < probEmpuje) {
+            desenlaceBot = Math.random() < 0.35 ? 'winner' : 'bot_red';
+          }
         }
       } else {
         let probFalloBot = 0;
@@ -7555,8 +7559,9 @@ const PartidoEngine = (() => {
         state.piqueFX = { x: b.x, z: b.z, t0: ahora };
         sonarPique(0.15);
       }
-      const targetBotX = b.desenlaceBot === 'winner' ? (b.x > 0 ? -0.5 : 0.5) : b.x;
-      const targetBotZ = (b.z1 < 0.85 && b.desenlaceBot !== 'winner') ? (b.z1 + 0.04) : 1.03;
+      const esWin = b.desenlaceBot === 'winner' || b.desenlaceBot === 'winner_corto';
+      const targetBotX = esWin ? (b.x > 0 ? -0.5 : 0.5) : b.x;
+      const targetBotZ = (b.z1 < 0.85 && !esWin) ? (b.z1 + 0.04) : 1.03;
       state.botX += (targetBotX - state.botX) * 0.14;
       state.botZ += (targetBotZ - state.botZ) * 0.16;
 
@@ -7566,7 +7571,9 @@ const PartidoEngine = (() => {
       }
 
       if (t >= 1) {
-        if (b.desenlaceBot === 'winner') {
+        if (b.desenlaceBot === 'winner_corto') {
+          finalizarPunto(true, '¡Dejada corta!', 'DOC Bot no llegó desde el fondo.', 'Excelente cambio de ritmo cerca de la red.', 'winner');
+        } else if (b.desenlaceBot === 'winner') {
           finalizarPunto(true, '¡Winner!', 'DOC Bot no llegó a tu tiro.', 'Excelente velocidad y colocación al fondo.', 'winner');
         } else if (b.desenlaceBot === 'bot_red') {
           lanzarFalloBot('bot_red');
