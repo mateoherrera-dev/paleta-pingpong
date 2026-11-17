@@ -7011,20 +7011,17 @@ const PartidoEngine = (() => {
       ctx.fillText('¡AHORA!', p.x, p.y - rTarget - 12);
     }
 
-    // Pill compacto en esquina superior izquierda:
-    // - Rutinas de racha: 1 línea con la acción esperada (sin mencionar efecto rival)
-    // - Partido/Multibola: "VIENE: <EFECTO>" (sin CORTO/LARGO); pista de respuesta solo en Principiante
-    const esRev = state.bola.ladoObjetivo === 'R';
-    const ladoLabel = esRev ? '◀ REVÉS' : 'DERECHA ▶';
+    // Pill ultra limpio en esquina superior izquierda (el lado lo muestran mesa, anillo y paleta):
+    // - Rutinas de racha: acción pedida (EMPUJE / TOPSPIN)
+    // - Partido/Multibola: VIENE <EFECTO>; pista de respuesta solo en Principiante
     let tituloPill = '';
     let golpeSug = '';
 
     if (esEstricto) {
-      const accion = movEsp.startsWith('E') ? 'EMPUJE' : 'TOPSPIN';
-      tituloPill = `${ladoLabel} · ${accion}`;
+      tituloPill = movEsp.startsWith('E') ? 'EMPUJE' : 'TOPSPIN';
     } else {
       const efCorto = state.bola.efecto === 'corte' ? 'CORTE' : state.bola.efecto === 'topspin' ? 'TOPSPIN' : 'NEUTRA';
-      tituloPill = `VIENE ${efCorto} · ${ladoLabel}`;
+      tituloPill = `VIENE ${efCorto}`;
       if (state.dificultad === 'principiante') {
         golpeSug = state.bola.efecto === 'corte'
           ? (state.bola.profundidad === 'corto' ? 'EMPUJE (cerca de la red)' : 'EMPUJE o TOPSPIN rápido')
@@ -7035,7 +7032,7 @@ const PartidoEngine = (() => {
     }
 
     const tieneSub = Boolean(golpeSug);
-    const bannerW = Math.min(cssW * 0.62, tieneSub ? 286 : 268);
+    const bannerW = Math.min(cssW * 0.52, tieneSub ? 256 : 188);
     const bannerH = tieneSub ? 52 : 36;
     const bx = 14;
     const by = 14;
