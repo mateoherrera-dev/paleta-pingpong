@@ -2271,9 +2271,9 @@
     max-width: 980px;
     width: 100%;
     margin: clamp(8px, 2.5vh, 24px) auto;
-    background: rgba(12, 21, 39, 0.92);
+    background: var(--surface-stage);
     border: 1px solid var(--line);
-    border-top: 1px solid rgba(255, 255, 255, 0.16);
+    border-top: 1px solid var(--line-strong);
     border-radius: var(--radius-lg);
     box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
     padding: clamp(22px, 3vw, 34px);
@@ -2293,7 +2293,7 @@
     gap: 20px;
   }
   .setup-guide {
-    background: rgba(7, 13, 24, 0.62);
+    background: rgba(8, 9, 13, 0.65);
     border: 1px solid var(--line);
     border-radius: var(--radius-md);
     padding: 18px 20px;
@@ -2432,7 +2432,7 @@
     gap: 4px;
     padding: 12px 14px;
     border-radius: var(--radius-md);
-    background: rgba(7, 13, 24, 0.72);
+    background: rgba(8, 9, 13, 0.68);
     border: 1px solid var(--line);
     color: var(--fg-muted);
     text-align: left;
@@ -2478,7 +2478,7 @@
   .setup-pill-btn {
     flex: 1;
     min-width: 72px;
-    background: rgba(7, 13, 24, 0.72);
+    background: rgba(8, 9, 13, 0.68);
     border: 1px solid var(--line);
     color: var(--fg-muted);
     font-size: 0.84rem;
@@ -2510,6 +2510,7 @@
   .partido-stage {
     justify-content: space-between;
     gap: 12px;
+    background-image: none;
   }
   .partido-controls button {
     white-space: nowrap;
@@ -2551,7 +2552,7 @@
     height: clamp(420px, 66vh, 620px);
     border-radius: var(--radius-md);
     overflow: hidden;
-    background: #070d18;
+    background: var(--bg);
   }
   #canvas-partido {
     position: absolute;
