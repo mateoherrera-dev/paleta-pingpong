@@ -6109,6 +6109,7 @@ const PartidoEngine = (() => {
     tImpactoOptimo: 0,
     piqueReproducido: false,
     botX: 0,
+    botZ: 1.03,
     botSwingMs: 0,
     playerX: 0.35,
     playerZ: 0.02,
@@ -7469,6 +7470,7 @@ const PartidoEngine = (() => {
 
     if (state.fase === 'SERVE_WAIT') {
       state.botX += (0 - state.botX) * 0.08;
+      state.botZ += (1.03 - state.botZ) * 0.08;
       state.playerX += (0 - state.playerX) * 0.12;
       state.playerZ += (0.02 - state.playerZ) * 0.12;
       if (state.saque === 'bot' && dt >= state.faseDuracion) {
@@ -7507,6 +7509,7 @@ const PartidoEngine = (() => {
         sonarPique(0.16);
       }
       state.botX += (b.x * 0.35 - state.botX) * 0.08;
+      state.botZ += (1.03 - state.botZ) * 0.06;
       state.playerX += (b.x1 - state.playerX) * 0.18;
       const targetPlayerZ = (b.efecto === 'corte' && b.profundidad === 'corto') ? 0.20 : 0.02;
       state.playerZ += (targetPlayerZ - state.playerZ) * 0.18;
@@ -7553,7 +7556,9 @@ const PartidoEngine = (() => {
         sonarPique(0.15);
       }
       const targetBotX = b.desenlaceBot === 'winner' ? (b.x > 0 ? -0.5 : 0.5) : b.x;
+      const targetBotZ = (b.z1 < 0.85 && b.desenlaceBot !== 'winner') ? (b.z1 + 0.04) : 1.03;
       state.botX += (targetBotX - state.botX) * 0.14;
+      state.botZ += (targetBotZ - state.botZ) * 0.16;
 
       if (!prefiereMenosMovimiento()) {
         state.trail.push({ x: b.x, z: b.z, y: b.y });
@@ -7717,7 +7722,7 @@ const PartidoEngine = (() => {
   }
 
   function dibujarPaletaBot(ahora) {
-    const p = proyectar(state.botX, 1.03, 0.18);
+    const p = proyectar(state.botX, state.botZ, 0.18);
     const swing = Math.max(0, 1 - (ahora - state.botSwingMs) / 220);
     const rX = 20 * p.scale;
     const rY = 23 * p.scale;
