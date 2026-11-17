@@ -2630,10 +2630,10 @@
         <!-- Selectores Compactos -->
         <div class="tut-selectors-strip">
           <div class="chip-group" id="tut-selector-golpe">
-            <button class="chip-btn activo" data-golpe="TD" type="button">Topspin Der.</button>
             <button class="chip-btn" data-golpe="TR" type="button">Topspin Rev.</button>
-            <button class="chip-btn" data-golpe="ED" type="button">Empuje Der.</button>
             <button class="chip-btn" data-golpe="ER" type="button">Empuje Rev.</button>
+            <button class="chip-btn activo" data-golpe="TD" type="button">Topspin Der.</button>
+            <button class="chip-btn" data-golpe="ED" type="button">Empuje Der.</button>
           </div>
           <div class="chip-group" id="tut-selector-paso">
             <button class="chip-btn activo" data-paso="1" type="button">1. Ángulo</button>
@@ -2739,10 +2739,10 @@
         <!-- Configuración de la Tanda -->
         <div class="benchmark-config-strip">
           <div class="chip-group" id="test-selector-golpe">
-            <button class="chip-btn activo" data-golpe="TD" type="button">Topspin Der.</button>
             <button class="chip-btn" data-golpe="TR" type="button">Topspin Rev.</button>
-            <button class="chip-btn" data-golpe="ED" type="button">Empuje Der.</button>
             <button class="chip-btn" data-golpe="ER" type="button">Empuje Rev.</button>
+            <button class="chip-btn activo" data-golpe="TD" type="button">Topspin Der.</button>
+            <button class="chip-btn" data-golpe="ED" type="button">Empuje Der.</button>
           </div>
           <div class="tanda-select-wrap">
             <select id="test-cant-tiros" class="select-clean">
@@ -6595,10 +6595,10 @@ const PartidoEngine = (() => {
   function simularTeclaGolpe(clave) {
     const k = String(clave).toUpperCase();
     const mapa = {
-      '1': { tipo: 0, ang: -15, vel: 35 },
-      '2': { tipo: 1, ang: -15, vel: 32 },
-      '3': { tipo: 2, ang: 35,  vel: 16 },
-      '4': { tipo: 3, ang: 35,  vel: 16 },
+      '1': { tipo: 1, ang: -15, vel: 32 }, // Topspin Revés (izquierda)
+      '2': { tipo: 3, ang: 35,  vel: 16 }, // Empuje Revés (izquierda)
+      '9': { tipo: 0, ang: -15, vel: 35 }, // Topspin Derecha (derecha)
+      '0': { tipo: 2, ang: 35,  vel: 16 }, // Empuje Derecha (derecha)
       'A': { tipo: state.bola.ladoObjetivo === 'R' ? 1 : 0, ang: -50, vel: 26 },
       'D': {
         tipo: state.bola.efecto === 'corte'
@@ -6648,7 +6648,7 @@ const PartidoEngine = (() => {
       return true;
     }
     if (state.pausado) return false;
-    if (['1', '2', '3', '4', 'a', 'A', 'd', 'D'].includes(key)) {
+    if (['1', '2', '9', '0', 'a', 'A', 'd', 'D'].includes(key)) {
       return simularTeclaGolpe(key);
     }
     return false;
