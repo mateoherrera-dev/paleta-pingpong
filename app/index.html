@@ -2114,11 +2114,9 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 10px;
-    padding: 8px 12px;
-    background: rgba(7, 13, 24, 0.55);
-    border: 1px solid var(--line);
-    border-radius: var(--radius-md);
+    gap: 14px;
+    padding: 2px 4px 12px;
+    border-bottom: 1px solid var(--line);
     flex-wrap: wrap;
   }
   .partido-score-players {
@@ -2132,10 +2130,10 @@
     gap: 10px;
   }
   .partido-player-name {
-    font-size: 0.85rem;
+    font-size: 0.82rem;
     font-weight: 700;
     color: var(--fg-muted);
-    letter-spacing: 0.04em;
+    letter-spacing: 0.05em;
     text-transform: uppercase;
     display: flex;
     align-items: center;
@@ -2161,11 +2159,11 @@
   .partido-pts {
     font-family: var(--font-mono);
     font-variant-numeric: tabular-nums;
-    font-size: 1.85rem;
+    font-size: 2.05rem;
     font-weight: 800;
     line-height: 1;
     color: #ffffff;
-    min-width: 2ch;
+    min-width: 1.5ch;
     text-align: center;
   }
   .partido-vs {
@@ -2174,24 +2172,25 @@
     color: var(--fg-muted);
     letter-spacing: 0.08em;
   }
+  .partido-meta-center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    text-align: center;
+  }
   .partido-rutina-badge {
     font-size: 0.78rem;
     font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
     color: var(--accent);
-    background: rgba(255, 119, 0, 0.12);
-    border: 1px solid rgba(255, 119, 0, 0.35);
-    padding: 5px 12px;
-    border-radius: var(--radius-pill);
     white-space: nowrap;
   }
   .partido-set-info {
-    font-size: 0.80rem;
-    font-weight: 700;
+    font-size: 0.78rem;
+    font-weight: 600;
     color: var(--fg-muted);
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid var(--line);
-    padding: 5px 12px;
-    border-radius: var(--radius-pill);
     white-space: nowrap;
   }
   .partido-controls {
@@ -3398,8 +3397,10 @@
             </div>
           </div>
 
-          <span class="partido-rutina-badge" id="partido-rutina-badge">Partido libre</span>
-          <span class="partido-set-info" id="partido-set-info">Set a 5 · Club</span>
+          <div class="partido-meta-center">
+            <span class="partido-rutina-badge" id="partido-rutina-badge">Partido libre</span>
+            <span class="partido-set-info" id="partido-set-info">Set a 5 · Club</span>
+          </div>
 
           <div class="partido-controls">
             <button id="btn-partido-config" class="btn-sec" type="button" style="padding:7px 12px;">Configurar</button>
