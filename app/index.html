@@ -2092,6 +2092,31 @@
     color: var(--fg-muted);
     line-height: 1.35;
   }
+  .setup-rules {
+    background: rgba(7, 13, 24, 0.55);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    padding: 8px 12px;
+    font-size: 0.78rem;
+    color: var(--fg-muted);
+  }
+  .setup-rules summary {
+    cursor: pointer;
+    font-weight: 700;
+    color: var(--fg);
+    user-select: none;
+  }
+  .setup-rules ul {
+    margin: 8px 0 2px;
+    padding-left: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    line-height: 1.38;
+  }
+  .setup-rules strong {
+    color: #ffffff;
+  }
   .setup-pills {
     display: flex;
     flex-wrap: wrap;
@@ -2867,6 +2892,16 @@
           <button type="button" class="setup-pill-btn partido-diff-btn" data-diff="pro">Pro</button>
         </div>
       </div>
+
+      <details class="setup-rules">
+        <summary>Cómo funciona cada golpe y efecto</summary>
+        <ul>
+          <li><strong>Neutra:</strong> elegís <strong>Topspin</strong> (-25° a -5°, más chance de punto) o <strong>Empuje</strong> (+25° a +45°, ventana más amplia).</li>
+          <li><strong>Corte largo vs corto:</strong> si pica lejos podés empujar o abrir con <strong>Topspin rápido</strong> (≥28 km/h, -18° a 0°). Si pica corto cerca de la red, solo <strong>Empuje</strong> (11–16 km/h lo deja corto).</li>
+          <li><strong>Topspin rival:</strong> respondés con <strong>Topspin</strong> o con <strong>Chop defensivo</strong> firme (≥18 km/h, +25° a +38°).</li>
+          <li><strong>Bola alta:</strong> empujar muy abierto (&gt;43°) o muy lento (&lt;11 km/h) regala la pelota para que el bot remate.</li>
+        </ul>
+      </details>
 
       <div class="setup-footer">
         <label class="doc-voice-toggle">
