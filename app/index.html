@@ -5351,6 +5351,7 @@ const PartidoEngine = (() => {
     ultimoGolpeJugador: null,
     ultimaCalidadAlta: false,
     dejoBolaAlta: false,
+    dejoCorto: false,
     historialSet: [],
     angleFX: null, // { ang, rango: [min, max], ok, t0, dur }
     ptsVos: 0,
@@ -5801,6 +5802,7 @@ const PartidoEngine = (() => {
     state.ultimoGolpeJugador = null;
     state.ultimaCalidadAlta = false;
     state.dejoBolaAlta = false;
+    state.dejoCorto = false;
     state.historialSet = [];
     state.angleFX = null;
     state.saque = calcularSaqueActual();
@@ -5832,6 +5834,7 @@ const PartidoEngine = (() => {
     state.ultimoGolpeJugador = null;
     state.ultimaCalidadAlta = false;
     state.dejoBolaAlta = false;
+    state.dejoCorto = false;
     state.rallyActual = 0;
     state.trail = [];
     state.piqueFX = null;
@@ -5896,7 +5899,11 @@ const PartidoEngine = (() => {
       const ult = state.ultimoGolpeJugador;
       if (state.dejoBolaAlta) {
         state.dejoBolaAlta = false;
+        state.dejoCorto = false;
         efecto = r < 0.85 ? 'topspin' : 'neutra';
+      } else if (state.dejoCorto) {
+        state.dejoCorto = false;
+        efecto = r < 0.80 ? 'corte' : 'neutra';
       } else if (desdeSaque || !ult) {
         efecto = r < 0.55 ? 'corte' : 'neutra';
       } else if (ult.startsWith('E')) {
@@ -5977,7 +5984,7 @@ const PartidoEngine = (() => {
     }
   }
 
-  function lanzarBolaHaciaBot(velKmh, efecto, angDeg, desenlaceBot, desdeVuelo = false) {
+  function lanzarBolaHaciaBot(velKmh, efecto, angDeg, desenlaceBot, desdeVuelo = false, esCorto = false) {
     const velClamp = Math.max(12, Math.min(60, velKmh || 26));
     const dur = Math.round(1250 - ((velClamp - 12) / 48) * 620);
 
@@ -5993,13 +6000,14 @@ const PartidoEngine = (() => {
     state.playerSwingMs = performance.now();
     state.playerSwingAng = angDeg ?? -15;
 
+    const bolaCorta = Boolean(esCorto && !desenlaceBot);
     state.bola.x0 = startX;
     state.bola.z0 = startZ;
     state.bola.y0 = startY;
     state.bola.x1 = (Math.random() * 1.1) - 0.55;
-    state.bola.z1 = 0.96;
+    state.bola.z1 = bolaCorta ? 0.72 : 0.96;
     state.bola.y1 = 0.24;
-    state.bola.zPique = 0.72;
+    state.bola.zPique = bolaCorta ? 0.60 : 0.72;
     state.bola.efecto = efecto;
     state.bola.desenlaceBot = desenlaceBot; // null | 'winner' | 'bot_red' | 'bot_larga'
     state.bola.seraWinner = Boolean(desenlaceBot);
@@ -6227,6 +6235,7 @@ const PartidoEngine = (() => {
     if (esRutinaRacha()) {
       state.rallyActual = 0;
       state.dejoBolaAlta = false;
+      state.dejoCorto = false;
       state.pasoDrill = 0;
       state.saque = 'bot';
       sonarPunto(false);
@@ -6477,9 +6486,11 @@ const PartidoEngine = (() => {
     const esPerfecto = Math.abs(deltaMs) <= cfg.perfectoMs;
     const calidadAlta = scoreArq >= 78 && Math.abs(deltaMs) <= cfg.perfectoMs * 1.4;
 
+    const empujeCorto = esEmpuje && vel >= 11 && vel <= 16 && ang <= 38;
     state.ultimoGolpeJugador = golpe;
     state.ultimaCalidadAlta = calidadAlta;
-    state.dejoBolaAlta = esEmpuje && (ang > 43 || vel < 14);
+    state.dejoBolaAlta = esEmpuje && (ang > 43 || vel < 11);
+    state.dejoCorto = empujeCorto;
     dispararAngleFX(enRangoOptimo);
     registrarHist('ok', ang, deltaMs);
 
@@ -6557,7 +6568,7 @@ const PartidoEngine = (() => {
     const fxSub = state.rallyActual >= 2 ? `Rally x${state.rallyActual} · ${vel} km/h` : `${vel} km/h`;
     const fxColor = esPerfecto ? '#10b981' : '#f59e0b';
     lanzarImpactFX(state.playerX, Math.max(0.05, state.bola.z), 0.24, fxTexto, fxSub, fxColor, esPerfecto);
-    lanzarBolaHaciaBot(vel, efectoSalida, ang, desenlaceBot, true);
+    lanzarBolaHaciaBot(vel, efectoSalida, ang, desenlaceBot, true, empujeCorto);
     if (esPerfecto) sonarPerfecto();
   }
 
