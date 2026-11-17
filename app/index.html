@@ -5352,6 +5352,7 @@ const PartidoEngine = (() => {
     ultimaCalidadAlta: false,
     dejoBolaAlta: false,
     dejoCorto: false,
+    dejoChop: false,
     historialSet: [],
     angleFX: null, // { ang, rango: [min, max], ok, t0, dur }
     ptsVos: 0,
@@ -5803,6 +5804,7 @@ const PartidoEngine = (() => {
     state.ultimaCalidadAlta = false;
     state.dejoBolaAlta = false;
     state.dejoCorto = false;
+    state.dejoChop = false;
     state.historialSet = [];
     state.angleFX = null;
     state.saque = calcularSaqueActual();
@@ -5835,6 +5837,7 @@ const PartidoEngine = (() => {
     state.ultimaCalidadAlta = false;
     state.dejoBolaAlta = false;
     state.dejoCorto = false;
+    state.dejoChop = false;
     state.rallyActual = 0;
     state.trail = [];
     state.piqueFX = null;
@@ -5900,10 +5903,15 @@ const PartidoEngine = (() => {
       if (state.dejoBolaAlta) {
         state.dejoBolaAlta = false;
         state.dejoCorto = false;
+        state.dejoChop = false;
         efecto = r < 0.85 ? 'topspin' : 'neutra';
       } else if (state.dejoCorto) {
         state.dejoCorto = false;
+        state.dejoChop = false;
         efecto = r < 0.80 ? 'corte' : 'neutra';
+      } else if (state.dejoChop) {
+        state.dejoChop = false;
+        efecto = r < 0.50 ? 'corte' : (r < 0.85 ? 'neutra' : 'topspin');
       } else if (desdeSaque || !ult) {
         efecto = r < 0.55 ? 'corte' : 'neutra';
       } else if (ult.startsWith('E')) {
@@ -6236,6 +6244,7 @@ const PartidoEngine = (() => {
       state.rallyActual = 0;
       state.dejoBolaAlta = false;
       state.dejoCorto = false;
+      state.dejoChop = false;
       state.pasoDrill = 0;
       state.saque = 'bot';
       sonarPunto(false);
@@ -6396,18 +6405,38 @@ const PartidoEngine = (() => {
 
     // 2. Validar compatibilidad golpe vs efecto entrante (ping-pong real + QTE)
     if (bolaEntrante === 'topspin' && esEmpuje) {
-      if (state.rutina === 'corte_ataque') state.pasoDrill = 0;
-      dispararAngleFX(false);
-      registrarHist('Se fue larga', ang, deltaMs);
-      lanzarFallo('larga', ang);
-      finalizarPunto(
-        false,
-        'Se fue larga',
-        `Empujaste con cara abierta (${ang}°) contra un topspin.`,
-        'Contra topspin rival usá Topspin con cara cerrada (-25° a -5°).',
-        'bad'
-      );
-      return;
+      const velChop = evento.vel || 22;
+      if (velChop < 18 || ang > 38) {
+        if (state.rutina === 'corte_ataque') state.pasoDrill = 0;
+        dispararAngleFX(false);
+        registrarHist('Se fue larga', ang, deltaMs);
+        lanzarFallo('larga', ang);
+        const motivo = velChop < 18
+          ? `Faltó velocidad de corte (${velChop} km/h) para frenar el topspin.`
+          : `Cara muy abierta ante topspin (${ang}°).`;
+        finalizarPunto(
+          false,
+          'Se fue larga',
+          motivo,
+          'Para chop defensivo ante topspin: tajada firme (≥18 km/h) y cara entre +25° y +38°, o respondé con Topspin.',
+          'bad'
+        );
+        return;
+      }
+      if (ang < 15) {
+        if (state.rutina === 'corte_ataque') state.pasoDrill = 0;
+        dispararAngleFX(false);
+        registrarHist('A la red', ang, deltaMs);
+        lanzarFallo('red', ang);
+        finalizarPunto(
+          false,
+          'A la red',
+          `Ángulo muy cerrado (${ang}°) para cortar un topspin.`,
+          'Abrí la cara entre +25° y +38° con tajada firme (≥18 km/h).',
+          'bad'
+        );
+        return;
+      }
     }
 
     if (bolaEntrante === 'corte' && esTopspin) {
@@ -6482,15 +6511,19 @@ const PartidoEngine = (() => {
     const vel = evento.vel || 22;
     const scoreArq = typeof evento.score === 'number' ? evento.score : 65;
     const scoreNorm = Math.max(0, Math.min(1, scoreArq / 100));
-    const enRangoOptimo = esTopspin ? (ang >= -25 && ang <= -5) : (ang >= 25 && ang <= 45);
+    const esChopDefensivo = bolaEntrante === 'topspin' && esEmpuje;
+    const enRangoOptimo = esChopDefensivo
+      ? (ang >= 25 && ang <= 38)
+      : (esTopspin ? (ang >= -25 && ang <= -5) : (ang >= 25 && ang <= 45));
     const esPerfecto = Math.abs(deltaMs) <= cfg.perfectoMs;
     const calidadAlta = scoreArq >= 78 && Math.abs(deltaMs) <= cfg.perfectoMs * 1.4;
 
-    const empujeCorto = esEmpuje && vel >= 11 && vel <= 16 && ang <= 38;
+    const empujeCorto = !esChopDefensivo && esEmpuje && vel >= 11 && vel <= 16 && ang <= 38;
     state.ultimoGolpeJugador = golpe;
     state.ultimaCalidadAlta = calidadAlta;
-    state.dejoBolaAlta = esEmpuje && (ang > 43 || vel < 11);
+    state.dejoBolaAlta = !esChopDefensivo && esEmpuje && (ang > 43 || vel < 11);
     state.dejoCorto = empujeCorto;
+    state.dejoChop = esChopDefensivo;
     dispararAngleFX(enRangoOptimo);
     registrarHist('ok', ang, deltaMs);
 
@@ -6530,7 +6563,10 @@ const PartidoEngine = (() => {
     // Solo en Partido libre el bot puede fallar (en rutinas de racha o multibola se sostiene el peloteo)
     let desenlaceBot = null;
     if (state.rutina === 'libre') {
-      if (esEmpuje) {
+      if (esChopDefensivo) {
+        // Chop defensivo ante topspin: absorbe el ataque sin chance de winner directo (0%)
+        desenlaceBot = null;
+      } else if (esEmpuje) {
         // Empuje es seguro pero rara vez gana el punto directo (riesgo/recompensa)
         const probEmpuje = Math.min(0.06, 0.02 + cfg.botError * 0.25);
         if (Math.random() < probEmpuje) {
@@ -7037,7 +7073,7 @@ const PartidoEngine = (() => {
         golpeSug = state.bola.efecto === 'corte'
           ? (state.bola.profundidad === 'corto' ? 'EMPUJE (cerca de la red)' : 'EMPUJE o TOPSPIN rápido')
           : state.bola.efecto === 'topspin'
-            ? 'TOPSPIN (cara cerrada)'
+            ? 'TOPSPIN o CHOP firme (≥18 km/h)'
             : 'EMPUJE o TOPSPIN';
       }
     }
