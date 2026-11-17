@@ -5307,6 +5307,7 @@ const PartidoEngine = (() => {
   };
 
   function obtenerMovimientoEsperado() {
+    if (!esRutinaRacha()) return null;
     const lado = state.bola.ladoObjetivo || 'D';
     const pref = state.bola.efecto === 'corte' ? 'E' : 'T';
     return pref + lado;
@@ -6039,14 +6040,17 @@ const PartidoEngine = (() => {
     const stats = {};
     const errores = {};
     hist.forEach((h) => {
-      const clave = h.golpeEsperado || h.golpeEjecutado;
+      if (h.resultado !== 'ok') {
+        errores[h.resultado] = (errores[h.resultado] || 0) + 1;
+      }
+      const ejValido = ['TD', 'TR', 'ED', 'ER'].includes(h.golpeEjecutado) ? h.golpeEjecutado : null;
+      const clave = h.golpeEsperado || ejValido;
       if (!clave || clave === '??') return;
       if (!stats[clave]) stats[clave] = { total: 0, ok: 0, angs: [], timings: [], timingFallas: [], errAngulo: 0, errTiming: 0, errTactico: 0 };
       stats[clave].total += 1;
       if (h.resultado === 'ok') {
         stats[clave].ok += 1;
       } else {
-        errores[h.resultado] = (errores[h.resultado] || 0) + 1;
         if (h.resultado === 'Tarde' || h.resultado === 'Anticipado') {
           stats[clave].errTiming += 1;
           if (typeof h.timingMs === 'number' && !Number.isNaN(h.timingMs)) {
@@ -6295,7 +6299,7 @@ const PartidoEngine = (() => {
       state.historialSet.push({
         efectoEntrante: state.bola.efecto,
         lado: state.bola.ladoObjetivo,
-        golpeEjecutado: golpe,
+        golpeEjecutado: golpe === '??' ? null : golpe,
         golpeEsperado: golpeEsp,
         angulo: anguloVal,
         timingMs: timingVal,
@@ -6351,6 +6355,22 @@ const PartidoEngine = (() => {
     const dispararAngleFX = (ok) => {
       state.angleFX = { ang, rango: rangoIdeal, ok, t0: performance.now(), dur: 600 };
     };
+
+    // 1b. En rutinas por racha (QTE estricto), exige el golpe exacto marcado por la consigna
+    if (golpeEsp && golpe !== golpeEsp) {
+      if (state.rutina === 'corte_ataque') state.pasoDrill = 0;
+      dispararAngleFX(false);
+      registrarHist('Golpe equivocado', ang, deltaMs);
+      lanzarFallo(esEmpuje ? 'larga' : 'red', ang);
+      finalizarPunto(
+        false,
+        'Golpe equivocado',
+        `La rutina pedía ${GOLPES[golpeEsp] || golpeEsp} y ejecutaste ${golpeStr}.`,
+        `En esta rutina respondé con ${GOLPES[golpeEsp] || golpeEsp}.`,
+        'bad'
+      );
+      return;
+    }
 
     // 2. Validar compatibilidad golpe vs efecto entrante (ping-pong real + QTE)
     if (bolaEntrante === 'topspin' && esEmpuje) {
@@ -6697,7 +6717,7 @@ const PartidoEngine = (() => {
         state.historialSet.push({
           efectoEntrante: b.efecto,
           lado: b.ladoObjetivo,
-          golpeEjecutado: '??',
+          golpeEjecutado: null,
           golpeEsperado: obtenerMovimientoEsperado(),
           angulo: null,
           timingMs: Math.round(ahora - state.tImpactoOptimo),
@@ -6830,7 +6850,10 @@ const PartidoEngine = (() => {
       const mTR = proyectar(xB, 0.5, 0);
       const mBR = proyectar(xB, 0, 0);
       const mBL = proyectar(xA, 0, 0);
-      const colSide = COLORES_MOVIMIENTO[obtenerMovimientoEsperado()] || '#ff7700';
+      const movEsp = obtenerMovimientoEsperado();
+      const colSide = movEsp
+        ? (COLORES_MOVIMIENTO[movEsp] || '#ff7700')
+        : (COLORES_EFECTO[state.bola.efecto] || '#e2e8f0');
       ctx.save();
       ctx.globalAlpha = 0.14;
       ctx.fillStyle = colSide;
@@ -6950,9 +6973,17 @@ const PartidoEngine = (() => {
       ctx.fill();
     }
 
-    // Iluminación del borde del campo según el color del movimiento esperado
+    // Codificación visual híbrida:
+    // - Rutinas de racha (estricto): color del golpe exigido
+    // - Partido / Multibola (lectura libre): borde y pill por efecto entrante; anillo neutro o bicolor si hay doble opción
     const movEsp = obtenerMovimientoEsperado();
-    const colMov = COLORES_MOVIMIENTO[movEsp] || COLORES_EFECTO[state.bola.efecto] || '#ff7700';
+    const esEstricto = Boolean(movEsp);
+    const dobleOpcion = !esEstricto && (
+      state.bola.efecto === 'neutra' ||
+      (state.bola.efecto === 'corte' && state.bola.profundidad === 'largo')
+    );
+    const colEf = COLORES_EFECTO[state.bola.efecto] || '#e2e8f0';
+    const colMov = esEstricto ? (COLORES_MOVIMIENTO[movEsp] || colEf) : colEf;
     ctx.save();
     ctx.strokeStyle = esPerfecto ? '#10b981' : colMov;
     ctx.globalAlpha = esPerfecto ? 0.55 : 0.34;
@@ -6961,11 +6992,27 @@ const PartidoEngine = (() => {
     ctx.restore();
 
     // Anillo que se contrae
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, rOuter, 0, Math.PI * 2);
-    ctx.strokeStyle = esPerfecto ? '#10b981' : (enVentana ? '#f59e0b' : colMov);
     ctx.lineWidth = 2.5;
-    ctx.stroke();
+    if (esPerfecto || enVentana) {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, rOuter, 0, Math.PI * 2);
+      ctx.strokeStyle = esPerfecto ? '#10b981' : '#f59e0b';
+      ctx.stroke();
+    } else if (dobleOpcion) {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, rOuter, -Math.PI * 0.5, Math.PI * 0.5);
+      ctx.strokeStyle = '#ff7700';
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, rOuter, Math.PI * 0.5, Math.PI * 1.5);
+      ctx.strokeStyle = '#38bdf8';
+      ctx.stroke();
+    } else {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, rOuter, 0, Math.PI * 2);
+      ctx.strokeStyle = esEstricto ? colMov : '#e2e8f0';
+      ctx.stroke();
+    }
 
     if (esPerfecto) {
       ctx.fillStyle = '#10b981';
@@ -6980,11 +7027,13 @@ const PartidoEngine = (() => {
       ? (state.bola.profundidad === 'corto' ? 'CORTE CORTO' : 'CORTE LARGO')
       : state.bola.efecto === 'topspin' ? 'TOPSPIN' : 'NEUTRA';
     const ladoLabel = state.bola.ladoObjetivo === 'R' ? '◀ REVÉS' : 'DERECHA ▶';
-    const golpeSug = state.bola.efecto === 'corte'
-      ? (state.bola.profundidad === 'corto' ? 'EMPUJE (cerca de la red)' : 'EMPUJE o TOPSPIN rápido')
-      : state.bola.efecto === 'topspin'
-        ? 'TOPSPIN (cara cerrada)'
-        : 'TOPSPIN o EMPUJE';
+    const golpeSug = esEstricto
+      ? (movEsp.startsWith('E') ? 'SOLO EMPUJE (cara abierta)' : 'SOLO TOPSPIN (cara cerrada)')
+      : state.bola.efecto === 'corte'
+        ? (state.bola.profundidad === 'corto' ? 'EMPUJE (cerca de la red)' : 'Lectura libre: EMPUJE o TOPSPIN')
+        : state.bola.efecto === 'topspin'
+          ? 'TOPSPIN (cara cerrada)'
+          : 'Lectura libre: EMPUJE o TOPSPIN';
 
     const bannerW = Math.min(cssW * 0.56, 276);
     const bannerH = 52;
