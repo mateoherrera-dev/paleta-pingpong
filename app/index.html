@@ -6143,11 +6143,11 @@ const PartidoEngine = (() => {
       consigna = 'Consigna: probá "Multibola" para estabilizar el ritmo y anticipar el swing apenas pica la pelota.';
       rutinaSugerida = 'multibola';
       rutinaLabel = 'Multibola';
-    } else if (peorGolpe === 'TR' || peorGolpe === 'ER') {
+    } else if (causaPrincipal !== 'ok' && (peorGolpe === 'TR' || peorGolpe === 'ER')) {
       consigna = 'Consigna: activá "Foco: Revés" o "Transición D ↔ R" para corregir la lectura y postura del revés.';
       rutinaSugerida = 'foco_r';
       rutinaLabel = 'Foco: Revés';
-    } else if (peorGolpe === 'TD' || peorGolpe === 'ED') {
+    } else if (causaPrincipal !== 'ok' && (peorGolpe === 'TD' || peorGolpe === 'ED')) {
       consigna = 'Consigna: activá "Foco: Derecha" o "Corte → Ataque" para fijar el golpe de derecha.';
       rutinaSugerida = 'foco_d';
       rutinaLabel = 'Foco: Derecha';
