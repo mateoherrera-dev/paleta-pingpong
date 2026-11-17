@@ -5313,6 +5313,15 @@ const PartidoEngine = (() => {
     return pref + lado;
   }
 
+  function obtenerColorVisualBola() {
+    const movEsp = obtenerMovimientoEsperado();
+    if (movEsp) return COLORES_MOVIMIENTO[movEsp] || '#ff7700';
+    const lado = state.bola.ladoObjetivo || 'D';
+    if (state.bola.efecto === 'topspin') return COLORES_MOVIMIENTO['T' + lado];
+    if (state.bola.efecto === 'corte') return COLORES_MOVIMIENTO['E' + lado];
+    return '#e2e8f0';
+  }
+
   let nSimPartido = 9000;
   let rafId = null;
   let resizeObs = null;
@@ -5891,11 +5900,11 @@ const PartidoEngine = (() => {
       } else if (desdeSaque || !ult) {
         efecto = r < 0.55 ? 'corte' : 'neutra';
       } else if (ult.startsWith('E')) {
-        efecto = r < 0.70 ? 'corte' : (r < 0.90 ? 'topspin' : 'neutra');
+        efecto = r < 0.55 ? 'corte' : (r < 0.80 ? 'topspin' : 'neutra');
       } else {
-        // Tras TD o TR: incluye defensa chopper (30% corte largo) ante calidad alta
+        // Tras TD o TR: mezcla bloqueo, contra-topspin y corte para evitar bucles
         if (state.ultimaCalidadAlta) {
-          if (r < 0.30) {
+          if (r < 0.35) {
             efecto = 'corte';
             forzarCorteLargo = true;
           } else if (r < 0.75) {
@@ -5904,7 +5913,7 @@ const PartidoEngine = (() => {
             efecto = 'topspin';
           }
         } else {
-          efecto = r < 0.85 ? 'topspin' : 'neutra';
+          efecto = r < 0.45 ? 'topspin' : (r < 0.75 ? 'neutra' : 'corte');
         }
       }
 
@@ -6850,10 +6859,7 @@ const PartidoEngine = (() => {
       const mTR = proyectar(xB, 0.5, 0);
       const mBR = proyectar(xB, 0, 0);
       const mBL = proyectar(xA, 0, 0);
-      const movEsp = obtenerMovimientoEsperado();
-      const colSide = movEsp
-        ? (COLORES_MOVIMIENTO[movEsp] || '#ff7700')
-        : (COLORES_EFECTO[state.bola.efecto] || '#e2e8f0');
+      const colSide = obtenerColorVisualBola();
       ctx.save();
       ctx.globalAlpha = 0.14;
       ctx.fillStyle = colSide;
@@ -6973,17 +6979,12 @@ const PartidoEngine = (() => {
       ctx.fill();
     }
 
-    // Codificación visual híbrida:
-    // - Rutinas de racha (estricto): color del golpe exigido
-    // - Partido / Multibola (lectura libre): borde y pill por efecto entrante; anillo neutro o bicolor si hay doble opción
+    // Codificación visual híbrida sin anillos partidos:
+    // - Borde, mesa y pill conservan color distinto entre Derecha y Revés
+    // - En Partido/Multibola el anillo que se contrae es blanco neutro (solo marca timing)
     const movEsp = obtenerMovimientoEsperado();
     const esEstricto = Boolean(movEsp);
-    const dobleOpcion = !esEstricto && (
-      state.bola.efecto === 'neutra' ||
-      (state.bola.efecto === 'corte' && state.bola.profundidad === 'largo')
-    );
-    const colEf = COLORES_EFECTO[state.bola.efecto] || '#e2e8f0';
-    const colMov = esEstricto ? (COLORES_MOVIMIENTO[movEsp] || colEf) : colEf;
+    const colMov = obtenerColorVisualBola();
     ctx.save();
     ctx.strokeStyle = esPerfecto ? '#10b981' : colMov;
     ctx.globalAlpha = esPerfecto ? 0.55 : 0.34;
@@ -6991,28 +6992,12 @@ const PartidoEngine = (() => {
     ctx.strokeRect(3, 3, cssW - 6, cssH - 6);
     ctx.restore();
 
-    // Anillo que se contrae
+    // Anillo que se contrae (siempre unicolor limpio)
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, rOuter, 0, Math.PI * 2);
+    ctx.strokeStyle = esPerfecto ? '#10b981' : (enVentana ? '#f59e0b' : (esEstricto ? colMov : '#e2e8f0'));
     ctx.lineWidth = 2.5;
-    if (esPerfecto || enVentana) {
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, rOuter, 0, Math.PI * 2);
-      ctx.strokeStyle = esPerfecto ? '#10b981' : '#f59e0b';
-      ctx.stroke();
-    } else if (dobleOpcion) {
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, rOuter, -Math.PI * 0.5, Math.PI * 0.5);
-      ctx.strokeStyle = '#ff7700';
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, rOuter, Math.PI * 0.5, Math.PI * 1.5);
-      ctx.strokeStyle = '#38bdf8';
-      ctx.stroke();
-    } else {
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, rOuter, 0, Math.PI * 2);
-      ctx.strokeStyle = esEstricto ? colMov : '#e2e8f0';
-      ctx.stroke();
-    }
+    ctx.stroke();
 
     if (esPerfecto) {
       ctx.fillStyle = '#10b981';
