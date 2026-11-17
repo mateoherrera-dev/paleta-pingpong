@@ -7007,21 +7007,32 @@ const PartidoEngine = (() => {
       ctx.fillText('¡AHORA!', p.x, p.y - rTarget - 12);
     }
 
-    // Pill compacto en esquina superior izquierda (no tapa al rival en el centro)
-    const efLabel = state.bola.efecto === 'corte'
-      ? (state.bola.profundidad === 'corto' ? 'CORTE CORTO' : 'CORTE LARGO')
-      : state.bola.efecto === 'topspin' ? 'TOPSPIN' : 'NEUTRA';
-    const ladoLabel = state.bola.ladoObjetivo === 'R' ? '◀ REVÉS' : 'DERECHA ▶';
-    const golpeSug = esEstricto
-      ? (movEsp.startsWith('E') ? 'SOLO EMPUJE (cara abierta)' : 'SOLO TOPSPIN (cara cerrada)')
-      : state.bola.efecto === 'corte'
-        ? (state.bola.profundidad === 'corto' ? 'EMPUJE (cerca de la red)' : 'Lectura libre: EMPUJE o TOPSPIN')
-        : state.bola.efecto === 'topspin'
-          ? 'TOPSPIN (cara cerrada)'
-          : 'Lectura libre: EMPUJE o TOPSPIN';
+    // Pill compacto en esquina superior izquierda:
+    // - Rutinas de racha: 1 línea con la acción esperada (sin mencionar efecto rival)
+    // - Partido/Multibola: "VIENE: <EFECTO>" (sin CORTO/LARGO); pista de respuesta solo en Principiante
+    const esRev = state.bola.ladoObjetivo === 'R';
+    const ladoLabel = esRev ? '◀ REVÉS' : 'DERECHA ▶';
+    let tituloPill = '';
+    let golpeSug = '';
 
-    const bannerW = Math.min(cssW * 0.56, 276);
-    const bannerH = 52;
+    if (esEstricto) {
+      const accion = movEsp.startsWith('E') ? 'EMPUJE' : 'TOPSPIN';
+      tituloPill = `${ladoLabel} · ${accion}`;
+    } else {
+      const efCorto = state.bola.efecto === 'corte' ? 'CORTE' : state.bola.efecto === 'topspin' ? 'TOPSPIN' : 'NEUTRA';
+      tituloPill = esRev ? `◀ VIENE: ${efCorto}` : `VIENE: ${efCorto} ▶`;
+      if (state.dificultad === 'principiante') {
+        golpeSug = state.bola.efecto === 'corte'
+          ? (state.bola.profundidad === 'corto' ? 'EMPUJE (cerca de la red)' : 'EMPUJE o TOPSPIN rápido')
+          : state.bola.efecto === 'topspin'
+            ? 'TOPSPIN (cara cerrada)'
+            : 'EMPUJE o TOPSPIN';
+      }
+    }
+
+    const tieneSub = Boolean(golpeSug);
+    const bannerW = Math.min(cssW * 0.54, tieneSub ? 268 : 228);
+    const bannerH = tieneSub ? 52 : 36;
     const bx = 14;
     const by = 14;
 
@@ -7036,20 +7047,23 @@ const PartidoEngine = (() => {
     ctx.stroke();
 
     // Punto de color del movimiento
+    const cyTop = tieneSub ? by + 18 : by + bannerH * 0.5;
     ctx.beginPath();
-    ctx.arc(bx + 15, by + 18, 5.5, 0, Math.PI * 2);
+    ctx.arc(bx + 15, cyTop, 5.5, 0, Math.PI * 2);
     ctx.fillStyle = colMov;
     ctx.fill();
 
     ctx.fillStyle = '#ffffff';
-    ctx.font = '900 15.5px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+    ctx.font = '900 15px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
     ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
-    ctx.fillText(`${efLabel} · ${ladoLabel}`, bx + 27, by + 18);
+    ctx.fillText(tituloPill, bx + 27, cyTop);
 
-    ctx.fillStyle = colMov;
-    ctx.font = '700 11.5px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
-    ctx.fillText(golpeSug, bx + 15, by + 38);
+    if (tieneSub) {
+      ctx.fillStyle = colMov;
+      ctx.font = '700 11.5px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+      ctx.fillText(golpeSug, bx + 15, by + 38);
+    }
     ctx.restore();
   }
 
