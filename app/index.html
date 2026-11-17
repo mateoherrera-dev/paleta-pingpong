@@ -6707,8 +6707,10 @@ const PartidoEngine = (() => {
     state.trail = [];
     state.botSwingMs = performance.now();
 
+    const zOrigen = (!desdeSaque && state.bola.z1 >= 0.65) ? Math.min(0.95, state.bola.z1) : 0.95;
+
     state.bola.x0 = x0;
-    state.bola.z0 = 0.95;
+    state.bola.z0 = zOrigen;
     state.bola.y0 = 0.24;
     state.bola.x1 = x1;
     state.bola.z1 = esCorto ? 0.24 : 0.04;
@@ -7535,7 +7537,8 @@ const PartidoEngine = (() => {
       const b = state.bola;
       b.x = b.x0 + (b.x1 - b.x0) * t;
       b.z = b.z0 + (b.z1 - b.z0) * t;
-      const tPique = 0.65;
+      const tPiqueCalc = (b.zPique - b.z0) / Math.max(0.1, b.z1 - b.z0);
+      const tPique = Math.max(0.45, Math.min(0.85, tPiqueCalc));
       if (t <= tPique) {
         const u = t / tPique;
         b.y = b.y0 * (1 - u) + Math.sin(u * Math.PI) * 0.34;
