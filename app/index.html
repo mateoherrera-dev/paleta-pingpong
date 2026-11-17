@@ -5966,11 +5966,15 @@ const PartidoEngine = (() => {
     state.playerCara = lado === 'D' ? 'negra' : 'roja';
     sonarGolpePaleta(0.20);
 
-    const vozEf = efecto === 'corte'
-      ? (profundidad === 'corto' ? 'Corte corto' : 'Corte largo')
-      : efecto === 'topspin' ? 'Topspin' : 'Neutra';
     const vozLado = lado === 'R' ? 'al revés' : 'a la derecha';
-    hablarPartido(`${vozEf} ${vozLado}`);
+    const movVoz = obtenerMovimientoEsperado();
+    if (movVoz) {
+      const accVoz = movVoz.startsWith('E') ? 'Empuje' : 'Topspin';
+      hablarPartido(`${accVoz} de ${lado === 'R' ? 'revés' : 'derecha'}`);
+    } else {
+      const vozEf = efecto === 'corte' ? 'Corte' : efecto === 'topspin' ? 'Topspin' : 'Neutra';
+      hablarPartido(`${vozEf} ${vozLado}`);
+    }
   }
 
   function lanzarBolaHaciaBot(velKmh, efecto, angDeg, desenlaceBot, desdeVuelo = false) {
@@ -7020,7 +7024,7 @@ const PartidoEngine = (() => {
       tituloPill = `${ladoLabel} · ${accion}`;
     } else {
       const efCorto = state.bola.efecto === 'corte' ? 'CORTE' : state.bola.efecto === 'topspin' ? 'TOPSPIN' : 'NEUTRA';
-      tituloPill = esRev ? `◀ VIENE: ${efCorto}` : `VIENE: ${efCorto} ▶`;
+      tituloPill = `VIENE ${efCorto} · ${ladoLabel}`;
       if (state.dificultad === 'principiante') {
         golpeSug = state.bola.efecto === 'corte'
           ? (state.bola.profundidad === 'corto' ? 'EMPUJE (cerca de la red)' : 'EMPUJE o TOPSPIN rápido')
@@ -7031,7 +7035,7 @@ const PartidoEngine = (() => {
     }
 
     const tieneSub = Boolean(golpeSug);
-    const bannerW = Math.min(cssW * 0.54, tieneSub ? 268 : 228);
+    const bannerW = Math.min(cssW * 0.62, tieneSub ? 286 : 268);
     const bannerH = tieneSub ? 52 : 36;
     const bx = 14;
     const by = 14;
