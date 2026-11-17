@@ -5,23 +5,29 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>DOC · Find your edge | Paleta Smart IMU</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%23ff7700'/%3E%3Ctext x='32' y='36' font-family='Arial Black,Impact,sans-serif' font-weight='900' font-size='20' fill='%23111111' text-anchor='middle' letter-spacing='-1'%3EDOC%3C/text%3E%3Ctext x='32' y='46' font-size='7' fill='%23111111' text-anchor='middle' font-weight='bold'%3E%E2%98%85%E2%98%85%E2%98%85%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700;800&family=Outfit:wght@500;600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <style>
   :root {
-    --bg: #070d18;
-    --card: #0c1527;
-    --card-hover: #121e36;
-    --card-soft: rgba(30, 58, 138, 0.08);
+    --bg: #08090d;
+    --surface-stage: rgba(14, 16, 23, 0.92);
+    --surface-panel: rgba(10, 12, 18, 0.95);
+    --card: #0f121a;
+    --card-hover: #151a25;
+    --card-soft: rgba(255, 119, 0, 0.06);
     --fg: #f8fafc;
     --fg-muted: #94a3b8;
     --muted: #94a3b8;
-    --line: rgba(255, 255, 255, 0.09);
+    --line: rgba(255, 255, 255, 0.08);
+    --line-strong: rgba(255, 255, 255, 0.14);
     --line-active: rgba(255, 119, 0, 0.55);
     --accent: #ff7700;
-    --accent-glow: rgba(255, 119, 0, 0.35);
+    --accent-glow: rgba(255, 119, 0, 0.32);
     --accent-soft: rgba(255, 119, 0, 0.12);
     --court-blue: #1e3a8a;
-    --court-glow: rgba(37, 99, 235, 0.22);
+    --court-glow: rgba(255, 119, 0, 0.14);
     --ok: #10b981;
     --ok-glow: rgba(16, 185, 129, 0.28);
     --ok-soft: rgba(16, 185, 129, 0.12);
@@ -33,10 +39,10 @@
     --rubber-black: #1e293b;
     --radius-sm: 8px;
     --radius-md: 12px;
-    --radius-lg: 18px;
+    --radius-lg: 16px;
     --radius-pill: 9999px;
-    --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
-    --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    --font: "Outfit", -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+    --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
     --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
     --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
     --dur-fast: 140ms;
@@ -51,25 +57,28 @@
     margin: 0;
     background: var(--bg);
     background-image:
-      radial-gradient(ellipse 75% 45% at 50% -5%, rgba(37, 99, 235, 0.16) 0%, transparent 65%),
-      radial-gradient(ellipse 55% 30% at 50% 20%, rgba(255, 119, 0, 0.05) 0%, transparent 60%);
+      radial-gradient(ellipse 75% 42% at 50% -6%, rgba(255, 119, 0, 0.11) 0%, transparent 62%),
+      radial-gradient(ellipse 50% 30% at 85% 95%, rgba(255, 119, 0, 0.04) 0%, transparent 60%),
+      linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px);
+    background-size: 100% 100%, 100% 100%, 48px 48px, 48px 48px;
     background-attachment: fixed;
     color: var(--fg);
     font: 15px/1.5 var(--font);
     letter-spacing: -0.01em;
-    min-height: 100vh;
+    min-height: 100dvh;
     display: flex;
     flex-direction: column;
   }
 
   main#app-main {
-    width: min(1200px, calc(100vw - 32px));
-    max-width: 1200px;
+    width: min(1240px, calc(100vw - 32px));
+    max-width: 1240px;
     margin: 0 auto;
-    padding: 14px 0 16px 0;
+    padding: 12px 0 18px 0;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 14px;
     flex: 1;
     min-height: 0;
     box-sizing: border-box;
@@ -91,27 +100,44 @@
     justify-content: space-between;
     align-items: center;
     gap: 12px;
-    padding: 10px 18px;
-    background: rgba(11, 17, 30, 0.82);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
-    border: 1px solid rgba(255, 255, 255, 0.10);
-    border-top: 1px solid rgba(255, 255, 255, 0.16);
-    border-radius: 16px;
+    padding: 8px 14px;
+    min-height: 56px;
+    background: rgba(12, 14, 20, 0.88);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--line);
+    border-top: 1px solid var(--line-strong);
+    border-radius: var(--radius-lg);
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
   }
 
   .app-bar-left {
     display: flex;
     align-items: center;
-    gap: 14px;
+    gap: 10px;
     flex-wrap: wrap;
   }
 
   .app-bar-right {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
+  }
+
+  .doc-mark-mini {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #090a0f;
+    font-weight: 900;
+    font-size: 0.62rem;
+    letter-spacing: -0.04em;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 14px rgba(255, 119, 0, 0.35);
+    flex-shrink: 0;
   }
 
   /* Botón Volver al Menú de Modos */
@@ -351,7 +377,7 @@
   /* --- Arquitectura Dual-Studio (Stage Visual + Panel Lateral Consolidado) --- */
   .studio-grid {
     display: grid;
-    grid-template-columns: minmax(340px, 1.25fr) minmax(320px, 1fr);
+    grid-template-columns: minmax(340px, 1.3fr) minmax(320px, 0.95fr);
     gap: 14px;
     align-items: stretch;
     flex: 1;
@@ -361,15 +387,16 @@
   .studio-stage {
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    background: rgba(11, 17, 30, 0.82);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
-    border: 1px solid rgba(255, 255, 255, 0.10);
-    border-top: 1px solid rgba(255, 255, 255, 0.16);
-    border-radius: 16px;
-    padding: 16px 18px;
-    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+    gap: 12px;
+    background: var(--surface-stage);
+    background-image: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255, 119, 0, 0.05), transparent 65%);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--line);
+    border-top: 1px solid var(--line-strong);
+    border-radius: var(--radius-lg);
+    padding: 18px 20px;
+    box-shadow: 0 18px 44px rgba(0, 0, 0, 0.48);
     height: 100%;
     min-height: 0;
     box-sizing: border-box;
@@ -378,15 +405,15 @@
   .studio-panel {
     display: flex;
     flex-direction: column;
-    gap: 14px;
-    background: rgba(11, 17, 30, 0.82);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
-    border: 1px solid rgba(255, 255, 255, 0.10);
-    border-top: 1px solid rgba(255, 255, 255, 0.16);
-    border-radius: 16px;
-    padding: 16px 18px;
-    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+    gap: 16px;
+    background: var(--surface-panel);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--line);
+    border-top: 1px solid var(--line-strong);
+    border-radius: var(--radius-lg);
+    padding: 18px 20px;
+    box-shadow: 0 18px 44px rgba(0, 0, 0, 0.48);
     height: 100%;
     min-height: 0;
     box-sizing: border-box;
@@ -395,14 +422,14 @@
 
   /* --- Modo Tutorial: Espaciado Generoso y Centrado --- */
   #card-tutorial {
-    max-height: 540px;
+    min-height: min(600px, calc(100dvh - 110px));
     margin: auto 0;
     width: 100%;
   }
   #card-tutorial .studio-stage {
     justify-content: space-between;
-    padding: 22px 24px;
-    gap: 16px;
+    padding: 24px 26px;
+    gap: 18px;
   }
   #card-tutorial .tut-selectors-strip {
     gap: 10px;
@@ -413,24 +440,25 @@
     flex-direction: column;
     justify-content: center;
     gap: 14px;
-    padding: 20px 22px;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 22px 24px;
+    background: rgba(255, 255, 255, 0.025);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--accent);
     border-radius: var(--radius-md);
   }
   #card-tutorial .challenge-consigna {
-    font-size: 0.98rem;
+    font-size: 1rem;
     line-height: 1.5;
     color: #ffffff;
   }
   #card-tutorial .challenge-count {
-    font-size: 1.35rem;
+    font-size: 1.4rem;
     color: var(--accent);
   }
   #card-tutorial .barra-progreso-wrap {
     height: 10px;
     border-radius: 5px;
-    margin: 6px 0;
+    margin: 4px 0;
     background: rgba(255, 255, 255, 0.08);
   }
   #card-tutorial .card-acciones {
@@ -442,50 +470,48 @@
   }
   #card-tutorial .studio-panel {
     justify-content: space-between;
-    padding: 22px 24px;
-    gap: 16px;
+    padding: 24px 24px;
+    gap: 18px;
   }
   #card-tutorial .doc-card {
     flex: 1;
     display: flex;
     flex-direction: column;
     justify-content: center;
-    padding: 22px 24px;
+    padding: 20px 22px;
     gap: 12px;
   }
   #card-tutorial .doc-bubble {
-    font-size: 0.94rem;
-    line-height: 1.5;
-  }
-  #card-tutorial .telemetry-grid {
-    gap: 10px;
-  }
-  #card-tutorial .telemetry-cell {
-    padding: 14px 12px;
+    font-size: 0.96rem;
+    line-height: 1.55;
   }
 
   /* --- Modo Benchmark: Espaciado Generoso y Centrado --- */
   #card-benchmark {
-    max-height: 540px;
+    min-height: min(600px, calc(100dvh - 110px));
     margin: auto 0;
     width: 100%;
   }
   #card-benchmark .studio-stage {
     justify-content: space-between;
-    padding: 22px 24px;
-    gap: 16px;
+    padding: 24px 26px;
+    gap: 18px;
   }
   #card-benchmark .benchmark-hud {
     flex: 1;
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 22px 24px;
+    flex-direction: column;
+    justify-content: center;
+    gap: 18px;
+    padding: 24px 26px;
+    background: rgba(255, 255, 255, 0.025);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
   }
   #card-benchmark .studio-panel {
-    justify-content: flex-start;
-    padding: 22px 24px;
-    gap: 16px;
+    justify-content: space-between;
+    padding: 24px 24px;
+    gap: 18px;
   }
 
   /* --- Responsive: Adaptación para Tablets y Celulares --- */
@@ -698,16 +724,24 @@
     position: relative;
     width: 100%;
     flex: 1;
-    min-height: 230px;
-    max-height: 480px;
-    border-radius: 14px;
-    background: radial-gradient(circle at 50% 40%, rgba(30, 64, 175, 0.22) 0%, rgba(12, 22, 42, 0.55) 45%, rgba(6, 11, 20, 0.96) 100%);
+    min-height: 240px;
+    max-height: 500px;
+    border-radius: var(--radius-md);
+    background:
+      radial-gradient(circle at 50% 42%, rgba(255, 119, 0, 0.08) 0%, rgba(16, 19, 28, 0.65) 48%, rgba(7, 8, 12, 0.98) 100%);
     overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 1px solid rgba(59, 130, 246, 0.18);
-    box-shadow: inset 0 0 35px rgba(0, 0, 0, 0.5);
+    border: 1px solid var(--line);
+    box-shadow: inset 0 0 42px rgba(0, 0, 0, 0.65);
+  }
+  .visor-reticle {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.38;
+    z-index: 1;
   }
   @media (max-width: 600px) {
     .visor-stage {
@@ -867,43 +901,57 @@
     color: rgba(255, 255, 255, 0.22);
   }
 
-  /* --- Instrumental de Métricas Consolidado (Grid 2x2 para Panel Lateral) --- */
+  .dot-rubber-black,
+  .dot-rubber-red {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    display: inline-block;
+    flex-shrink: 0;
+  }
+  .dot-rubber-black {
+    background: #1e293b;
+    border: 1.5px solid rgba(248, 250, 252, 0.55);
+  }
+  .dot-rubber-red {
+    background: #ef4444;
+    box-shadow: 0 0 8px rgba(239, 68, 68, 0.45);
+  }
+
+  /* --- Instrumental de Métricas Consolidado (Bloque Unificado 2x2 con Divisores) --- */
   .telemetry-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
-    background: transparent;
-    border: none;
-    box-shadow: none;
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    overflow: hidden;
   }
 
   .telemetry-cell {
-    padding: 12px 14px;
+    padding: 13px 15px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     text-align: left;
-    background: rgba(255, 255, 255, 0.025);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    border-radius: var(--radius-sm);
-    transition: background-color var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out);
+    background: #0b0d14;
+    transition: background-color var(--dur-fast) var(--ease-out);
     position: relative;
-    overflow: hidden;
   }
   .telemetry-cell:hover {
-    background: rgba(255, 255, 255, 0.045);
-    border-color: rgba(255, 255, 255, 0.12);
+    background: #10131d;
   }
   .telemetry-label {
-    font-size: 0.76rem;
-    font-weight: 800;
+    font-size: 0.72rem;
+    font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: #cbd5e1;
+    letter-spacing: 0.07em;
+    color: var(--fg-muted);
   }
   .telemetry-val {
-    font-size: 1.5rem;
-    font-weight: 900;
+    font-size: 1.55rem;
+    font-weight: 800;
     letter-spacing: -0.03em;
     font-family: var(--font-mono);
     font-variant-numeric: tabular-nums;
@@ -915,17 +963,123 @@
   }
   .telemetry-unit {
     font-size: 0.72rem;
-    font-weight: 700;
+    font-weight: 600;
     color: var(--fg-muted);
     font-family: var(--font);
   }
 
+  /* --- Tira de Resumen de Sesión (Modo Libre) --- */
+  .session-strip {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    padding: 9px 12px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    margin-top: 8px;
+  }
+  .session-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+  .session-stat-lbl {
+    font-size: 0.66rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--fg-muted);
+  }
+  .session-stat-val {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--fg);
+  }
+
+  /* --- Banda Visual de Rango (Tutorial) --- */
+  .tut-range-box {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding-top: 4px;
+  }
+  .tut-range-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--fg-muted);
+  }
+  .tut-range-track {
+    position: relative;
+    height: 8px;
+    border-radius: var(--radius-pill);
+    background: rgba(255, 255, 255, 0.07);
+    overflow: visible;
+  }
+  .tut-range-zone {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    border-radius: var(--radius-pill);
+    background: rgba(16, 185, 129, 0.35);
+    border: 1px solid rgba(16, 185, 129, 0.7);
+  }
+  .tut-range-marker {
+    position: absolute;
+    top: 50%;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 2px solid #090a0f;
+    box-shadow: 0 0 10px var(--accent-glow);
+    transform: translate(-50%, -50%);
+    transition: left 0.28s var(--ease-out), opacity 0.2s ease;
+    opacity: 0;
+  }
+  .tut-range-marker.visible {
+    opacity: 1;
+  }
+
+  /* --- Barra Segmentada (Benchmark) --- */
+  .test-seg-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 100%;
+  }
+  .test-seg-bar {
+    display: flex;
+    height: 10px;
+    width: 100%;
+    border-radius: var(--radius-pill);
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.07);
+    gap: 2px;
+  }
+  .test-seg-ok { background: var(--ok); transition: width 0.28s var(--ease-out); }
+  .test-seg-err { background: var(--bad); transition: width 0.28s var(--ease-out); }
+  .test-seg-ruido { background: var(--warn); transition: width 0.28s var(--ease-out); }
+  .test-seg-legend {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.72rem;
+    color: var(--fg-muted);
+    font-weight: 600;
+  }
+
   /* --- Tarjeta del Coach DOC --- */
   .doc-card {
-    background: linear-gradient(180deg, rgba(255, 119, 0, 0.05) 0%, rgba(12, 21, 38, 0.70) 100%);
-    border: 1px solid rgba(255, 119, 0, 0.22);
+    background: linear-gradient(135deg, rgba(255, 119, 0, 0.08) 0%, rgba(14, 16, 23, 0.92) 70%);
+    border: 1px solid rgba(255, 119, 0, 0.24);
+    border-left: 3px solid var(--accent);
     border-radius: var(--radius-md);
-    padding: 12px 14px;
+    padding: 13px 15px;
     display: flex;
     flex-direction: column;
     gap: 8px;
@@ -939,18 +1093,22 @@
   .doc-identity {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 9px;
   }
   .doc-avatar {
-    width: 24px;
-    height: 24px;
+    width: 28px;
+    height: 28px;
     border-radius: 50%;
-    background: rgba(255, 119, 0, 0.16);
+    background: var(--accent);
+    color: #090a0f;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.76rem;
-    border: 1px solid rgba(255, 119, 0, 0.40);
+    font-size: 0.60rem;
+    font-weight: 900;
+    letter-spacing: -0.04em;
+    box-shadow: 0 0 12px rgba(255, 119, 0, 0.35);
+    flex-shrink: 0;
   }
   .doc-name {
     font-weight: 800;
@@ -1627,18 +1785,43 @@
     z-index: 100;
     overflow: hidden;
     background:
-      /* Halo cenital suave de iluminacion sobre la pelota */
-      radial-gradient(ellipse 760px 480px at 50% 38%, rgba(255, 119, 0, 0.08), transparent 65%),
-      /* Penumbra de mesa deportiva en la base */
-      radial-gradient(ellipse 960px 220px at 50% 92%, rgba(15, 23, 42, 0.65), transparent 70%),
-      /* Degrade profundo de estadio deportivo */
-      linear-gradient(180deg, #070a12 0%, #0a0f1c 55%, #050811 100%);
+      /* Foco cenital neutro de estadio sobre la pelota y mesa */
+      radial-gradient(ellipse 820px 540px at 50% 36%, rgba(226, 232, 240, 0.12) 0%, rgba(148, 163, 184, 0.05) 45%, transparent 72%),
+      /* Halo superior de reflector blanco frío */
+      radial-gradient(ellipse 680px 260px at 50% 0%, rgba(241, 245, 249, 0.12), transparent 70%),
+      /* Reflejo suave de mesa iluminada en la base */
+      radial-gradient(ellipse 980px 300px at 50% 88%, rgba(30, 64, 120, 0.28), transparent 72%),
+      /* Degradé de estadio neutro */
+      linear-gradient(180deg, #0c101a 0%, #121826 52%, #080b12 100%);
     pointer-events: none;
     transition: opacity 0.3s ease;
     will-change: opacity;
   }
   #intro-stage.oculto {
     opacity: 0;
+  }
+  #intro-crowd {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+    pointer-events: none;
+    opacity: 0;
+    transform: translateZ(0);
+    will-change: opacity;
+  }
+  #intro-crowd-vignette {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0;
+    background:
+      /* Viñeta en esquinas superiores y bordes laterales sin tapar los reflectores centrales */
+      radial-gradient(ellipse 68% 58% at 50% 42%, transparent 34%, rgba(7, 10, 17, 0.58) 82%, rgba(5, 8, 14, 0.90) 100%),
+      /* Fade suave solo en la base detrás del Dock */
+      linear-gradient(180deg, transparent 0%, transparent 64%, rgba(6, 9, 15, 0.92) 96%);
+    will-change: opacity;
   }
   #canvas-intro {
     position: absolute;
@@ -1718,6 +1901,62 @@
     user-select: none;
   }
 
+  /* --- Barra Superior de la Intro (visible solo junto al Dock) --- */
+  .intro-top-bar {
+    position: absolute;
+    top: clamp(16px, 3vh, 28px);
+    left: 50%;
+    transform: translateX(-50%) translateY(-10px);
+    width: min(1100px, calc(100vw - 32px));
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    z-index: 10;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .intro-top-bar.visible {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+    pointer-events: auto;
+  }
+  .intro-ble-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: rgba(12, 15, 23, 0.78);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: var(--radius-pill);
+    color: var(--fg);
+    font-family: var(--font);
+    font-size: 0.78rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out);
+  }
+  .intro-ble-btn:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #090a0f;
+    box-shadow: 0 6px 20px rgba(255, 119, 0, 0.35);
+    transform: translateY(-1px);
+  }
+  .intro-ble-btn:hover .dot-status:not(.conectado) {
+    background: #090a0f;
+  }
+  .intro-ble-btn:active {
+    transform: scale(0.97);
+  }
+  .intro-ble-btn.conectado {
+    border-color: rgba(16, 185, 129, 0.45);
+    background: rgba(16, 185, 129, 0.12);
+  }
+
   /* --- DOCk Unificado de Selección de Modo (Pie de Página) --- */
   .intro-menu-hub {
     position: absolute;
@@ -1767,22 +2006,56 @@
     color: #ffffff;
     display: flex;
     flex-direction: column;
+    align-items: flex-start;
     gap: 4px;
     transition: background 0.16s ease, transform 0.16s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.16s ease;
     position: relative;
   }
-  .dock-segment:hover {
-    background: rgba(255, 255, 255, 0.06);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
-    transform: translateY(-2px);
+  .dock-segment:not(.dock-cta):hover,
+  .dock-segment:not(.dock-cta).active {
+    background: rgba(255, 255, 255, 0.08);
   }
-  .dock-segment.active {
-    background: rgba(255, 119, 0, 0.08);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3), inset 0 0 0 1px rgba(255, 119, 0, 0.35);
+  .dock-segment:not(.dock-cta):hover .segment-idx,
+  .dock-segment:not(.dock-cta).active .segment-idx {
+    color: #ff8c24;
+    text-shadow: 0 0 12px rgba(255, 119, 0, 0.45);
+  }
+  .dock-segment:not(.dock-cta):hover .segment-title,
+  .dock-segment:not(.dock-cta).active .segment-title {
+    color: #ffffff;
+  }
+  .dock-segment:not(.dock-cta):hover .segment-desc,
+  .dock-segment:not(.dock-cta).active .segment-desc {
+    color: rgba(248, 250, 252, 0.84);
+  }
+  .dock-segment.dock-cta {
+    flex: 1.42;
+    background: var(--accent);
+    color: #090a0f;
+    box-shadow: 0 8px 24px rgba(255, 119, 0, 0.34);
+  }
+  .dock-segment.dock-cta:hover,
+  .dock-segment.dock-cta.active {
+    background: #ff851a;
+    box-shadow: 0 10px 28px rgba(255, 119, 0, 0.46);
     transform: translateY(-2px);
   }
   .dock-segment:active {
     transform: translateY(0) scale(0.985);
+  }
+  .dock-cta-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    width: 100%;
+  }
+  .dock-cta-arrow {
+    flex-shrink: 0;
+    transition: transform 0.18s var(--ease-out);
+  }
+  .dock-segment.dock-cta:hover .dock-cta-arrow {
+    transform: translateX(3px);
   }
   .segment-idx {
     font-family: var(--font-mono);
@@ -1791,6 +2064,7 @@
     letter-spacing: 0.08em;
     color: var(--accent, #ff7700);
     margin-bottom: 2px;
+    transition: color 0.16s ease;
   }
   .segment-title {
     font-size: 0.95rem;
@@ -1799,9 +2073,10 @@
     color: rgba(248, 250, 252, 0.92);
     transition: color 0.16s ease;
   }
-  .dock-segment:hover .segment-title,
-  .dock-segment.active .segment-title {
-    color: #ffffff;
+  .dock-segment.dock-cta .segment-idx,
+  .dock-segment.dock-cta .segment-title {
+    color: #090a0f;
+    font-weight: 800;
   }
   .segment-desc {
     font-size: 0.72rem;
@@ -1809,15 +2084,15 @@
     line-height: 1.35;
     transition: color 0.16s ease;
   }
-  .dock-segment:hover .segment-desc,
-  .dock-segment.active .segment-desc {
-    color: rgba(248, 250, 252, 0.85);
+  .dock-segment.dock-cta .segment-desc {
+    color: rgba(9, 10, 15, 0.78);
+    font-weight: 600;
   }
   .dock-divider {
     width: 1px;
     align-self: stretch;
-    margin: 10px 0;
-    background: rgba(255, 255, 255, 0.08);
+    margin: 12px 0;
+    background: rgba(255, 255, 255, 0.05);
   }
 
   @media (max-width: 680px) {
@@ -2519,11 +2794,20 @@
 
 <!-- Entorno 3D de la Pelota y Landing -->
 <div id="intro-stage">
+  <canvas id="intro-crowd"></canvas>
+  <div id="intro-crowd-vignette"></div>
   <canvas id="canvas-intro"></canvas>
 </div>
 
 <!-- Overlay de Controles de Usuario -->
 <div id="stage-landing">
+  <div id="intro-top-bar" class="intro-top-bar">
+    <button id="intro-ble-btn" class="intro-ble-btn" type="button">
+      <span class="dot-status" id="intro-ble-dot"></span>
+      <span id="intro-ble-txt">Conectar paleta</span>
+    </button>
+  </div>
+
   <div id="intro-actions-wrap">
     <button id="btn-comenzar" type="button">
       <span>ENTRENAR</span>
@@ -2537,13 +2821,16 @@
   <!-- DOCk Unificado de Selección de Modo -->
   <div id="intro-menu-hub" class="intro-menu-hub">
     <div class="dock-container">
-      <button type="button" class="dock-segment" data-modo="libre">
-        <span class="segment-idx">01</span>
+      <button type="button" class="dock-segment dock-cta" data-modo="libre">
+        <div class="dock-cta-head">
+          <span class="segment-idx">01</span>
+          <svg class="dock-cta-arrow" viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3 8h10M9 4l4 4-4 4"/>
+          </svg>
+        </div>
         <div class="segment-title">Modo Libre</div>
         <div class="segment-desc">Telemetría y visor 3D en vivo</div>
       </button>
-
-      <div class="dock-divider" aria-hidden="true"></div>
 
       <button type="button" class="dock-segment" data-modo="tutorial">
         <span class="segment-idx">02</span>
@@ -2564,7 +2851,7 @@
       <button type="button" class="dock-segment" data-modo="partido">
         <span class="segment-idx">04</span>
         <div class="segment-title">Partido</div>
-        <div class="segment-desc">Partido simulado con QTE</div>
+        <div class="segment-desc">Partido simulado contra la IA</div>
       </button>
     </div>
   </div>
@@ -2575,20 +2862,24 @@
   <header class="app-bar">
     <div class="app-bar-left">
       <button id="btn-volver-intro" class="btn-volver" type="button" aria-label="Volver al menú de modos" title="Volver al menú de modos (Esc)">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M19 12H5M12 19l-7-7 7-7"/>
         </svg>
         <span>Menú</span>
       </button>
 
-      <div class="brand" id="brand-link" title="Volver al menú de modos">
+      <div class="brand" id="brand-link" title="Volver al menú de modos" style="gap:10px;">
+        <span class="doc-mark-mini" aria-hidden="true">DOC</span>
         <span class="brand-mode-title" id="modo-actual-badge">Modo Libre</span>
       </div>
     </div>
 
     <div class="app-bar-right">
       <div id="badge-compat-ble" class="badge-compat-ble" style="display:none;" title="Web Bluetooth no soportado en este navegador. Usá Chrome, Edge o Bluefy en iPhone.">
-        <span>⚠️ Sin Web BLE</span>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+        <span>Sin Web BLE</span>
       </div>
       <div class="connection-status">
         <span class="dot-status" id="dot-ble"></span>
@@ -2610,7 +2901,10 @@
       </div>
     </div>
     <div class="alerta-ble-acciones">
-      <button id="btn-reconectar-ble" class="btn-primary alerta-ble-btn" type="button">⚡ Reconectar</button>
+      <button id="btn-reconectar-ble" class="btn-primary alerta-ble-btn" type="button">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        <span>Reconectar</span>
+      </button>
       <button id="btn-cerrar-alerta-ble" class="alerta-ble-cerrar" type="button" aria-label="Cerrar aviso">✕</button>
     </div>
   </div>
@@ -2622,10 +2916,16 @@
       <section class="studio-stage">
         <div class="hero-strike-header">
           <div class="strike-title" id="golpe">Esperando golpe…</div>
+          <span class="strike-conf-badge" id="libre-estado-pill">En espera</span>
         </div>
 
-        <!-- Visor 3D Libre y Expansivo (Limpio y sin marcas de agua) -->
+        <!-- Visor 3D Libre y Expansivo (Limpio y con retícula óptica sutil) -->
         <div class="visor-stage">
+          <svg class="visor-reticle" viewBox="0 0 400 260" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+            <circle cx="200" cy="130" r="96" fill="none" stroke="rgba(255,255,255,0.14)" stroke-width="0.75" stroke-dasharray="3 5"/>
+            <line x1="200" y1="22" x2="200" y2="238" stroke="rgba(255,255,255,0.08)" stroke-width="0.75"/>
+            <line x1="60" y1="130" x2="340" y2="130" stroke="rgba(255,255,255,0.08)" stroke-width="0.75"/>
+          </svg>
           <div id="canvas3d-container"></div>
           <div class="visor-indicador" style="display:none;">
             <span id="visor-angulo">–°</span>
@@ -2635,9 +2935,9 @@
 
         <div class="agarre-banner">
           <span>Agarre de referencia:</span>
-          <span class="agarre-tag-negra">⚫ Negra (Derecha)</span>
+          <span class="agarre-tag-negra"><span class="dot-rubber-black" aria-hidden="true"></span>Negra (Derecha)</span>
           <span class="agarre-sep">·</span>
-          <span class="agarre-tag-roja">🔴 Roja (Revés)</span>
+          <span class="agarre-tag-roja"><span class="dot-rubber-red" aria-hidden="true"></span>Roja (Revés)</span>
         </div>
       </section>
 
@@ -2663,13 +2963,28 @@
               <div class="telemetry-val"><span id="score-pts" style="color:var(--accent)">–</span> <small class="telemetry-unit">/100</small></div>
             </div>
           </div>
+
+          <div class="session-strip" id="libre-session-strip" aria-label="Resumen de sesión">
+            <div class="session-stat">
+              <span class="session-stat-lbl">Golpes</span>
+              <span class="session-stat-val" id="libre-ses-total">0</span>
+            </div>
+            <div class="session-stat">
+              <span class="session-stat-lbl">Pico vel.</span>
+              <span class="session-stat-val" id="libre-ses-maxvel">–</span>
+            </div>
+            <div class="session-stat">
+              <span class="session-stat-lbl">Prom. score</span>
+              <span class="session-stat-val" id="libre-ses-avgscore">–</span>
+            </div>
+          </div>
         </div>
 
         <!-- Tarjeta del Coach DOC (aquí acompañando las métricas del tiro) -->
         <div class="doc-card" id="coach-card">
           <div class="doc-header">
             <div class="doc-identity">
-              <div class="doc-avatar">🏓</div>
+              <div class="doc-avatar" aria-hidden="true">DOC</div>
               <div>
                 <div class="doc-name">DOC</div>
                 <div class="doc-role">Coach Biomecánico IA</div>
@@ -2677,7 +2992,10 @@
             </div>
             <label class="doc-voice-toggle">
               <input type="checkbox" id="voz">
-              <span>🔊 Voz</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+              </svg>
+              <span>Voz</span>
             </label>
           </div>
           <div class="doc-bubble" id="consejo">
@@ -2762,6 +3080,17 @@
             <div class="barra-progreso-fill" id="tut-barra"></div>
           </div>
 
+          <div class="tut-range-box" id="tut-range-box">
+            <div class="tut-range-head">
+              <span>Zona objetivo del paso</span>
+              <span id="tut-range-label">Óptimo: -25° a -5°</span>
+            </div>
+            <div class="tut-range-track">
+              <div class="tut-range-zone" id="tut-range-zone" style="left:28%; width:22%;"></div>
+              <div class="tut-range-marker" id="tut-range-marker"></div>
+            </div>
+          </div>
+
           <div class="challenge-meta">
             <div class="drill-streak-label">
               <span class="drill-streak-dot"></span>
@@ -2795,7 +3124,7 @@
         <div class="doc-card">
           <div class="doc-header">
             <div class="doc-identity">
-              <div class="doc-avatar">🏓</div>
+              <div class="doc-avatar" aria-hidden="true">DOC</div>
               <div>
                 <div class="doc-name">DOC</div>
                 <div class="doc-role">Evaluación en tiempo real</div>
@@ -2863,19 +3192,37 @@
 
         <!-- HUD Heroico de Acierto -->
         <div class="benchmark-hud">
-          <div>
-            <div class="hud-title">Tasa de Acierto en vivo</div>
-            <div class="hud-val" id="test-porcentaje">– %</div>
+          <div style="display:flex; align-items:center; justify-content:space-between; width:100%;">
+            <div>
+              <div class="hud-title">Tasa de Acierto en vivo</div>
+              <div class="hud-val" id="test-porcentaje">– %</div>
+            </div>
+            <div style="text-align:right;">
+              <small id="test-conteo-tiros" class="hud-counter">0 / 10 tiros</small>
+            </div>
           </div>
-          <div style="text-align:right;">
-            <small id="test-conteo-tiros" class="hud-counter">0 / 10 tiros</small>
+          <div class="test-seg-wrap">
+            <div class="test-seg-bar" aria-label="Distribución de tiros">
+              <div class="test-seg-ok" id="test-seg-ok" style="width:0%"></div>
+              <div class="test-seg-err" id="test-seg-err" style="width:0%"></div>
+              <div class="test-seg-ruido" id="test-seg-ruido" style="width:0%"></div>
+            </div>
+            <div class="test-seg-legend">
+              <span>Aciertos / Confusión / Ruido</span>
+              <span id="test-seg-meta">Meta MVP: ≥ 80%</span>
+            </div>
           </div>
         </div>
 
         <!-- Acciones de la Tanda -->
         <div class="card-acciones">
           <button id="test-btn-reiniciar" class="btn-sec" type="button">Reiniciar tanda</button>
-          <button id="test-btn-copiar" class="btn-primary" type="button">📋 Copiar reporte</button>
+          <button id="test-btn-copiar" class="btn-primary" type="button" style="display:inline-flex; align-items:center; gap:6px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+            </svg>
+            <span>Copiar reporte</span>
+          </button>
         </div>
       </section>
 
@@ -3596,6 +3943,22 @@ function mostrar(e, registrarSesion = true, esSimulado = false) {
   if (typeof reaccionarImpactoPelota === 'function') reaccionarImpactoPelota();
   const elCerteza = $('certeza');
   if (elCerteza) elCerteza.textContent = e.conf !== null ? `${e.conf} %` : '';
+  const elEstadoPill = $('libre-estado-pill');
+  if (elEstadoPill) {
+    elEstadoPill.textContent = e.conf !== null ? `${e.conf}% certeza` : `Impacto #${e.n || sesion.golpes.length}`;
+  }
+  const elSesTotal = $('libre-ses-total');
+  const elSesMaxVel = $('libre-ses-maxvel');
+  const elSesAvgScore = $('libre-ses-avgscore');
+  if (elSesTotal) elSesTotal.textContent = `${sesion.golpes.length}`;
+  if (elSesMaxVel) {
+    const vels = sesion.golpes.map((g) => g.vel).filter((v) => v !== null && v !== undefined);
+    elSesMaxVel.textContent = vels.length ? `${Math.max(...vels)} km/h` : '–';
+  }
+  if (elSesAvgScore) {
+    const scores = sesion.golpes.map((g) => g.score && g.score.total).filter((s) => typeof s === 'number');
+    elSesAvgScore.textContent = scores.length ? `${Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)}/100` : '–';
+  }
   $('consejo').textContent = c.texto;
   $('consejo').classList.toggle('ok', c.ok);
   if (registrarSesion) decir(c.texto);
@@ -3920,6 +4283,30 @@ function actualizarUITutorial() {
   $('tut-titulo-paso').textContent = cfg.titulo;
   $('tut-consigna').textContent = cfg.consigna(g);
 
+  // Actualizar banda visual de objetivo en Tutorial
+  const rangeBox = $('tut-range-box');
+  const rangeZone = $('tut-range-zone');
+  const rangeLbl = $('tut-range-label');
+  if (rangeBox && rangeZone && rangeLbl) {
+    if (p === 1) {
+      rangeBox.style.display = 'flex';
+      const esTop = g === 'TD' || g === 'TR';
+      rangeLbl.textContent = esTop ? 'Óptimo: -25° a -5°' : 'Óptimo: +25° a +45°';
+      rangeZone.style.left = esTop ? '29%' : '71%';
+      rangeZone.style.width = '17%';
+    } else if (p === 2) {
+      rangeBox.style.display = 'flex';
+      rangeLbl.textContent = 'Óptimo: ≥ 20 km/h';
+      rangeZone.style.left = '40%';
+      rangeZone.style.width = '60%';
+    } else {
+      rangeBox.style.display = 'flex';
+      rangeLbl.textContent = 'Óptimo: -20 ms a +20 ms';
+      rangeZone.style.left = '35%';
+      rangeZone.style.width = '30%';
+    }
+  }
+
   // Progreso de puntos hacia la meta
   const meta = tutorial.metaPts || 500;
   const pts = Math.min(meta, tutorial.puntos);
@@ -4010,6 +4397,22 @@ function procesarTutorial(e) {
   const fbEl = $('tut-feedback');
   fbEl.textContent = res.msg;
   fbEl.classList.toggle('ok', res.ok);
+
+  const marker = $('tut-range-marker');
+  if (marker) {
+    let pctMarker = null;
+    if (tutorial.paso === 1 && e.ang !== null) {
+      pctMarker = Math.max(2, Math.min(98, ((e.ang + 60) / 120) * 100));
+    } else if (tutorial.paso === 2 && e.vel !== null) {
+      pctMarker = Math.max(2, Math.min(98, (e.vel / 50) * 100));
+    } else if (tutorial.paso === 3 && e.pico !== null) {
+      pctMarker = Math.max(2, Math.min(98, ((e.pico + 65) / 130) * 100));
+    }
+    if (pctMarker !== null) {
+      marker.style.left = `${pctMarker}%`;
+      marker.classList.add('visible');
+    }
+  }
 
   if (res.ok) {
     tutorial.racha++;
@@ -4118,6 +4521,16 @@ function actualizarUITest() {
   $('test-cant-ok').textContent = okCount;
   $('test-cant-conf').textContent = confCount;
   $('test-cant-ruido').textContent = ruidoCount;
+
+  const segBase = meta > 0 ? Math.max(meta, total) : Math.max(total, 1);
+  const segOk = $('test-seg-ok');
+  const segErr = $('test-seg-err');
+  const segRuido = $('test-seg-ruido');
+  if (segOk && segErr && segRuido) {
+    segOk.style.width = `${(okCount / segBase) * 100}%`;
+    segErr.style.width = `${(confCount / segBase) * 100}%`;
+    segRuido.style.width = `${(ruidoCount / segBase) * 100}%`;
+  }
 
   if (total === 0) {
     $('test-porcentaje').textContent = '– %';
@@ -4287,6 +4700,13 @@ function setEstadoBLE(conectado, texto) {
   if (dot) dot.classList.toggle('conectado', conectado);
   const el = $('estado');
   if (el) el.textContent = texto;
+
+  const introBtn = $('intro-ble-btn');
+  const introDot = $('intro-ble-dot');
+  const introTxt = $('intro-ble-txt');
+  if (introBtn) introBtn.classList.toggle('conectado', conectado);
+  if (introDot) introDot.classList.toggle('conectado', conectado);
+  if (introTxt) introTxt.textContent = conectado ? 'Paleta conectada' : 'Conectar paleta';
 }
 
 // Bluetooth: cada notificación trae un struct de 14 bytes (entra entero en un paquete).
@@ -4706,11 +5126,11 @@ function crearTexturaMesaIntro() {
   c.height = h;
   const ctx = c.getContext('2d');
 
-  // Superficie de mesa reglamentaria ITTF: Azul torneo mate profundo
+  // Superficie de mesa reglamentaria ITTF: Azul torneo mate con más iluminación de estadio
   const grad = ctx.createLinearGradient(0, 0, 0, h);
-  grad.addColorStop(0, '#060d16'); // Horizonte en penumbra
-  grad.addColorStop(0.35, '#0a1726');
-  grad.addColorStop(1, '#0e2238'); // Primer plano
+  grad.addColorStop(0, '#0a1626'); // Horizonte
+  grad.addColorStop(0.35, '#112742');
+  grad.addColorStop(1, '#193b63'); // Primer plano iluminado
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, w, h);
 
@@ -4745,14 +5165,22 @@ function crearTexturaMesaIntro() {
   ctx.fillStyle = bottomGrad;
   ctx.fillRect(0, h - borderH, w, borderH);
 
-  // 4. Línea del fondo reglamentaria bien marcada y nítida en el horizonte
-  const farLineH = 34;
-  ctx.fillStyle = '#ffffff';
-  ctx.fillRect(0, 0, w, farLineH);
+  // 4. Línea del fondo en el horizonte con fade suave para integrarse al estadio sin corte abrupto
+  const farLineH = 26;
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.62)';
+  ctx.fillRect(0, 12, w, farLineH);
 
-  // Sutil relieve de sombra bajo la línea del fondo para definir la profundidad
-  ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
-  ctx.fillRect(0, farLineH, w, 10);
+  // Sutil relieve de sombra bajo la línea del fondo
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
+  ctx.fillRect(0, 12 + farLineH, w, 10);
+
+  // Degradado de profundidad en el borde superior del tablero hacia el fondo
+  const horizonFade = ctx.createLinearGradient(0, 0, 0, 48);
+  horizonFade.addColorStop(0, 'rgba(8, 12, 20, 0.92)');
+  horizonFade.addColorStop(0.45, 'rgba(8, 12, 20, 0.35)');
+  horizonFade.addColorStop(1, 'rgba(8, 12, 20, 0.0)');
+  ctx.fillStyle = horizonFade;
+  ctx.fillRect(0, 0, w, 48);
 
   const tex = new THREE.CanvasTexture(c);
   tex.colorSpace = THREE.SRGBColorSpace;
@@ -4766,18 +5194,140 @@ function crearTexturaSombraIntro() {
   c.height = s;
   const ctx = c.getContext('2d');
 
-  // Contacto oclusivo: núcleo oscuro directamente debajo de la pelota que eclipsa la línea central
+  // Contacto suave en perspectiva: núcleo nítido sobre la línea central y bordes bien difusos
   const g = ctx.createRadialGradient(s / 2, s / 2, 0, s / 2, s / 2, s / 2);
-  g.addColorStop(0, 'rgba(0, 0, 0, 0.90)');
-  g.addColorStop(0.28, 'rgba(2, 6, 14, 0.65)');
-  g.addColorStop(0.65, 'rgba(4, 10, 20, 0.22)');
-  g.addColorStop(1, 'rgba(0, 0, 0, 0)');
+  g.addColorStop(0, 'rgba(5, 12, 25, 0.76)');
+  g.addColorStop(0.28, 'rgba(5, 12, 25, 0.56)');
+  g.addColorStop(0.62, 'rgba(5, 12, 25, 0.20)');
+  g.addColorStop(1, 'rgba(5, 12, 25, 0)');
 
   ctx.fillStyle = g;
   ctx.fillRect(0, 0, s, s);
 
   const tex = new THREE.CanvasTexture(c);
   return tex;
+}
+
+function dibujarTribunaIntro() {
+  const c = $('intro-crowd');
+  if (!c) return;
+  const w = 720;
+  const h = 460;
+  c.width = w;
+  c.height = h;
+  const ctx = c.getContext('2d');
+  if (!ctx) return;
+
+  ctx.clearRect(0, 0, w, h);
+  ctx.save();
+  if ('filter' in ctx) {
+    ctx.filter = 'blur(3px) saturate(0.92)';
+  }
+
+  // Luces de pabellón en el techo con haz elíptico suave hacia las gradas (sin bordes laterales rectos)
+  const roofY = h * 0.09;
+  [0.20, 0.40, 0.60, 0.80].forEach((fx) => {
+    const gx = w * fx;
+    ctx.save();
+    ctx.translate(gx, roofY);
+    ctx.scale(0.85, 2.35);
+    const beam = ctx.createRadialGradient(0, 0, 4, 0, 0, w * 0.14);
+    beam.addColorStop(0, 'rgba(241, 245, 249, 0.22)');
+    beam.addColorStop(0.35, 'rgba(226, 232, 240, 0.09)');
+    beam.addColorStop(0.7, 'rgba(148, 163, 184, 0.025)');
+    beam.addColorStop(1, 'transparent');
+    ctx.fillStyle = beam;
+    ctx.beginPath();
+    ctx.arc(0, 0, w * 0.14, 0, Math.PI);
+    ctx.fill();
+    ctx.restore();
+
+    const g = ctx.createRadialGradient(gx, roofY, 2, gx, roofY, w * 0.09);
+    g.addColorStop(0, 'rgba(255, 255, 255, 0.70)');
+    g.addColorStop(0.35, 'rgba(226, 232, 240, 0.22)');
+    g.addColorStop(1, 'transparent');
+    ctx.fillStyle = g;
+    ctx.fillRect(gx - w * 0.1, 0, w * 0.2, h * 0.24);
+  });
+
+  // Generador determinístico simple para evitar parpadeos al redimensionar
+  let seed = 4217;
+  const rand = () => {
+    seed = (seed * 1664525 + 1013904223) % 4294967296;
+    return seed / 4294967296;
+  };
+
+  // Paleta apagada de ropa en gradas de estadio (azules, grises, bordó oscuro, algún tono claro)
+  const paleta = [
+    '#1e293b', '#263449', '#334155', '#1b2d45',
+    '#3b2838', '#2a374a', '#475569', '#233042',
+    '#3f334d', '#1f3a52', '#526075', '#64748b'
+  ];
+
+  // 7 filas de tribuna en perspectiva detrás de la mesa (de arriba/lejos hacia abajo/cerca)
+  const filas = 7;
+  const yInicio = h * 0.26;
+  const yFin = h * 0.77;
+
+  for (let f = 0; f < filas; f++) {
+    const t = f / (filas - 1);
+    const yBase = yInicio + (yFin - yInicio) * Math.pow(t, 1.08);
+    const escala = 0.58 + t * 0.72;
+    const pasoX = 16 * escala;
+    const cant = Math.ceil(w / pasoX) + 4;
+
+    // Estructura arquitectónica de cada escalón (banda oscura + filo superior iluminado)
+    ctx.fillStyle = `rgba(7, 10, 18, ${(0.72 - t * 0.14).toFixed(2)})`;
+    ctx.fillRect(0, yBase - 11 * escala, w, 36 * escala);
+    ctx.fillStyle = `rgba(148, 163, 184, ${(0.14 + t * 0.06).toFixed(2)})`;
+    ctx.fillRect(0, yBase - 11 * escala, w, 1.5);
+
+    for (let i = -2; i < cant; i++) {
+      const jitterX = (rand() - 0.5) * pasoX * 0.55;
+      const jitterY = (rand() - 0.5) * 7 * escala;
+      const cx = i * pasoX + jitterX;
+      const cy = yBase + jitterY;
+
+      const color = paleta[Math.floor(rand() * paleta.length)];
+      const alpha = 0.42 + rand() * 0.34;
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = color;
+
+      // Torso / hombros redondeados
+      const anchoHombro = (11 + rand() * 6) * escala;
+      const altoTorso = (14 + rand() * 5) * escala;
+      ctx.beginPath();
+      ctx.ellipse(cx, cy + altoTorso * 0.45, anchoHombro, altoTorso * 0.7, 0, Math.PI, 0, false);
+      ctx.lineTo(cx + anchoHombro, cy + altoTorso);
+      ctx.lineTo(cx - anchoHombro, cy + altoTorso);
+      ctx.closePath();
+      ctx.fill();
+
+      // Cabeza sutil (apenas más clara/cálida para dar lectura de silueta humana en masa)
+      const rCabeza = (4.2 + rand() * 1.4) * escala;
+      ctx.fillStyle = rand() > 0.35 ? '#475569' : '#6b5b53';
+      ctx.beginPath();
+      ctx.arc(cx, cy - rCabeza * 0.35, rCabeza, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Destellos bokeh aislados en la tribuna (pantallas / cámaras lejanas)
+    if (f >= 1 && f <= 5) {
+      const destellos = 2 + Math.floor(rand() * 2);
+      for (let d = 0; d < destellos; d++) {
+        const dx = w * (0.08 + rand() * 0.84);
+        const dy = yBase + (rand() - 0.5) * 10 * escala;
+        const dr = (5 + rand() * 5) * escala;
+        ctx.globalAlpha = 0.24 + rand() * 0.18;
+        ctx.fillStyle = rand() > 0.3 ? '#e2e8f0' : '#ffedd5';
+        ctx.beginPath();
+        ctx.arc(dx, dy, dr, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+  }
+  ctx.globalAlpha = 1;
+  ctx.restore();
 }
 
 function initIntroBall() {
@@ -4915,8 +5465,8 @@ function initIntroBall() {
   introTableMesh.position.set(0, -0.0305, -0.16);
   introScene.add(introTableMesh);
 
-  // Sombra de contacto suave sobre el tablero justo bajo la pelota
-  const shadowGeo = new THREE.PlaneGeometry(0.046, 0.032);
+  // Sombra elíptica achatada en perspectiva sobre el tablero justo bajo la pelota
+  const shadowGeo = new THREE.PlaneGeometry(0.088, 0.022);
   shadowGeo.rotateX(-Math.PI / 2);
   const shadowMat = new THREE.MeshBasicMaterial({
     map: crearTexturaSombraIntro(),
@@ -4937,6 +5487,7 @@ function initIntroBall() {
 
   setCurvatura(0.0);
   setZoom(0.0);
+  dibujarTribunaIntro();
 
   window.addEventListener('resize', () => {
     if (!introRenderer || !introCamera) return;
@@ -4945,6 +5496,7 @@ function initIntroBall() {
     introCamera.aspect = nw / nh;
     introCamera.updateProjectionMatrix();
     introRenderer.setSize(nw, nh);
+    dibujarTribunaIntro();
     setCurvatura(currentCurvatura);
     setZoom(currentZoom);
   });
@@ -5042,14 +5594,14 @@ function setZoom(t) {
   const pTable = Math.max(0, Math.min(1, (currentZoom - 0.62) / 0.38));
   const easeTable = pTable * pTable * (3 - 2 * pTable); // smoothstep para encendido orgánico de reflectores
 
-  // Posición segura en Y: garantiza que la mesa nunca intersecte la base de la pelota en ningún fotograma
-  const yMesaFinal = -0.0305;
+  // Posición segura en Y: separación mínima bajo la pelota para dar sensación de altura sobre la mesa
+  const yMesaFinal = -0.0335;
   const yBasePelota = ballY - R;
-  const yMesaSegura = Math.min(yMesaFinal, yBasePelota - 0.0035);
+  const yMesaSegura = Math.min(yMesaFinal, yBasePelota - 0.0055);
 
   if (introTableMesh) {
     introTableMesh.position.y = yMesaSegura;
-    introTableMesh.material.opacity = easeTable * 0.94;
+    introTableMesh.material.opacity = easeTable * 0.96;
     introTableMesh.visible = easeTable > 0.001;
   }
   if (introShadowMesh) {
@@ -5057,6 +5609,10 @@ function setZoom(t) {
     introShadowMesh.material.opacity = easeTable * 0.88;
     introShadowMesh.visible = easeTable > 0.001;
   }
+  const crowdEl = $('intro-crowd');
+  const crowdVig = $('intro-crowd-vignette');
+  if (crowdEl) crowdEl.style.opacity = (easeTable * 0.82).toFixed(3);
+  if (crowdVig) crowdVig.style.opacity = easeTable.toFixed(3);
 
   actualizarUVs();
 
@@ -5108,6 +5664,9 @@ function ejecutarEtapa(etapa) {
     if (menuHub) {
       menuHub.classList.remove('visible');
     }
+    if ($('intro-top-bar')) {
+      $('intro-top-bar').classList.remove('visible');
+    }
     renderIntroFrame();
   } else if (etapa === 1) {
     // -----------------------------------------------------------------
@@ -5119,6 +5678,9 @@ function ejecutarEtapa(etapa) {
     }
     if (menuHub) {
       menuHub.classList.remove('visible');
+    }
+    if ($('intro-top-bar')) {
+      $('intro-top-bar').classList.remove('visible');
     }
     if (introBallGroup) {
       introBallGroup.position.set(0, 0, 0);
@@ -5162,6 +5724,7 @@ function ejecutarEtapa(etapa) {
       } else {
         introAnimId = null;
         if (menuHub) menuHub.classList.add('visible');
+        if ($('intro-top-bar')) $('intro-top-bar').classList.add('visible');
         activarModoHub(0, false);
         iniciarIdleSpin();
         if (typeof sonarPique === 'function') sonarPique(0.20);
@@ -5183,6 +5746,9 @@ function ejecutarEtapa(etapa) {
     }
     if (menuHub) {
       menuHub.classList.remove('visible');
+    }
+    if ($('intro-top-bar')) {
+      $('intro-top-bar').classList.remove('visible');
     }
 
     const durCurva = 240;
@@ -5216,6 +5782,7 @@ function ejecutarEtapa(etapa) {
         setCurvatura(1.0);
         setZoom(1.0);
         if (menuHub) menuHub.classList.add('visible');
+        if ($('intro-top-bar')) $('intro-top-bar').classList.add('visible');
         activarModoHub(0, false);
         iniciarIdleSpin();
         if (typeof sonarPique === 'function') sonarPique(0.20);
@@ -5248,6 +5815,20 @@ function activarModoHub(idx, conSonido = true) {
 }
 
 function initIntroMenu() {
+  const introTopBar = $('intro-top-bar');
+  if (introTopBar) {
+    introTopBar.addEventListener('click', (e) => {
+      e.stopPropagation();
+    });
+  }
+  const introBleBtn = $('intro-ble-btn');
+  if (introBleBtn) {
+    introBleBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      conectar();
+    });
+  }
+
   const menuHub = $('intro-menu-hub');
   if (menuHub) {
     menuHub.addEventListener('click', (e) => {
@@ -5333,6 +5914,9 @@ function abrirIntro(modo) {
   const menuHub = $('intro-menu-hub');
   if (menuHub) {
     menuHub.classList.add('visible');
+  }
+  if ($('intro-top-bar')) {
+    $('intro-top-bar').classList.add('visible');
   }
 
   const modoObjetivo = modo || tabActiva || 'libre';
