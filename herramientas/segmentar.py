@@ -5,7 +5,9 @@ coincidiendo exactamente con ML_BUFFER_LONGITUD_ESPERADA en firmware/paleta/ml_i
 
 Soporta:
   1. Golpes técnicos: segmentación por trigger de impacto (df['impacto'] == 1).
-  2. Ruido / not_a_swing:
+  2. Filtrado de descartes: detecta archivos NOTAS*.md y separa los tiros defectuosos
+     (red, afuera, etc.) en datos/segmentados_descartados/.
+  3. Ruido / not_a_swing:
      - Impactos físicos accidentales (toques, malabares, mesa).
      - Swings al aire sin choque: detección de picos de rotación (|ω| > 250 °/s).
      - Caminata y manipulación: ventanas periódicas con movimiento activo.
@@ -109,26 +111,56 @@ def inferir_etiqueta(nombre_archivo):
     return "desconocido"
 
 
+def cargar_descartes(crudos_dir):
+    """Lee archivos NOTAS*.md en la carpeta de crudos y devuelve { 'archivo.csv': {indices_impacto_a_descartar} }."""
+    descartes = {}
+    for ruta_md in crudos_dir.glob("*.md"):
+        try:
+            with open(ruta_md, "r", encoding="utf-8") as f:
+                for linea in f:
+                    partes = [p.strip().strip("`") for p in linea.split("|")]
+                    if len(partes) >= 3:
+                        archivo = partes[1]
+                        impacto_str = partes[2]
+                        if archivo.endswith(".csv") and impacto_str.isdigit():
+                            if archivo not in descartes:
+                                descartes[archivo] = set()
+                            descartes[archivo].add(int(impacto_str))
+        except Exception as e:
+            print(f"Aviso al leer descartes de {ruta_md.name}: {e}")
+    return descartes
+
+
 def main():
     parser = argparse.ArgumentParser(description="Segmenta CSVs crudos de IMU en ventanas para Edge Impulse.")
     parser.add_argument("--crudos", type=str, default="datos/crudos", help="Carpeta con archivos CSV crudos")
-    parser.add_argument("--salida", type=str, default="datos/segmentados", help="Carpeta de salida para ventanas")
+    parser.add_argument("--salida", type=str, default="datos/segmentados", help="Carpeta de salida para ventanas válidas")
+    parser.add_argument("--descartados", type=str, default="datos/segmentados_descartados", help="Carpeta para ventanas descartadas según NOTAS*.md")
     args = parser.parse_args()
 
     crudos_dir = pathlib.Path(args.crudos)
     salida_dir = pathlib.Path(args.salida)
+    descartados_dir = pathlib.Path(args.descartados)
 
     if not crudos_dir.exists():
         print(f"No existe la carpeta '{crudos_dir}'. Asegurate de colocar los archivos crudos allí.")
         return
 
     salida_dir.mkdir(parents=True, exist_ok=True)
+    descartados_dir.mkdir(parents=True, exist_ok=True)
+
+    descartes_por_archivo = cargar_descartes(crudos_dir)
+    if descartes_por_archivo:
+        total_descartes_anotados = sum(len(v) for v in descartes_por_archivo.values())
+        print(f"Descartes detectados en notas: {total_descartes_anotados} impactos en {len(descartes_por_archivo)} archivo(s).")
+
     archivos = sorted(list(crudos_dir.glob("*.csv")))
     if not archivos:
         print(f"No hay archivos CSV en '{crudos_dir}'.")
         return
 
-    total_ventanas = 0
+    total_validas = 0
+    total_descartadas = 0
 
     for ruta_csv in archivos:
         try:
@@ -144,13 +176,23 @@ def main():
 
         etiqueta = inferir_etiqueta(ruta_csv.name)
         indices_impacto = df.index[df["impacto"] == 1].tolist() if "impacto" in df.columns else []
-        ventanas_este_archivo = 0
+        descartes_este_archivo = descartes_por_archivo.get(ruta_csv.name, set())
+
+        validas_archivo = 0
+        descartadas_archivo = 0
 
         # 1. Ventanas por impacto físico (golpes técnicos o choques de ruido)
         for i, idx in enumerate(indices_impacto):
-            nombre_salida = salida_dir / f"{etiqueta}.{ruta_csv.stem}_impacto_{i+1}.csv"
+            numero_impacto = i + 1
+            es_descarte = numero_impacto in descartes_este_archivo
+            destino = descartados_dir if es_descarte else salida_dir
+
+            nombre_salida = destino / f"{etiqueta}.{ruta_csv.stem}_impacto_{numero_impacto}.csv"
             if exportar_ventana(df, idx, nombre_salida):
-                ventanas_este_archivo += 1
+                if es_descarte:
+                    descartadas_archivo += 1
+                else:
+                    validas_archivo += 1
 
         # 2. Si es archivo de ruido, extraer también swings al aire y movimientos sin choque
         if etiqueta == "ruido":
@@ -159,7 +201,7 @@ def main():
             for j, idx in enumerate(picos_swing):
                 nombre_salida = salida_dir / f"{etiqueta}.{ruta_csv.stem}_swing_{j+1}.csv"
                 if exportar_ventana(df, idx, nombre_salida):
-                    ventanas_este_archivo += 1
+                    validas_archivo += 1
 
             # Movimiento continuo (caminata, manipulación de paleta)
             excluidos_totales = indices_impacto + picos_swing
@@ -167,17 +209,23 @@ def main():
             for k, idx in enumerate(muestras_mov):
                 nombre_salida = salida_dir / f"{etiqueta}.{ruta_csv.stem}_movimiento_{k+1}.csv"
                 if exportar_ventana(df, idx, nombre_salida):
-                    ventanas_este_archivo += 1
+                    validas_archivo += 1
 
             detalles_ruido = f"({len(indices_impacto)} impactos, {len(picos_swing)} swings al aire, {len(muestras_mov)} caminata/mov)"
-            print(f"Procesando {ruta_csv.name} [{etiqueta}]: {ventanas_este_archivo} ventanas {detalles_ruido}")
+            print(f"Procesando {ruta_csv.name} [{etiqueta}]: {validas_archivo} válidas {detalles_ruido}")
         else:
-            print(f"Procesando {ruta_csv.name} [{etiqueta}]: {ventanas_este_archivo} impactos")
+            if descartadas_archivo > 0:
+                print(f"Procesando {ruta_csv.name} [{etiqueta}]: {validas_archivo} válidas, {descartadas_archivo} descartadas en notas")
+            else:
+                print(f"Procesando {ruta_csv.name} [{etiqueta}]: {validas_archivo} impactos")
 
-        total_ventanas += ventanas_este_archivo
+        total_validas += validas_archivo
+        total_descartadas += descartadas_archivo
 
-    print(f"\n¡Listo! Se generaron {total_ventanas} ventanas en '{salida_dir}'.")
-    print("Podés subir esta carpeta directamente a Edge Impulse.")
+    print(f"\n¡Listo! Ventanas válidas generadas: {total_validas} en '{salida_dir}'.")
+    if total_descartadas > 0:
+        print(f"Ventanas descartadas: {total_descartadas} en '{descartados_dir}'.")
+    print("Podés subir la carpeta de segmentados directamente a Edge Impulse.")
 
 
 if __name__ == "__main__":
