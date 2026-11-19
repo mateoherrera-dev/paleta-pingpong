@@ -436,7 +436,7 @@ void mandarGolpe() {
   float msModelo;
   uint8_t tipo = clasificarGolpe(confianza, msModelo);
   float giroMax = giroMaxVentana();
-  if (tipo == TIPO_DESCONOCIDO || giroMax < GIRO_MIN_GOLPE_DPS) {
+  if (!modoJuego && (tipo == TIPO_DESCONOCIDO || giroMax < GIRO_MIN_GOLPE_DPS)) {
     // No cuenta como golpe: la app no lo recibe y numero_golpe sigue correlativo
     Serial.printf("# Descartado: %s %u %% (modelo en %.1f ms), giro máx %.0f °/s%s\n", nombres[tipo],
                   confianza, msModelo, giroMax, giroMax < GIRO_MIN_GOLPE_DPS ? " (swing muy lento)" : "");
