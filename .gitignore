@@ -5,8 +5,9 @@ datos/*
 __pycache__/
 .venv/
 
-# Libreria de Arduino generada por firmware/armar_libreria_arduino.py
-firmware/*_arduino.zip
+# Librerias y exports de modelos (no se suben a git salvo el dummy)
+firmware/*.zip
+!firmware/modelo_dummy_sintetico.zip
 
 # Prueba del ángulo compilada para la PC (firmware/prueba_pc/comparar.py)
 firmware/prueba_pc/prueba_angulo
