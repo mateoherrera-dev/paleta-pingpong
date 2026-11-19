@@ -3263,6 +3263,49 @@
           </div>
         </div>
       </aside>
+
+      <!-- Grabador USB Web Serial para Dataset (reemplaza herramientas/grabar.py desde la web) -->
+      <section class="studio-stage" style="grid-column: 1 / -1;">
+        <div class="unified-card-header" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+          <div>
+            <h2 class="unified-title">Grabar dataset por USB (1000 Hz)</h2>
+            <small style="color:var(--txt-mut);">Mismo CSV que <code>grabar.py</code> para <code>segmentar.py</code> y Edge Impulse (cerrá el Monitor Serie de Arduino IDE antes).</small>
+          </div>
+          <span id="usb-rec-estado" style="font-size:0.85rem; color:var(--txt-mut);">Sin conexión USB</span>
+        </div>
+
+        <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-top:8px;">
+          <input id="usb-rec-jugador" type="text" value="tomas" placeholder="Jugador (sin espacios)" class="select-clean" style="min-width:140px; padding:8px 10px;" aria-label="Nombre del jugador">
+          <select id="usb-rec-golpe" class="select-clean" aria-label="Etiqueta del golpe">
+            <option value="topspin_derecha">topspin_derecha</option>
+            <option value="topspin_reves">topspin_reves</option>
+            <option value="empuje_derecha">empuje_derecha</option>
+            <option value="empuje_reves">empuje_reves</option>
+            <option value="ruido">ruido</option>
+          </select>
+          <button id="usb-btn-grabar" class="btn-primary" type="button">🔌 Conectar USB y grabar</button>
+          <button id="usb-btn-detener" class="btn-sec" type="button" disabled>⏹ Detener y descargar CSV</button>
+        </div>
+
+        <div class="telemetry-grid" style="margin-top:12px;">
+          <div class="telemetry-cell">
+            <div class="telemetry-label">Muestras</div>
+            <div class="telemetry-val"><span id="usb-stat-muestras">0</span></div>
+          </div>
+          <div class="telemetry-cell">
+            <div class="telemetry-label">Impactos</div>
+            <div class="telemetry-val" style="color:var(--accent)"><span id="usb-stat-impactos">0</span></div>
+          </div>
+          <div class="telemetry-cell">
+            <div class="telemetry-label">Duración</div>
+            <div class="telemetry-val"><span id="usb-stat-duracion">0.0 s</span></div>
+          </div>
+          <div class="telemetry-cell">
+            <div class="telemetry-label">Perdidas</div>
+            <div class="telemetry-val" style="color:var(--warn)"><span id="usb-stat-perdidas">0</span></div>
+          </div>
+        </div>
+      </section>
     </div>
   </div>
 
@@ -4696,6 +4739,140 @@ $('test-btn-copiar').addEventListener('click', async () => {
 actualizarUITutorial();
 actualizarUITest();
 
+// --- Grabador USB Web Serial para dataset (mismo formato que herramientas/grabar.py) ---
+(() => {
+  const btnGrabar = $('usb-btn-grabar');
+  const btnDetener = $('usb-btn-detener');
+  const elEstado = $('usb-rec-estado');
+  const elJugador = $('usb-rec-jugador');
+  const elGolpe = $('usb-rec-golpe');
+  const elMuestras = $('usb-stat-muestras');
+  const elImpactos = $('usb-stat-impactos');
+  const elDur = $('usb-stat-duracion');
+  const elPerdidas = $('usb-stat-perdidas');
+  if (!btnGrabar || !btnDetener) return;
+
+  if (!('serial' in navigator)) {
+    btnGrabar.disabled = true;
+    if (elEstado) elEstado.textContent = 'Navegador sin Web Serial (usá Chrome o Edge).';
+    return;
+  }
+
+  const REGEX_MUESTRA = /^\d{1,10}(,-?\d+\.\d{3}){3}(,-?\d+\.\d){3},[01]$/;
+  let port = null;
+  let reader = null;
+  let grabando = false;
+  let lineasCsv = [];
+  let nMuestras = 0;
+  let nImpactos = 0;
+  let nPerdidas = 0;
+  let tPrevUs = null;
+  let tInicioMs = 0;
+  let uiTimer = null;
+
+  function actualizarStatsUSB() {
+    if (elMuestras) elMuestras.textContent = nMuestras.toLocaleString('es-AR');
+    if (elImpactos) elImpactos.textContent = String(nImpactos);
+    if (elPerdidas) elPerdidas.textContent = String(nPerdidas);
+    if (elDur) elDur.textContent = grabando ? `${((performance.now() - tInicioMs) / 1000).toFixed(1)} s` : '0.0 s';
+  }
+
+  function descargarCsvUSB() {
+    if (lineasCsv.length <= 1) return;
+    const ahora = new Date();
+    const pad = (n) => String(n).padStart(2, '0');
+    const fecha = `${ahora.getFullYear()}-${pad(ahora.getMonth() + 1)}-${pad(ahora.getDate())}_${pad(ahora.getHours())}${pad(ahora.getMinutes())}${pad(ahora.getSeconds())}`;
+    const jugador = (elJugador.value || 'jugador').trim().replace(/\s+/g, '_').toLowerCase() || 'jugador';
+    const golpe = elGolpe.value || 'libre';
+    const nombre = `${fecha}_${jugador}_${golpe}.csv`;
+
+    const blob = new Blob([lineasCsv.join('\n') + '\n'], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = nombre;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  async function detenerGrabacionUSB() {
+    grabando = false;
+    if (uiTimer) { clearInterval(uiTimer); uiTimer = null; }
+    try { if (reader) await reader.cancel(); } catch (e) {}
+    try { if (port) await port.close(); } catch (e) {}
+    reader = null;
+    port = null;
+    btnGrabar.disabled = false;
+    btnDetener.disabled = true;
+    actualizarStatsUSB();
+    if (nMuestras > 0) {
+      descargarCsvUSB();
+      if (elEstado) elEstado.textContent = `Guardado (${nMuestras} muestras, ${nImpactos} impactos).`;
+    } else if (elEstado) {
+      elEstado.textContent = 'Detenido sin muestras.';
+    }
+  }
+
+  btnGrabar.addEventListener('click', async () => {
+    if (grabando) return;
+    try {
+      port = await navigator.serial.requestPort();
+      await port.open({ baudRate: 921600, bufferSize: 1024 * 1024 });
+    } catch (err) {
+      if (elEstado) elEstado.textContent = `No se pudo abrir USB: ${err.message}`;
+      port = null;
+      return;
+    }
+
+    lineasCsv = ['t_us,ax_g,ay_g,az_g,gx_dps,gy_dps,gz_dps,impacto'];
+    nMuestras = 0;
+    nImpactos = 0;
+    nPerdidas = 0;
+    tPrevUs = null;
+    tInicioMs = performance.now();
+    grabando = true;
+    btnGrabar.disabled = true;
+    btnDetener.disabled = false;
+    if (elEstado) elEstado.textContent = 'Grabando por USB (1000 Hz)…';
+    actualizarStatsUSB();
+    uiTimer = setInterval(actualizarStatsUSB, 200);
+
+    const decoder = new TextDecoder();
+    let resto = '';
+    try {
+      reader = port.readable.getReader();
+      while (grabando) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        resto += decoder.decode(value, { stream: true });
+        const partes = resto.split('\n');
+        resto = partes.pop() || '';
+        for (let i = 0; i < partes.length; i++) {
+          const linea = partes[i].trim();
+          if (!linea || linea.startsWith('#')) continue;
+          if (!REGEX_MUESTRA.test(linea)) continue;
+          const tUs = parseInt(linea.slice(0, linea.indexOf(',')), 10);
+          if (tPrevUs !== null && tUs - tPrevUs > 1500) {
+            nPerdidas += Math.max(1, Math.round((tUs - tPrevUs) / 1000) - 1);
+          }
+          tPrevUs = tUs;
+          lineasCsv.push(linea);
+          nMuestras++;
+          if (linea.endsWith(',1')) nImpactos++;
+        }
+      }
+    } catch (err) {
+      if (grabando && elEstado) elEstado.textContent = `Error USB: ${err.message}`;
+    } finally {
+      if (grabando) await detenerGrabacionUSB();
+    }
+  });
+
+  btnDetener.addEventListener('click', detenerGrabacionUSB);
+})();
+
 function setEstadoBLE(conectado, texto) {
   const dot = $('dot-ble');
   if (dot) dot.classList.toggle('conectado', conectado);
@@ -6030,9 +6207,9 @@ window.addEventListener('keydown', (ev) => {
 // ==================== MOTOR PARTIDO (QTE RÍTMICO ARCADE 2D) ====================
 const PartidoEngine = (() => {
   const DIFICULTADES = {
-    principiante: { label: 'Principiante', ventanaMs: 360, perfectoMs: 140, flightMs: 1500, winFactor: 1.15, botError: 0.14, markovErr: 0.24 },
-    club:         { label: 'Club',         ventanaMs: 260, perfectoMs: 100, flightMs: 1150, winFactor: 0.85, botError: 0.07, markovErr: 0.15 },
-    pro:          { label: 'Pro',          ventanaMs: 180, perfectoMs: 70,  flightMs: 880,  winFactor: 0.55, botError: 0.02, markovErr: 0.07 },
+    principiante: { label: 'Principiante', ventanaMs: 480, perfectoMs: 170, flightMs: 1500, winFactor: 1.15, botError: 0.18, markovErr: 0.28 },
+    club:         { label: 'Club',         ventanaMs: 360, perfectoMs: 130, flightMs: 1150, winFactor: 0.85, botError: 0.10, markovErr: 0.20 },
+    pro:          { label: 'Pro',          ventanaMs: 250, perfectoMs: 90,  flightMs: 880,  winFactor: 0.55, botError: 0.04, markovErr: 0.10 },
   };
 
   const COLORES_EFECTO = {
@@ -6176,7 +6353,7 @@ const PartidoEngine = (() => {
     } catch (e) {}
   }
 
-  function lanzarImpactFX(xNorm, zNorm, yHeight, texto, sub, color, esPerfecto) {
+  function lanzarImpactFX(xNorm, zNorm, yHeight, texto, sub, color, esPerfecto, durMs = null) {
     const p = proyectar(xNorm, zNorm, yHeight);
     const particulas = [];
     const nPart = esPerfecto ? 12 : 6;
@@ -6194,7 +6371,7 @@ const PartidoEngine = (() => {
       sub,
       color,
       t0: performance.now(),
-      dur: esPerfecto ? 760 : 540,
+      dur: durMs || (esPerfecto ? 760 : 540),
       esPerfecto,
       particulas,
     };
@@ -6530,8 +6707,11 @@ const PartidoEngine = (() => {
     nuevoPartido();
   }
 
+  let ultimoGolpeTs = 0;
+
   function nuevoPartido() {
     ocultarReportePostSet();
+    ultimoGolpeTs = 0;
     state.pausado = false;
     state.pausaInicio = 0;
     state.ptsVos = 0;
@@ -6963,6 +7143,15 @@ const PartidoEngine = (() => {
   }
 
   function finalizarPunto(ganadorVos, titulo, sub, consejoTxt, estadoClase) {
+    if (!ganadorVos && titulo) {
+      const esRed = titulo === 'A la red';
+      const esLarga = titulo === 'Se fue larga';
+      const fxX = esRed ? 0 : (esLarga ? 0 : state.playerX);
+      const fxZ = esRed ? 0.50 : (esLarga ? 0.96 : 0.16);
+      const fxY = esRed ? 0.20 : 0.26;
+      const fxSub = sub && sub.length > 44 ? sub.slice(0, 42) + '…' : (sub || '');
+      lanzarImpactFX(fxX, fxZ, fxY, `¡${titulo.toUpperCase()}!`, fxSub, '#ef4444', false, 1450);
+    }
     if (state.rutina === 'multibola') {
       if (ganadorVos) state.multibolaAciertos += 1;
       else state.pausaExtraMs = 500;
@@ -7049,14 +7238,14 @@ const PartidoEngine = (() => {
     state.saque = calcularSaqueActual();
     if (state.fase === 'SERVE_WAIT') {
       state.faseInicio = performance.now();
-      state.faseDuracion = state.saque === 'bot' ? 950 : 999999;
+      state.faseDuracion = state.saque === 'bot' ? (ganadorVos ? 950 : 1400) : 999999;
     }
     actualizarScoreboard();
   }
 
   function inferirGolpe(evento) {
     if (evento.golpe && evento.golpe !== '??') return evento.golpe;
-    if (evento.vel === null || evento.vel < 8) return '??';
+    if (evento.vel === null || evento.vel < 4) return '??';
     const prefijo = (evento.ang !== null && evento.ang < 0) ? 'T' : 'E';
     let lado = state.bola.ladoObjetivo || 'D';
     if (evento.q && Math.abs(evento.q.z) > 0.14) {
@@ -7066,12 +7255,18 @@ const PartidoEngine = (() => {
   }
 
   function evaluarGolpeEnVuelo(evento, esSimulado) {
-    const ahora = performance.now() - (esSimulado ? 0 : 80);
+    const ahora = performance.now() - (esSimulado ? 0 : 110);
     const cfg = DIFICULTADES[state.dificultad];
     const deltaMs = Math.round(ahora - state.tImpactoOptimo);
     const timingStr = (deltaMs >= 0 ? `+${deltaMs}` : `${deltaMs}`) + ' ms';
 
     const golpe = inferirGolpe(evento);
+    const esTopspin = golpe.startsWith('T');
+    const ventanaEf = Math.round(cfg.ventanaMs * (esTopspin ? 0.85 : 1.15));
+
+    // En modo real, ignorar movimientos de orientacion/armado antes de entrar a la zona QTE
+    if (!esSimulado && deltaMs < -ventanaEf) return;
+
     const velStr = evento.vel !== null ? `${evento.vel} km/h` : '–';
     const angStr = evento.ang !== null ? `${evento.ang}°` : '–';
     const golpeStr = GOLPES[golpe] || golpe;
@@ -7100,12 +7295,10 @@ const PartidoEngine = (() => {
     }
 
     const ang = evento.ang ?? 0;
-    const esTopspin = golpe.startsWith('T');
     const esEmpuje = golpe.startsWith('E');
     const ladoGolpe = golpe.endsWith('R') ? 'R' : 'D';
     const ladoObjetivo = state.bola.ladoObjetivo || 'D';
     const bolaEntrante = state.bola.efecto;
-    const ventanaEf = Math.round(cfg.ventanaMs * (esTopspin ? 0.85 : 1.15));
 
     if (Math.abs(deltaMs) > ventanaEf) {
       if (state.rutina === 'corte_ataque') state.pasoDrill = 0;
@@ -7209,35 +7402,35 @@ const PartidoEngine = (() => {
       }
       // Contra corte largo se puede abrir con topspin rápido sin cerrar demasiado la cara
       const velActual = evento.vel || 22;
-      const puedeAbrir = velActual >= 28 && ang >= -18 && ang <= 0;
+      const puedeAbrir = velActual >= 22 && ang >= -24 && ang <= 0;
       if (!puedeAbrir) {
         if (state.rutina === 'corte_ataque') state.pasoDrill = 0;
         dispararAngleFX(false);
         registrarHist('A la red', ang, deltaMs);
         lanzarFallo('red', ang);
-        const motivo = velActual < 28
+        const motivo = velActual < 22
           ? `Faltó velocidad (${velActual} km/h) para levantar el corte con topspin.`
           : `Cerraste demasiado la cara (${ang}°) contra un corte rival.`;
         finalizarPunto(
           false,
           'A la red',
           motivo,
-          'Contra corte largo usá Empuje abierto (+25° a +45°) o Topspin rápido (≥28 km/h, -18° a 0°).',
+          'Contra corte largo usá Empuje abierto (+25° a +45°) o Topspin firme (≥22 km/h, -24° a 0°).',
           'bad'
         );
         return;
       }
     }
 
-    // 3. Reglas de ángulo según docs/GOLPES.md
-    if (ang < -35 || (esEmpuje && bolaEntrante === 'corte' && ang < 15)) {
+    // 3. Reglas de ángulo según docs/GOLPES.md (topspin al aire tolera hasta -65°, empuje contra corte desde +5°)
+    if (ang < -65 || (esEmpuje && bolaEntrante === 'corte' && ang < 5)) {
       if (state.rutina === 'corte_ataque') state.pasoDrill = 0;
       dispararAngleFX(false);
       registrarHist('A la red', ang, deltaMs);
       lanzarFallo('red', ang);
       const tip = esEmpuje
         ? 'Abrí la cara (+25° a +45°) para entrar por debajo del corte rival.'
-        : 'Cara muy tapada (< -35°): abrila un poco para superar la red.';
+        : 'Cara muy tapada (< -65°): abrila un poco para superar la red.';
       finalizarPunto(false, 'A la red', `Ángulo muy cerrado (${ang}°).`, tip, 'bad');
       return;
     }
@@ -7262,7 +7455,9 @@ const PartidoEngine = (() => {
     }
 
     const vel = evento.vel || 22;
-    const scoreArq = typeof evento.score === 'number' ? evento.score : 65;
+    const scoreArq = typeof evento.score === 'number'
+      ? evento.score
+      : (evento.score && typeof evento.score.total === 'number' ? evento.score.total : 65);
     const scoreNorm = Math.max(0, Math.min(1, scoreArq / 100));
     const esChopDefensivo = bolaEntrante === 'topspin' && esEmpuje;
     const enRangoOptimo = esChopDefensivo
@@ -7367,6 +7562,12 @@ const PartidoEngine = (() => {
 
   function procesarGolpe(evento, esSimulado = false) {
     if (!state.activo || state.enSetup || state.pausado) return;
+    if (!esSimulado) {
+      const minVel = state.fase === 'SERVE_WAIT' ? 9 : (evento.golpe && evento.golpe !== '??' ? 6 : 7);
+      if (evento.vel === null || evento.vel < minVel) return;
+    }
+    const ahoraMs = performance.now();
+    if (!esSimulado && (ahoraMs - ultimoGolpeTs) < 650) return;
     if (state.fase === 'IDLE' || state.fase === 'MATCH_OVER') {
       nuevoPartido();
       return;
@@ -7374,6 +7575,7 @@ const PartidoEngine = (() => {
     if (state.fase === 'SERVE_WAIT' && state.saque === 'vos') {
       const golpe = inferirGolpe(evento);
       if (golpe === '??') return;
+      ultimoGolpeTs = ahoraMs;
       const esTopspin = golpe.startsWith('T');
       state.playerCara = (golpe === 'TR' || golpe === 'ER') ? 'roja' : 'negra';
       state.rallyActual = 1;
@@ -7392,7 +7594,10 @@ const PartidoEngine = (() => {
       return;
     }
     if (state.fase === 'BALL_TO_PLAYER') {
+      const prevTs = ultimoGolpeTs;
+      ultimoGolpeTs = ahoraMs;
       evaluarGolpeEnVuelo(evento, esSimulado);
+      if (state.fase === 'BALL_TO_PLAYER') ultimoGolpeTs = prevTs;
     }
   }
 
@@ -7531,7 +7736,7 @@ const PartidoEngine = (() => {
       }
 
       const cfg = DIFICULTADES[state.dificultad];
-      if (ahora > state.tImpactoOptimo + Math.round(cfg.ventanaMs * 1.15)) {
+      if (ahora > state.tImpactoOptimo + Math.round(cfg.ventanaMs * 1.15) + 110) {
         if (state.rutina === 'corte_ataque') state.pasoDrill = 0;
         state.historialSet.push({
           efectoEntrante: b.efecto,
