@@ -79,6 +79,10 @@ Para evitar el bloqueo de interrupciones en el ESP32 causado por el parseo y con
 
 - **Servicio Custom:** `6e400001-b5a3-f393-e0a9-e50e24dcca9e`.
 - **Caracteristica de Notificacion (Notify):** `6e400003-b5a3-f393-e0a9-e50e24dcca9e`.
+- **Caracteristica de Escritura opcional RX (Write / Write Without Response):** `6e400002-b5a3-f393-e0a9-e50e24dcca9e`.
+  - **Payload:** 1 byte de comando de modo:
+    - `0x00`: Modo Impacto real (default al arrancar, disparo por `UMBRAL_JERK_G`).
+    - `0x01`: Modo Juego / Swing al aire (disparo por pico de velocidad angular `omega`).
 
 ### Estructura de Datos (C++ ESP32)
 ```c
