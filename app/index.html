@@ -1823,6 +1823,22 @@
     height: 100% !important;
     display: block;
   }
+  #landing-vector-overlay {
+    position: absolute;
+    inset: 0;
+    background: #ff7700;
+    pointer-events: none;
+    overflow: hidden;
+  }
+  #landing-vector-svg {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 100vh;
+    height: 100vh;
+    transform: translate(-50%, -50%);
+    display: block;
+  }
   #stage-landing {
     position: fixed;
     inset: 0;
@@ -2796,6 +2812,18 @@
   <canvas id="intro-crowd"></canvas>
   <div id="intro-crowd-vignette"></div>
   <canvas id="canvas-intro"></canvas>
+  <div id="landing-vector-overlay" aria-hidden="true">
+    <svg id="landing-vector-svg" viewBox="533.55 533.55 980.9 980.9" xmlns="http://www.w3.org/2000/svg">
+      <g fill="#0f172a" text-anchor="middle" dominant-baseline="central" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif">
+        <text x="948" y="878" font-size="56" font-weight="700" font-family="sans-serif">★</text>
+        <text x="1024" y="878" font-size="56" font-weight="700" font-family="sans-serif">★</text>
+        <text x="1100" y="878" font-size="56" font-weight="700" font-family="sans-serif">★</text>
+        <text x="1024" y="998" font-size="168" font-weight="900">DOC</text>
+        <text x="1024" y="1096" font-size="68" font-weight="800">40+</text>
+        <text x="1024" y="1164" font-size="27" font-weight="900" letter-spacing="10">FIND YOUR EDGE</text>
+      </g>
+    </svg>
+  </div>
 </div>
 
 <!-- Overlay de Controles de Usuario -->
@@ -3958,54 +3986,57 @@ function decir(texto) {
 function mostrar(e, registrarSesion = true, esSimulado = false) {
   ultimoEvento = e;
   e.score = calcularScore(e);
-  if (registrarSesion) {
+  const enModoLibre = tabActiva === 'libre';
+  if (registrarSesion && enModoLibre) {
     sesion.golpes.unshift(e);
     sesion.conteo[e.golpe] = (sesion.conteo[e.golpe] || 0) + 1;
   }
   const c = consejo(e);
 
-  $('golpe').textContent = GOLPES[e.golpe];
-  $('vel').textContent = e.vel === null ? '–' : `${e.vel} km/h`;
-  $('ang').textContent = e.ang === null ? '–' : `${e.ang}°`;
-  $('pico').textContent = formatearPico(e.pico);
+  if (enModoLibre || !registrarSesion) {
+    $('golpe').textContent = GOLPES[e.golpe];
+    $('vel').textContent = e.vel === null ? '–' : `${e.vel} km/h`;
+    $('ang').textContent = e.ang === null ? '–' : `${e.ang}°`;
+    $('pico').textContent = formatearPico(e.pico);
 
-  const elScore = $('score-pts');
-  if (elScore) {
-    if (e.score) {
-      elScore.textContent = `${e.score.total}`;
-      if (e.score.total >= 75) elScore.style.color = 'var(--ok)';
-      else if (e.score.total >= 40) elScore.style.color = '#b87800';
-      else elScore.style.color = 'var(--bad)';
-    } else {
-      elScore.textContent = '–';
-      elScore.style.color = '';
+    const elScore = $('score-pts');
+    if (elScore) {
+      if (e.score) {
+        elScore.textContent = `${e.score.total}`;
+        if (e.score.total >= 75) elScore.style.color = 'var(--ok)';
+        else if (e.score.total >= 40) elScore.style.color = '#b87800';
+        else elScore.style.color = 'var(--bad)';
+      } else {
+        elScore.textContent = '–';
+        elScore.style.color = '';
+      }
     }
-  }
 
-  actualizarVisor3D(e.ang, e.golpe, e.q);
-  if (typeof acelerarSpinPelotaHeader === 'function') acelerarSpinPelotaHeader();
-  if (typeof reaccionarImpactoPelota === 'function') reaccionarImpactoPelota();
-  const elCerteza = $('certeza');
-  if (elCerteza) elCerteza.textContent = e.conf !== null ? `${e.conf} %` : '';
-  const elEstadoPill = $('libre-estado-pill');
-  if (elEstadoPill) {
-    elEstadoPill.textContent = e.conf !== null ? `${e.conf}% certeza` : `Impacto #${e.n || sesion.golpes.length}`;
+    actualizarVisor3D(e.ang, e.golpe, e.q);
+    if (typeof acelerarSpinPelotaHeader === 'function') acelerarSpinPelotaHeader();
+    if (typeof reaccionarImpactoPelota === 'function') reaccionarImpactoPelota();
+    const elCerteza = $('certeza');
+    if (elCerteza) elCerteza.textContent = e.conf !== null ? `${e.conf} %` : '';
+    const elEstadoPill = $('libre-estado-pill');
+    if (elEstadoPill) {
+      elEstadoPill.textContent = e.conf !== null ? `${e.conf}% certeza` : `Impacto #${e.n || sesion.golpes.length}`;
+    }
+    const elSesTotal = $('libre-ses-total');
+    const elSesMaxVel = $('libre-ses-maxvel');
+    const elSesAvgScore = $('libre-ses-avgscore');
+    if (elSesTotal) elSesTotal.textContent = `${sesion.golpes.length}`;
+    if (elSesMaxVel) {
+      const vels = sesion.golpes.map((g) => g.vel).filter((v) => v !== null && v !== undefined);
+      elSesMaxVel.textContent = vels.length ? `${Math.max(...vels)} km/h` : '–';
+    }
+    if (elSesAvgScore) {
+      const scores = sesion.golpes.map((g) => g.score && g.score.total).filter((s) => typeof s === 'number');
+      elSesAvgScore.textContent = scores.length ? `${Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)}/100` : '–';
+    }
+    $('consejo').textContent = c.texto;
+    $('consejo').classList.toggle('ok', c.ok);
+    if (registrarSesion) decir(c.texto);
   }
-  const elSesTotal = $('libre-ses-total');
-  const elSesMaxVel = $('libre-ses-maxvel');
-  const elSesAvgScore = $('libre-ses-avgscore');
-  if (elSesTotal) elSesTotal.textContent = `${sesion.golpes.length}`;
-  if (elSesMaxVel) {
-    const vels = sesion.golpes.map((g) => g.vel).filter((v) => v !== null && v !== undefined);
-    elSesMaxVel.textContent = vels.length ? `${Math.max(...vels)} km/h` : '–';
-  }
-  if (elSesAvgScore) {
-    const scores = sesion.golpes.map((g) => g.score && g.score.total).filter((s) => typeof s === 'number');
-    elSesAvgScore.textContent = scores.length ? `${Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)}/100` : '–';
-  }
-  $('consejo').textContent = c.texto;
-  $('consejo').classList.toggle('ok', c.ok);
-  if (registrarSesion) decir(c.texto);
 
   // Actualizar panel de diagnóstico si está disponible
   const caraCalculada = determinarCara(e.golpe, e.ang, e.q);
@@ -4044,11 +4075,11 @@ function mostrar(e, registrarSesion = true, esSimulado = false) {
   idxHistorial = 0;
   renderImpactoPaginado();
 
-  // Actualizar modos interactivos (Tutorial, Benchmark de Modelo y Partido)
+  // Actualizar modos interactivos (Tutorial, Benchmark de Modelo y Partido) solo en su vista activa
   if (registrarSesion) {
-    procesarTutorial(e);
-    procesarTest(e);
-    if (tabActiva === 'partido' && typeof PartidoEngine !== 'undefined') {
+    if (tabActiva === 'tutorial') procesarTutorial(e);
+    else if (tabActiva === 'test') procesarTest(e);
+    else if (tabActiva === 'partido' && typeof PartidoEngine !== 'undefined') {
       PartidoEngine.procesarGolpe(e, esSimulado);
     }
   }
@@ -4906,7 +4937,29 @@ function recibir(evento) {
   }
 }
 
+let demoBleActivo = /[?&](demo|fakeble)=1(?:&|$)/i.test(window.location.search);
+
+function aplicarModoDemoBle(activo) {
+  demoBleActivo = Boolean(activo);
+  const badge = $('badge-compat-ble');
+  const btnCon = $('conectar');
+  if (demoBleActivo) {
+    if (badge) badge.style.display = 'none';
+    setEstadoBLE(true, 'Conectada a Paleta DOC (20 B · Cuaternión 3D)');
+    if (btnCon) btnCon.textContent = 'Conectada';
+  } else {
+    setEstadoBLE(false, 'Sin conectar');
+    if (btnCon) btnCon.textContent = 'Conectar';
+    verificarCompatibilidadBLE();
+  }
+}
+
 async function conectar() {
+  if (demoBleActivo) {
+    aplicarModoDemoBle(true);
+    ocultarAlertaDesconexion();
+    return;
+  }
   if (!navigator.bluetooth) {
     setEstadoBLE(false, 'Navegador sin Bluetooth Web');
     alert('Tu navegador no soporta Web Bluetooth.\n\n• En PC o Android: usá Google Chrome o Microsoft Edge.\n• En iPhone/iPad (iOS): usá la app Bluefy - Web BLE Browser.');
@@ -4959,6 +5012,10 @@ function ocultarAlertaDesconexion() {
 }
 
 function verificarCompatibilidadBLE() {
+  if (demoBleActivo) {
+    aplicarModoDemoBle(true);
+    return;
+  }
   if (!navigator.bluetooth) {
     setEstadoBLE(false, 'Sin Bluetooth Web');
     const badge = $('badge-compat-ble');
@@ -5025,6 +5082,76 @@ function alternarSimulador() {
   }, 2500);
   if (btnSim) btnSim.textContent = 'Detener simulador';
   $('estado').textContent = 'Simulador: golpes inventados cada 2,5 s.';
+}
+
+function simularGolpeTecla(clave) {
+  const mapa = {
+    '1': { tipo: 1, esTopspin: true },  // Topspin Revés (TR)
+    '2': { tipo: 3, esTopspin: false }, // Empuje Revés (ER)
+    '9': { tipo: 0, esTopspin: true },  // Topspin Derecha (TD)
+    '0': { tipo: 2, esTopspin: false }, // Empuje Derecha (ED)
+  };
+  const spec = mapa[String(clave)];
+  if (!spec) return false;
+
+  const azar = (a, b) => Math.round(a + Math.random() * (b - a));
+  const r = Math.random();
+
+  let ang, vel, pico, conf;
+  if (spec.esTopspin) {
+    if (r < 0.55) {
+      ang = azar(-23, -7);
+      vel = azar(24, 44);
+      pico = azar(-12, 18);
+      conf = azar(86, 98);
+    } else if (r < 0.85) {
+      ang = Math.random() < 0.5 ? azar(-33, -26) : azar(-4, 4);
+      vel = azar(16, 36);
+      pico = Math.random() < 0.5 ? azar(-32, -16) : azar(21, 38);
+      conf = azar(74, 90);
+    } else {
+      ang = Math.random() < 0.5 ? azar(-45, -36) : azar(2, 14);
+      vel = azar(11, 20);
+      pico = Math.random() < 0.5 ? azar(-45, -28) : azar(33, 52);
+      conf = azar(62, 82);
+    }
+  } else {
+    if (r < 0.55) {
+      ang = azar(27, 43);
+      vel = azar(12, 24);
+      pico = azar(-15, 20);
+      conf = azar(85, 98);
+    } else if (r < 0.85) {
+      ang = Math.random() < 0.5 ? azar(16, 24) : azar(46, 54);
+      vel = azar(9, 32);
+      pico = azar(-25, 30);
+      conf = azar(72, 90);
+    } else {
+      ang = Math.random() < 0.5 ? azar(5, 14) : azar(56, 66);
+      vel = azar(7, 38);
+      pico = azar(-35, 40);
+      conf = azar(60, 82);
+    }
+  }
+
+  const datos = new DataView(new ArrayBuffer(TAM_COMPLETO));
+  datos.setUint32(0, Math.round(performance.now()), true);
+  datos.setUint16(4, ++nSim, true);
+  datos.setUint8(6, spec.tipo);
+  datos.setUint8(7, conf);
+  datos.setInt16(8, vel, true);
+  datos.setInt16(10, ang, true);
+  datos.setInt16(12, pico, true);
+
+  const esRoja = spec.tipo === 1 || spec.tipo === 3;
+  const angRojaRad = (esRoja ? ang : -ang) * Math.PI / 180;
+  const pitchRad = (Math.PI / 2 - angRojaRad) * 0.5;
+  datos.setInt16(14, Math.round(Math.sin(pitchRad) * 32767), true);
+  datos.setInt16(16, 0, true);
+  datos.setInt16(18, 0, true);
+
+  recibir({ target: { value: datos }, esSimulado: true });
+  return true;
 }
 
 const btnConectar = $('conectar');
@@ -5232,9 +5359,11 @@ function renderIntroFrame() {
 }
 
 // Textura única generada al inicio: todo el texto es 100% recto y nítido (sin re-subidas a VRAM por cuadro)
-function crearTexturaPelotaIntro() {
-  const w = 2048;
-  const h = 2048;
+function crearTexturaPelotaIntro(maxTexSize = 2048) {
+  const escala = maxTexSize >= 4096 ? 2 : 1;
+  const base = 2048;
+  const w = base * escala;
+  const h = base * escala;
   const c = document.createElement('canvas');
   c.width = w;
   c.height = h;
@@ -5244,8 +5373,10 @@ function crearTexturaPelotaIntro() {
   ctx.fillStyle = '#ff7700';
   ctx.fillRect(0, 0, w, h);
 
-  const cx = w / 2;
-  const cy = h / 2;
+  ctx.scale(escala, escala);
+
+  const cx = base / 2;
+  const cy = base / 2;
 
   // Tinta profunda slate
   ctx.fillStyle = '#0f172a';
@@ -5522,8 +5653,8 @@ function initIntroBall() {
   introCamera.position.set(0, 0, Z_CAM_CLOSE);
 
   introRenderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  introRenderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 4));
   introRenderer.setSize(w, h);
-  introRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2.5));
   introRenderer.outputColorSpace = THREE.SRGBColorSpace;
 
   // Iluminación
@@ -5615,7 +5746,8 @@ function initIntroBall() {
     uvsSphBall[i * 2 + 1] = vSB;
   }
 
-  introCanvasTex = crearTexturaPelotaIntro();
+  const maxTexSize = introRenderer ? introRenderer.capabilities.maxTextureSize : 2048;
+  introCanvasTex = crearTexturaPelotaIntro(maxTexSize);
   if (introRenderer) {
     introCanvasTex.anisotropy = Math.min(16, introRenderer.capabilities.getMaxAnisotropy());
   }
@@ -5673,6 +5805,7 @@ function initIntroBall() {
     const nh = window.innerHeight;
     introCamera.aspect = nw / nh;
     introCamera.updateProjectionMatrix();
+    introRenderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 4));
     introRenderer.setSize(nw, nh);
     dibujarTribunaIntro();
     setCurvatura(currentCurvatura);
@@ -5708,6 +5841,10 @@ function actualizarUVs() {
 
 function setCurvatura(t) {
   currentCurvatura = Math.max(0, Math.min(1, t));
+  const landingVec = $('landing-vector-overlay');
+  if (landingVec) {
+    landingVec.style.display = (currentCurvatura <= 0.001 && currentZoom <= 0.001) ? 'block' : 'none';
+  }
   actualizarUVs();
 
   if (introScene && introScene.userData.dirLight) {
@@ -6142,6 +6279,11 @@ if (brandLink) {
 }
 
 window.addEventListener('keydown', (ev) => {
+  if (ev.altKey && !ev.ctrlKey && !ev.metaKey && (ev.key === 'b' || ev.key === 'B')) {
+    ev.preventDefault();
+    aplicarModoDemoBle(!demoBleActivo);
+    return;
+  }
   if (!introActiva) {
     if (ev.key === 'Escape') {
       const alerta = $('alerta-desconexion-ble');
@@ -6154,10 +6296,18 @@ window.addEventListener('keydown', (ev) => {
       abrirIntro();
       return;
     }
-    if (tabActiva === 'partido' && typeof PartidoEngine !== 'undefined') {
-      const tag = ev.target && ev.target.tagName ? ev.target.tagName.toLowerCase() : '';
-      if (tag !== 'input' && tag !== 'textarea' && tag !== 'select') {
+    const tag = ev.target && ev.target.tagName ? ev.target.tagName.toLowerCase() : '';
+    if (tag !== 'input' && tag !== 'textarea' && tag !== 'select') {
+      if (tabActiva === 'partido' && typeof PartidoEngine !== 'undefined') {
         if (PartidoEngine.manejarTecla(ev.key)) {
+          ev.preventDefault();
+        }
+      } else if (
+        !ev.ctrlKey && !ev.metaKey && !ev.altKey &&
+        (tabActiva === 'libre' || tabActiva === 'tutorial' || tabActiva === 'test') &&
+        ['1', '2', '9', '0'].includes(ev.key)
+      ) {
+        if (simularGolpeTecla(ev.key)) {
           ev.preventDefault();
         }
       }
