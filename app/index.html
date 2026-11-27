@@ -7397,10 +7397,9 @@ const PartidoEngine = (() => {
     if (evento.golpe && evento.golpe !== '??') return evento.golpe;
     if (evento.vel === null || evento.vel < 4) return '??';
     const prefijo = (evento.ang !== null && evento.ang < 0) ? 'T' : 'E';
-    let lado = state.bola.ladoObjetivo || 'D';
-    if (evento.q && Math.abs(evento.q.z) > 0.14) {
-      lado = evento.q.z > 0 ? 'R' : 'D';
-    }
+    // No usar evento.q.z para inferir Derecha/Reves: el rumbo (yaw) no tiene magnetometro,
+    // depende de como apunto la paleta al prenderla y deriva con el tiempo (CONTRATOS.md).
+    const lado = state.bola.ladoObjetivo || 'D';
     return prefijo + lado;
   }
 
