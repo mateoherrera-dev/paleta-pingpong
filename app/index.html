@@ -3421,9 +3421,9 @@
             <div class="setup-matrix-row" style="--row-accent:#38bdf8;">
               <div class="setup-matrix-top">
                 <span class="setup-matrix-ball">Corte largo</span>
-                <span class="setup-matrix-tag">Empuje · Topspin ≥28</span>
+                <span class="setup-matrix-tag">Empuje · Topspin ≥15</span>
               </div>
-              <div class="setup-matrix-resp">Empujá firme o abrí con Topspin rápido (-18° a 0°).</div>
+              <div class="setup-matrix-resp">Empujá firme o abrí con Topspin firme (-28° a +5°).</div>
             </div>
 
             <div class="setup-matrix-row" style="--row-accent:#2dd4bf;">
@@ -7549,22 +7549,22 @@ const PartidoEngine = (() => {
         );
         return;
       }
-      // Contra corte largo se puede abrir con topspin rápido sin cerrar demasiado la cara
+      // Contra corte largo se puede abrir con topspin firme sin cerrar demasiado la cara
       const velActual = evento.vel || 22;
-      const puedeAbrir = velActual >= 22 && ang >= -24 && ang <= 0;
+      const puedeAbrir = velActual >= 15 && ang >= -28 && ang <= 5;
       if (!puedeAbrir) {
         if (state.rutina === 'corte_ataque') state.pasoDrill = 0;
         dispararAngleFX(false);
         registrarHist('A la red', ang, deltaMs);
         lanzarFallo('red', ang);
-        const motivo = velActual < 22
+        const motivo = velActual < 15
           ? `Faltó velocidad (${velActual} km/h) para levantar el corte con topspin.`
           : `Cerraste demasiado la cara (${ang}°) contra un corte rival.`;
         finalizarPunto(
           false,
           'A la red',
           motivo,
-          'Contra corte largo usá Empuje abierto (+25° a +45°) o Topspin firme (≥22 km/h, -24° a 0°).',
+          'Contra corte largo usá Empuje abierto (+25° a +45°) o Topspin firme (≥15 km/h, -28° a +5°).',
           'bad'
         );
         return;
@@ -7584,7 +7584,7 @@ const PartidoEngine = (() => {
       return;
     }
 
-    if ((esTopspin && bolaEntrante !== 'corte' && ang > 0) || (esEmpuje && ang > 55) || (esTopspin && ang > 15)) {
+    if ((esTopspin && bolaEntrante !== 'corte' && ang > 5) || (esEmpuje && ang > 55) || (esTopspin && ang > 15)) {
       if (state.rutina === 'corte_ataque') state.pasoDrill = 0;
       dispararAngleFX(false);
       registrarHist('Se fue larga', ang, deltaMs);
